@@ -17,6 +17,7 @@ import {
   RefreshCw,
   QrCode,
   Link2,
+  AlertTriangle,
 } from 'lucide-react';
 import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
@@ -140,6 +141,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [inputGistId, setInputGistId] = useState('');
   const [showGistConfig, setShowGistConfig] = useState(false);
   const [isGistCopied, setIsGistCopied] = useState(false);
+  const [showGistQr, setShowGistQr] = useState(false);
 
   const handleGenerateTransferQr = async () => {
     setIsGeneratingQr(true);
@@ -165,6 +167,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setIsGistCopied(true);
       setTimeout(() => setIsGistCopied(false), 2000);
       onShowToast('info', 'Ссылка связки скопирована', 'Откройте её на втором устройстве для моментального подключения.');
+    }
+  };
+
+  const handleSaveGistToken = async () => {
+    const cleanToken = gistToken.trim();
+    if (!cleanToken) {
+      onShowToast('error', 'Укажите токен GitHub', 'Вставьте ваш токен с разрешением gist.');
+      return;
+    }
+    setIsSyncing(true);
+    SyncService.setGistToken(cleanToken);
+    const ok = await SyncService.pushToCloud();
+    setIsSyncing(false);
+    if (ok) {
+      onShowToast('success', 'Двусторонняя синхронизация включена!', 'Все задания с этого устройства сохранены в облако.');
+    } else {
+      onShowToast('info', 'Токен сохранён', 'Теперь изменения с этого устройства будут отправляться в облако.');
     }
   };
 
@@ -495,9 +514,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="space-y-3 pt-2">
               <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400 block">
-                    ID вашего Gist в GitHub:
-                  </span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400">
+                      ID связки Gist:
+                    </span>
+                    {gistToken ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                        Двусторонняя (Телефон ⇄ ПК)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                        Только чтение (Телефон ➔ ПК)
+                      </span>
+                    )}
+                  </div>
                   <span className="font-mono text-xs font-bold text-apple-blue select-all">
                     {gistId}
                   </span>
@@ -521,15 +551,84 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-black/5 dark:border-white/5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={isGistCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
-                  onClick={handleCopyGistUrl}
-                >
-                  {isGistCopied ? 'Ссылка связки скопирована!' : 'Скопировать ссылку для связки с другим устройством'}
-                </Button>
+              {!gistToken && (
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2.5">
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    <span>Включите двустороннюю синхронизацию для этого ПК</span>
+                  </div>
+                  <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 leading-relaxed">
+                    Сейчас задания с телефона поступают на этот ПК. Но чтобы новые или удалённые задания с ПК тоже появлялись на телефоне, введите токен GitHub:
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      placeholder="Вставьте ваш токен GitHub (ghp_...)"
+                      value={gistToken}
+                      onChange={(e) => setGistToken(e.target.value)}
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
+                    />
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      loading={isSyncing}
+                      onClick={handleSaveGistToken}
+                    >
+                      Сохранить токен
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-bold text-apple-gray-900 dark:text-white block">
+                      Связка со вторым устройством (Телефон ⇄ ПК)
+                    </span>
+                    <span className="text-xs text-apple-gray-500">
+                      Отправьте ссылку себе в Telegram/VK или отсканируйте QR-код для моментального подключения.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<QrCode className="w-3.5 h-3.5" />}
+                      onClick={() => setShowGistQr(!showGistQr)}
+                    >
+                      {showGistQr ? 'Скрыть QR' : 'Показать QR-код'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={isGistCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
+                      onClick={handleCopyGistUrl}
+                    >
+                      {isGistCopied ? 'Ссылка скопирована!' : 'Скопировать ссылку для второго устройства'}
+                    </Button>
+                  </div>
+                </div>
+
+                {showGistQr && (
+                  <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
+                    <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
+                      <img
+                        src={SyncService.getQrCodeForUrl(SyncService.getGistPairingUrl(gistId, gistToken || undefined))}
+                        alt="QR-код связки"
+                        className="w-32 h-32 rounded-lg"
+                      />
+                    </div>
+                    <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1 text-center sm:text-left">
+                      <p className="font-bold text-apple-gray-900 dark:text-white">
+                        QR-код для подключения второго устройства:
+                      </p>
+                      <p>
+                        Отсканируйте камерой второго устройства — оно автоматически подключится к этой же связке заданий.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : showGistConfig ? (

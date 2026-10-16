@@ -80,24 +80,40 @@ export function useHomework() {
     }
   }, []);
 
-  // Auto-sync from cloud when switching tabs or focusing window
+  // Auto-sync from cloud: window focus, mobile visibility change, and continuous 8s polling
   useEffect(() => {
     let isMounted = true;
-    const syncOnFocus = async () => {
-      if (SyncService.getSyncKey()) {
-        const res = await SyncService.pullFromCloud();
-        if (res.updated && isMounted) {
-          setItems(StorageService.getHomework());
-        }
+
+    const performSync = async () => {
+      if (!SyncService.isSyncConfigured()) return;
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+
+      const res = await SyncService.pullFromCloud();
+      if (res.updated && isMounted) {
+        setItems(StorageService.getHomework());
       }
     };
 
-    window.addEventListener('focus', syncOnFocus);
-    syncOnFocus(); // pull once on mount
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        performSync();
+      }
+    };
+
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Poll every 8 seconds while page is visible
+    const timer = setInterval(performSync, 8000);
+
+    // Initial sync
+    performSync();
 
     return () => {
       isMounted = false;
-      window.removeEventListener('focus', syncOnFocus);
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      clearInterval(timer);
     };
   }, []);
 

@@ -40,10 +40,31 @@ export class SyncService {
     return localStorage.getItem(GIST_ID_STORAGE);
   }
 
-  static setGistCredentials(token: string, gistId: string): void {
-    localStorage.setItem(GIST_TOKEN_STORAGE, token.trim());
+  static setGistCredentials(token: string | undefined | null, gistId: string): void {
+    if (token && token.trim()) {
+      localStorage.setItem(GIST_TOKEN_STORAGE, token.trim());
+    } else {
+      localStorage.removeItem(GIST_TOKEN_STORAGE);
+    }
     localStorage.setItem(GIST_ID_STORAGE, gistId.trim());
     this.setSyncKey(`GIST-${gistId.trim().substring(0, 8).toUpperCase()}`);
+  }
+
+  static setGistToken(token: string): void {
+    if (token && token.trim()) {
+      localStorage.setItem(GIST_TOKEN_STORAGE, token.trim());
+    } else {
+      localStorage.removeItem(GIST_TOKEN_STORAGE);
+    }
+  }
+
+  static hasWritePermission(): boolean {
+    const t = this.getGistToken();
+    return Boolean(t && t.trim());
+  }
+
+  static isSyncConfigured(): boolean {
+    return Boolean(this.getGistId() || this.getSyncKey());
   }
 
   static clearGistCredentials(): void {
@@ -319,96 +340,151 @@ export class SyncService {
     const token = this.getGistToken();
     const gistId = this.getGistId();
 
-    if (token && gistId) {
-      try {
-        const updatedAt = StorageService.getLastModified();
-        const payload: CloudPayload = {
-          version: '1.0',
-          updatedAt,
-          homework: StorageService.getHomework(),
-          events: StorageService.getEvents(),
-          deletedHwIds: StorageService.getDeletedHomeworkIds(),
-        };
+    if (!token || !gistId) {
+      return false;
+    }
 
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/vnd.github+json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            files: {
-              'ksu_planner_sync.json': {
-                content: JSON.stringify(payload, null, 2),
-              },
+    try {
+      const updatedAt = new Date().toISOString();
+      StorageService.recordLastModified(updatedAt);
+
+      const payload: CloudPayload = {
+        version: '1.0',
+        updatedAt,
+        homework: StorageService.getHomework(),
+        events: StorageService.getEvents(),
+        deletedHwIds: StorageService.getDeletedHomeworkIds(),
+      };
+
+      const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          files: {
+            'ksu_planner_sync.json': {
+              content: JSON.stringify(payload, null, 2),
             },
-          }),
-        });
+          },
+        }),
+      });
 
-        if (res.ok) {
-          localStorage.setItem(SYNC_LAST_PULL_STORAGE, updatedAt);
-          return true;
-        }
-      } catch (e) {
-        console.error('Failed to push to GitHub Gist', e);
+      if (res.ok) {
+        localStorage.setItem(SYNC_LAST_PULL_STORAGE, updatedAt);
+        return true;
       }
+    } catch (e) {
+      console.error('Failed to push to GitHub Gist', e);
     }
 
     return false;
   }
 
   /**
-   * Pull newer tasks from cloud store (strictly timestamp guarded)
+   * Pull and smart-merge tasks from cloud store (bi-directional synchronization)
    */
   static async pullFromCloud(): Promise<{ updated: boolean; countHw?: number }> {
     const token = this.getGistToken();
     const gistId = this.getGistId();
 
-    if (gistId) {
-      try {
-        const headers: Record<string, string> = {
-          Accept: 'application/vnd.github+json',
-        };
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
+    if (!gistId) return { updated: false };
 
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
-
-        if (!res.ok) return { updated: false };
-
-        const resJson = await res.json();
-        const fileObj = resJson.files?.['ksu_planner_sync.json'];
-        if (!fileObj || !fileObj.content) return { updated: false };
-
-        const cloudData: CloudPayload = JSON.parse(fileObj.content);
-
-        const localTime = new Date(StorageService.getLastModified()).getTime();
-        const cloudTime = new Date(cloudData.updatedAt).getTime();
-
-        // ONLY accept cloud data if it is strictly newer than our local state
-        if (cloudTime > localTime) {
-          if (Array.isArray(cloudData.deletedHwIds)) {
-            StorageService.recordDeletedHomeworkIds(cloudData.deletedHwIds);
-          }
-          StorageService.saveHomework(cloudData.homework);
-          if (Array.isArray(cloudData.events)) {
-            StorageService.saveEvents(cloudData.events);
-          }
-          StorageService.recordLastModified(cloudData.updatedAt);
-          localStorage.setItem(SYNC_LAST_PULL_STORAGE, cloudData.updatedAt);
-          return { updated: true, countHw: cloudData.homework.length };
-        } else if (localTime > cloudTime) {
-          // Local has newer changes that haven't reached cloud -> push to cloud
-          this.pushToCloud();
-          return { updated: false };
-        }
-      } catch (e) {
-        console.error('Failed to pull from GitHub Gist', e);
+    try {
+      const headers: Record<string, string> = {
+        Accept: 'application/vnd.github+json',
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
       }
-    }
 
-    return { updated: false };
+      const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
+      if (!res.ok) return { updated: false };
+
+      const resJson = await res.json();
+      const fileObj = resJson.files?.['ksu_planner_sync.json'];
+      if (!fileObj || !fileObj.content) return { updated: false };
+
+      const cloudData: CloudPayload = JSON.parse(fileObj.content);
+      if (!cloudData || !Array.isArray(cloudData.homework)) {
+        return { updated: false };
+      }
+
+      // 1. Merge tombstones (any task deleted on either device stays deleted permanently)
+      if (Array.isArray(cloudData.deletedHwIds)) {
+        StorageService.recordDeletedHomeworkIds(cloudData.deletedHwIds);
+      }
+      const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+
+      // 2. Filter local and cloud homework against all known tombstones
+      const localHw = StorageService.getHomework().filter((h) => !allDeletedIds.has(h.id));
+      const cloudHw = cloudData.homework.filter((h) => !allDeletedIds.has(h.id));
+
+      // 3. Smart Merge: Map by task ID
+      const mergedMap = new Map<string, Homework>();
+      for (const h of cloudHw) {
+        mergedMap.set(h.id, h);
+      }
+
+      let localHadNewerOrUnique = false;
+      for (const h of localHw) {
+        const cloudItem = mergedMap.get(h.id);
+        if (!cloudItem) {
+          // Task exists locally but is not in cloud yet
+          mergedMap.set(h.id, h);
+          localHadNewerOrUnique = true;
+        } else {
+          const localItemTime = new Date(h.updatedAt || h.createdAt || 0).getTime();
+          const cloudItemTime = new Date(cloudItem.updatedAt || cloudItem.createdAt || 0).getTime();
+          if (localItemTime > cloudItemTime) {
+            // Local task was modified/checked more recently
+            mergedMap.set(h.id, h);
+            localHadNewerOrUnique = true;
+          }
+        }
+      }
+
+      const finalHw = Array.from(mergedMap.values());
+
+      // Check if anything actually changed in local storage
+      const localRaw = JSON.stringify(localHw);
+      const finalRaw = JSON.stringify(finalHw);
+      const hasLocalChanges = localRaw !== finalRaw;
+
+      if (hasLocalChanges) {
+        StorageService.saveHomework(finalHw);
+      }
+
+      // 4. Merge custom calendar events
+      if (Array.isArray(cloudData.events)) {
+        const localEvents = StorageService.getEvents();
+        const eventMap = new Map<string, CalendarCustomEvent>();
+        for (const e of cloudData.events) {
+          eventMap.set(e.id, e);
+        }
+        for (const e of localEvents) {
+          if (!eventMap.has(e.id)) {
+            eventMap.set(e.id, e);
+            localHadNewerOrUnique = true;
+          }
+        }
+        StorageService.saveEvents(Array.from(eventMap.values()));
+      }
+
+      // 5. If local had newer or unique changes, and we have token, push merged state up!
+      if (localHadNewerOrUnique && token) {
+        this.pushToCloud();
+      }
+
+      const cloudTimestamp = cloudData.updatedAt || new Date().toISOString();
+      localStorage.setItem(SYNC_LAST_PULL_STORAGE, cloudTimestamp);
+
+      return { updated: hasLocalChanges, countHw: finalHw.length };
+    } catch (e) {
+      console.error('Failed to pull from GitHub Gist', e);
+      return { updated: false };
+    }
   }
 }

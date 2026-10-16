@@ -75,7 +75,15 @@ export const App: React.FC = () => {
           if (res.success) {
             homework.reload();
             calendar.reload();
-            showToast('success', 'GitHub Gist подключен!', `Загружено заданий: ${res.countHw}`);
+            if (gToken) {
+              showToast(
+                'success',
+                'Двусторонняя связка подключена!',
+                `Синхронизировано заданий: ${res.countHw}. Добавление и удаление активны с обоих устройств!`
+              );
+            } else {
+              showToast('success', 'GitHub Gist подключен (чтение)', `Загружено заданий: ${res.countHw}`);
+            }
           } else {
             showToast('error', 'Ошибка подключения Gist', res.error);
           }
