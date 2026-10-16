@@ -535,6 +535,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           >
             Синхронизировать расписание
           </Button>
+
+          <Button
+            variant="ghost"
+            icon={<RefreshCw className="w-4 h-4 text-apple-orange" />}
+            onClick={() => {
+              if ('caches' in window) {
+                caches.keys().then((names) => {
+                  names.forEach((name) => caches.delete(name));
+                });
+              }
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                  registrations.forEach((r) => r.unregister());
+                });
+              }
+              setTimeout(() => {
+                window.location.reload();
+              }, 300);
+            }}
+          >
+            Сбросить кэш и обновить версию
+          </Button>
         </div>
       </div>
     </div>
