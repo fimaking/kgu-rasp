@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="КГУ Студент" />
+    <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)" />
+    <title>КГУ Расписание & Задачи</title>
+  </head>
+  <body class="h-full bg-apple-gray-100 dark:bg-[#121214] text-apple-gray-900 dark:text-zinc-100 antialiased selection:bg-apple-blue selection:text-white">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then((reg) => {
+            console.log('PWA ServiceWorker registered with scope:', reg.scope);
+          }).catch((err) => {
+            console.log('PWA ServiceWorker registration failed:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

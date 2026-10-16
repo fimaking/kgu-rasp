@@ -1,0 +1,30 @@
+{
+  "name": "КГУ Студент — Расписание & Задачи",
+  "short_name": "КГУ Студент",
+  "description": "Расписание занятий группы 8953 (26-ИСбо-4) КГУ и менеджер домашних заданий",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F2F2F7",
+  "theme_color": "#007AFF",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
