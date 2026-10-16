@@ -28,8 +28,8 @@ import { Button } from '../ui/Button';
 interface SettingsViewProps {
   themeMode: ThemeMode;
   onThemeChange: (mode: ThemeMode) => void;
-  subgroupPreference: number;
-  onSubgroupChange: (sg: number) => void;
+  subgroupPreference?: number;
+  onSubgroupChange?: (sg: number) => void;
   onShowToast: (type: 'success' | 'error' | 'info', title: string, msg?: string) => void;
   onDataImported: () => void;
   onRefreshSchedule: () => void;
@@ -39,8 +39,6 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   themeMode,
   onThemeChange,
-  subgroupPreference,
-  onSubgroupChange,
   onShowToast,
   onDataImported,
   onRefreshSchedule,
@@ -318,29 +316,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
-        {/* Subgroup preference */}
+        {/* Subgroup & Language profile */}
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-2">
-            Фильтр подгруппы по умолчанию
+            Профиль расписания
           </label>
-          <div className="flex p-1 bg-black/[0.03] dark:bg-white/[0.05] rounded-2xl border border-black/10 dark:border-white/10 text-xs font-medium">
-            {[
-              { id: 0, label: 'Вся группа (показывать всё)' },
-              { id: 1, label: '1-я подгруппа' },
-              { id: 2, label: '2-я подгруппа' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => onSubgroupChange(item.id)}
-                className={`flex-1 py-2 px-3 rounded-xl transition-all ${
-                  subgroupPreference === item.id
-                    ? 'bg-white dark:bg-zinc-800 text-apple-gray-900 dark:text-white font-bold shadow-apple-sm'
-                    : 'text-apple-gray-600 dark:text-apple-gray-400'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+          <div className="p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center font-bold text-xs">
+                1
+              </div>
+              <div>
+                <p className="text-xs font-bold text-apple-gray-900 dark:text-white">
+                  1-я подгруппа • Немецкий язык
+                </p>
+                <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
+                  Автоматически отфильтрованы 2-я подгруппа, английский и французский языки
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              Активен
+            </span>
           </div>
         </div>
       </div>

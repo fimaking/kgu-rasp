@@ -5,8 +5,8 @@ import { formatRussianDate, formatDayOfWeek } from '../../utils/dateUtils';
 interface HeaderProps {
   title?: string;
   subtitle?: string;
-  subgroupFilter: number;
-  onSubgroupChange: (sg: number) => void;
+  subgroupFilter?: number;
+  onSubgroupChange?: (sg: number) => void;
   onRefresh: () => void;
   refreshing: boolean;
   isOffline: boolean;
@@ -16,8 +16,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   title,
   subtitle,
-  subgroupFilter,
-  onSubgroupChange,
   onRefresh,
   refreshing,
   isOffline,
@@ -52,26 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-        {/* Subgroup Switcher */}
-        <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5 text-xs font-medium">
-          <Users className="w-3.5 h-3.5 ml-2 mr-1 text-apple-gray-500 hidden sm:inline-block" />
-          {[
-            { id: 0, label: 'Все' },
-            { id: 1, label: '1 п/г' },
-            { id: 2, label: '2 п/г' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onSubgroupChange(item.id)}
-              className={`px-2.5 py-1 rounded-xl transition-all ${
-                subgroupFilter === item.id
-                  ? 'bg-white dark:bg-zinc-800 text-apple-gray-900 dark:text-white font-semibold shadow-apple-sm'
-                  : 'text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+        {/* User Personalization Badge: 1st subgroup + German */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue border border-apple-blue/20 text-xs font-semibold">
+          <Users className="w-3.5 h-3.5 shrink-0" />
+          <span>1 подгруппа • Немецкий</span>
         </div>
 
         {/* Sync status & Refresh button */}

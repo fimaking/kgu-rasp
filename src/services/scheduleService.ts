@@ -1,8 +1,8 @@
 import { ScheduleResponse, RawRaspItem, ParsedLesson, RaspInfo } from '../types/schedule';
-import { parseRawRaspItem } from '../utils/scheduleParser';
+import { parseRawRaspItem, isUserLesson } from '../utils/scheduleParser';
 import initialScheduleData from '../data/initialSchedule.json';
 
-const STORAGE_KEY_SCHEDULE = 'ksu_schedule_cache_v2';
+const STORAGE_KEY_SCHEDULE = 'ksu_schedule_cache_v3';
 const STORAGE_KEY_TIMESTAMP = 'ksu_schedule_last_sync';
 
 export interface ScheduleFetchResult {
@@ -84,7 +84,7 @@ export class ScheduleService {
   }
 
   private static processResponse(res: ScheduleResponse, isOffline: boolean): ScheduleFetchResult {
-    const rawItems = res.data.rasp || [];
+    const rawItems = (res.data.rasp || []).filter(isUserLesson);
     const lessons = rawItems.map(parseRawRaspItem);
     
     // Sort lessons chronologically by start date/time

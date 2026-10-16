@@ -10,7 +10,7 @@ import {
   formatDayOfWeek,
   formatShortDayOfWeek,
 } from '../utils/dateUtils';
-import { getLessonStatus } from '../utils/scheduleParser';
+import { getLessonStatus, isUserLesson } from '../utils/scheduleParser';
 
 export function useSchedule() {
   const [lessons, setLessons] = useState<ParsedLesson[]>([]);
@@ -23,9 +23,7 @@ export function useSchedule() {
 
   // Settings
   const [groupId] = useState<number>(() => StorageService.getSettings().groupId);
-  const [subgroupFilter, setSubgroupFilter] = useState<number>(
-    () => StorageService.getSettings().subgroupPreference
-  );
+  const [subgroupFilter, setSubgroupFilter] = useState<number>(1);
 
   // Date selection: default to today
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
@@ -63,11 +61,10 @@ export function useSchedule() {
     StorageService.saveSettings({ ...s, subgroupPreference: sg });
   };
 
-  // Filter lessons by subgroup
+  // Filter lessons specifically for user (1st subgroup + German language)
   const filteredLessons = useMemo(() => {
-    if (subgroupFilter === 0) return lessons;
-    return lessons.filter((l) => l.subgroup === 0 || l.subgroup === subgroupFilter);
-  }, [lessons, subgroupFilter]);
+    return lessons.filter(isUserLesson);
+  }, [lessons]);
 
   // Lessons for today
   const todayDateStr = formatDateToIso(new Date());
@@ -121,10 +118,10 @@ export function useSchedule() {
     });
   }, [selectedWeekMonday, filteredLessons]);
 
-  // Distinct subjects list for dropdowns
+  // Distinct subjects list for dropdowns (only user's subjects)
   const subjects = useMemo(() => {
-    return ScheduleService.extractSubjects(lessons);
-  }, [lessons]);
+    return ScheduleService.extractSubjects(filteredLessons);
+  }, [filteredLessons]);
 
   // Week navigation
   const prevWeek = () => {

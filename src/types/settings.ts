@@ -20,7 +20,7 @@ export interface UserSettings {
 export const DEFAULT_SETTINGS: UserSettings = {
   groupId: 8953,
   groupName: '26-ИСбо-4',
-  subgroupPreference: 0,
+  subgroupPreference: 1,
   theme: 'system',
   notifications: {
     enabled: false,

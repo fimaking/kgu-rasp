@@ -45,6 +45,38 @@ export function parseSubgroup(item: RawRaspItem): number {
   return 0; // Entire group
 }
 
+/**
+ * Personalization filter: User attends 1st subgroup and German language only.
+ * Excludes:
+ * 1. Foreign languages other than German (English 1, English 2, French)
+ * 2. 2nd subgroup classes (subgroup 2)
+ */
+export function isUserLesson(lesson: {
+  rawDiscipline?: string;
+  дисциплина?: string;
+  subgroup?: number;
+  номерПодгруппы?: number;
+}): boolean {
+  const rawDiscipline = (lesson.rawDiscipline || lesson.дисциплина || '').toLowerCase();
+
+  const isForeignLang =
+    rawDiscipline.includes('иностранный язык') ||
+    rawDiscipline.includes('англ') ||
+    rawDiscipline.includes('франц') ||
+    rawDiscipline.includes('немец');
+
+  if (isForeignLang) {
+    return rawDiscipline.includes('немец');
+  }
+
+  const sg =
+    typeof lesson.subgroup === 'number'
+      ? lesson.subgroup
+      : parseSubgroup(lesson as RawRaspItem);
+
+  return sg === 0 || sg === 1;
+}
+
 export function parseBuildingAndAuditorium(rawAud: string): { building: string; auditorium: string } {
   if (!rawAud || rawAud.trim() === '') {
     return { building: 'КГУ', auditorium: 'Не указана' };
