@@ -227,32 +227,36 @@ export class SyncService {
 
   /**
    * Connect to an existing private Gist on another device
+  /**
+   * Connect to an existing private Gist on another device (token is optional for reading)
    */
   static async connectGistSync(
-    token: string,
-    gistId: string
+    gistId: string,
+    token?: string
   ): Promise<{ success: boolean; countHw?: number; countEvents?: number; error?: string }> {
-    const cleanToken = token.trim();
-    const cleanGistId = gistId.trim();
+    const cleanGistId = gistId ? gistId.trim() : '';
+    const cleanToken = token ? token.trim() : '';
 
-    if (!cleanToken || !cleanGistId) {
-      return { success: false, error: 'Заполните токен и ID связки' };
+    if (!cleanGistId) {
+      return { success: false, error: 'Введите ID связки Gist' };
     }
 
     try {
-      const res = await fetch(`https://api.github.com/gists/${cleanGistId}`, {
-        headers: {
-          Authorization: `Bearer ${cleanToken}`,
-          Accept: 'application/vnd.github+json',
-        },
-      });
+      const headers: Record<string, string> = {
+        Accept: 'application/vnd.github+json',
+      };
+      if (cleanToken) {
+        headers.Authorization = `Bearer ${cleanToken}`;
+      }
+
+      const res = await fetch(`https://api.github.com/gists/${cleanGistId}`, { headers });
 
       if (!res.ok) {
         if (res.status === 404) {
           return { success: false, error: 'Gist с таким ID не найден на GitHub.' };
         }
         if (res.status === 401) {
-          return { success: false, error: 'Неверный токен GitHub или нет доступа к Gist.' };
+          return { success: false, error: 'Ошибка доступа к Gist. Проверьте ID или токен.' };
         }
         throw new Error(`Ошибка GitHub API (${res.status})`);
       }
@@ -291,6 +295,17 @@ export class SyncService {
       const msg = err instanceof Error ? err.message : 'Ошибка подключения к GitHub Gist';
       return { success: false, error: msg };
     }
+  }
+
+  /**
+   * Get direct URL to pair this Gist on another device
+   */
+  static getGistPairingUrl(gistId: string, token?: string): string {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const tParam = token ? `&token=${encodeURIComponent(token)}` : '';
+    return `${origin}${pathname}#gist=${encodeURIComponent(gistId)}${tParam}`;
   }
 
   /* =====================================================================
@@ -350,14 +365,16 @@ export class SyncService {
     const token = this.getGistToken();
     const gistId = this.getGistId();
 
-    if (token && gistId) {
+    if (gistId) {
       try {
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/vnd.github+json',
-          },
-        });
+        const headers: Record<string, string> = {
+          Accept: 'application/vnd.github+json',
+        };
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
 
         if (!res.ok) return { updated: false };
 

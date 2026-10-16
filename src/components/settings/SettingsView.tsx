@@ -16,6 +16,7 @@ import {
   Copy,
   RefreshCw,
   QrCode,
+  Link2,
 } from 'lucide-react';
 import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
@@ -138,6 +139,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [gistId, setGistId] = useState<string>(() => SyncService.getGistId() || '');
   const [inputGistId, setInputGistId] = useState('');
   const [showGistConfig, setShowGistConfig] = useState(false);
+  const [isGistCopied, setIsGistCopied] = useState(false);
 
   const handleGenerateTransferQr = async () => {
     setIsGeneratingQr(true);
@@ -153,6 +155,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
       onShowToast('info', 'Ссылка для переноса скопирована в буфер обмена');
+    }
+  };
+
+  const handleCopyGistUrl = () => {
+    if (gistId) {
+      const url = SyncService.getGistPairingUrl(gistId, gistToken || undefined);
+      navigator.clipboard.writeText(url);
+      setIsGistCopied(true);
+      setTimeout(() => setIsGistCopied(false), 2000);
+      onShowToast('info', 'Ссылка связки скопирована', 'Откройте её на втором устройстве для моментального подключения.');
     }
   };
 
@@ -173,15 +185,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleConnectGistSync = async () => {
-    if (!gistToken.trim() || !inputGistId.trim()) {
-      onShowToast('error', 'Заполните поля', 'Введите токен GitHub и ID существующего Gist.');
+    const cleanId = inputGistId.trim();
+    if (!cleanId) {
+      onShowToast('error', 'Заполните поле', 'Введите ID существующего Gist (например: e2d77945...).');
       return;
     }
     setIsSyncing(true);
-    const res = await SyncService.connectGistSync(gistToken, inputGistId);
+    const res = await SyncService.connectGistSync(cleanId, gistToken.trim() || undefined);
     setIsSyncing(false);
     if (res.success) {
-      setGistId(inputGistId.trim());
+      setGistId(cleanId);
       onDataImported();
       onShowToast('success', 'Связка подключена!', `Восстановлено заданий: ${res.countHw}`);
     } else {
@@ -507,6 +520,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </button>
                 </div>
               </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-black/5 dark:border-white/5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={isGistCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
+                  onClick={handleCopyGistUrl}
+                >
+                  {isGistCopied ? 'Ссылка связки скопирована!' : 'Скопировать ссылку для связки с другим устройством'}
+                </Button>
+              </div>
             </div>
           ) : showGistConfig ? (
             <div className="space-y-3 pt-2 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
@@ -545,12 +569,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="pt-2 border-t border-black/5 dark:border-white/5">
                 <span className="text-[11px] text-apple-gray-500 block mb-1.5">
-                  Или подключитесь к уже существующему Gist (введите токен выше и ID ниже):
+                  Или подключитесь к уже созданному Gist (вставьте ID связки с другого устройства; токен не обязателен):
                 </span>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="ID существующего Gist..."
+                    placeholder="Вставьте ID связки (например: e2d77945...)"
                     value={inputGistId}
                     onChange={(e) => setInputGistId(e.target.value)}
                     className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"

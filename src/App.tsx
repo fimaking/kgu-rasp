@@ -64,6 +64,23 @@ export const App: React.FC = () => {
           showToast('error', 'Ошибка импорта', res.error);
         }
         window.history.replaceState(null, '', window.location.pathname);
+      } else if (hash && hash.includes('#gist=')) {
+        const query = hash.replace(/^#/, '');
+        const params = new URLSearchParams(query);
+        const gId = params.get('gist') || '';
+        const gToken = params.get('token') || '';
+        if (gId) {
+          showToast('info', 'Подключение GitHub Gist...', `ID: ${gId.slice(0, 8)}...`);
+          const res = await SyncService.connectGistSync(gId, gToken);
+          if (res.success) {
+            homework.reload();
+            calendar.reload();
+            showToast('success', 'GitHub Gist подключен!', `Загружено заданий: ${res.countHw}`);
+          } else {
+            showToast('error', 'Ошибка подключения Gist', res.error);
+          }
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       }
     };
 
