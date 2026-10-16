@@ -14,6 +14,7 @@ export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson })
 
   return (
     <div
+      id={isToday ? 'day-card-today' : undefined}
       className={`p-5 rounded-3xl backdrop-blur-xl border transition-all ${
         isToday
           ? 'bg-blue-500/[0.03] dark:bg-blue-500/[0.05] border-apple-blue/30 shadow-apple-card ring-1 ring-apple-blue/20'

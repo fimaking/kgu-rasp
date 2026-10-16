@@ -55,7 +55,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             className="px-3.5 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue font-semibold text-xs transition-colors flex items-center gap-1.5"
           >
             <CalendarIcon className="w-3.5 h-3.5" />
-            <span>Текущая неделя</span>
+            <span>Сегодня</span>
           </button>
 
           <button

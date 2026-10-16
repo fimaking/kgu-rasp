@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   LayoutGrid,
@@ -34,9 +34,45 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onOpenCreateHomeworkForSubject,
 }) => {
   const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => new Date());
-  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('grid');
+  // Default to single day view so Today's schedule opens immediately
+  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('single');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
+
+  const handleGoToToday = () => {
+    onGoToToday();
+    setSelectedDayDate(new Date());
+  };
+
+  const handlePrevWeek = () => {
+    onPrevWeek();
+    setSelectedDayDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(prev.getDate() - 7);
+      return next;
+    });
+  };
+
+  const handleNextWeek = () => {
+    onNextWeek();
+    setSelectedDayDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(prev.getDate() + 7);
+      return next;
+    });
+  };
+
+  // Scroll to today's card when opening grid layout
+  useEffect(() => {
+    if (viewLayout === 'grid') {
+      setTimeout(() => {
+        const el = document.getElementById('day-card-today');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    }
+  }, [viewLayout]);
 
   // Day buttons data for WeekNavigator
   const daysSummary = useMemo(() => {
@@ -144,9 +180,9 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       {/* Week Navigator Bar */}
       <WeekNavigator
         selectedWeekMonday={selectedWeekMonday}
-        onPrevWeek={onPrevWeek}
-        onNextWeek={onNextWeek}
-        onGoToToday={onGoToToday}
+        onPrevWeek={handlePrevWeek}
+        onNextWeek={handleNextWeek}
+        onGoToToday={handleGoToToday}
         selectedDayDate={selectedDayDate}
         onSelectDay={(d) => {
           setSelectedDayDate(d);
