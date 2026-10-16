@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Homework,
   HomeworkFilters,
@@ -7,6 +7,7 @@ import {
   HomeworkSortOption,
 } from '../types/homework';
 import { StorageService } from '../services/storageService';
+import { SyncService } from '../services/syncService';
 import { NotificationService } from '../services/notificationService';
 import { formatDateToIso, parseIsoDate, getMondayOfWeek } from '../utils/dateUtils';
 
@@ -29,18 +30,21 @@ export function useHomework() {
   const addHomework = useCallback((data: Omit<Homework, 'id' | 'createdAt' | 'updatedAt'>) => {
     const created = StorageService.addHomework(data);
     setItems(StorageService.getHomework());
+    SyncService.pushToCloud();
     return created;
   }, []);
 
   const updateHomework = useCallback((updated: Homework) => {
     const res = StorageService.updateHomework(updated);
     setItems(StorageService.getHomework());
+    SyncService.pushToCloud();
     return res;
   }, []);
 
   const deleteHomework = useCallback((id: string) => {
     StorageService.deleteHomework(id);
     setItems(StorageService.getHomework());
+    SyncService.pushToCloud();
   }, []);
 
   const toggleComplete = useCallback((id: string) => {
@@ -49,6 +53,7 @@ export function useHomework() {
       NotificationService.playChime();
     }
     setItems(StorageService.getHomework());
+    SyncService.pushToCloud();
   }, []);
 
   const toggleSubtask = useCallback((homeworkId: string, subtaskId: string) => {
@@ -71,7 +76,25 @@ export function useHomework() {
       }
       StorageService.updateHomework(hw);
       setItems(StorageService.getHomework());
+      SyncService.pushToCloud();
     }
+  }, []);
+
+  // Auto-sync from cloud when switching tabs or focusing window
+  useEffect(() => {
+    const syncOnFocus = async () => {
+      if (SyncService.getSyncKey()) {
+        const res = await SyncService.pullFromCloud();
+        if (res.updated) {
+          setItems(StorageService.getHomework());
+        }
+      }
+    };
+
+    window.addEventListener('focus', syncOnFocus);
+    syncOnFocus(); // pull once on mount
+
+    return () => window.removeEventListener('focus', syncOnFocus);
   }, []);
 
   // Compute dates
