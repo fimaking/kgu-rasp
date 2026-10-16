@@ -37,14 +37,13 @@ export class RealtimeSyncService {
    * Get active sync room code
    */
   static getRoomCode(): string {
-    // Priority: stored room code, or fallback to active gistId
     const stored = localStorage.getItem(REALTIME_ROOM_STORAGE);
-    if (stored) return stored;
+    if (stored && stored.trim()) return stored.trim().toLowerCase();
 
     const gistId = localStorage.getItem('ksu_student_gist_id');
-    if (gistId) return gistId.trim();
+    if (gistId && gistId.trim()) return gistId.trim().toLowerCase();
 
-    return '';
+    return 'e2d779451fca13d7005a7453b0df880b';
   }
 
   /**

@@ -8,8 +8,23 @@ const STORAGE_KEY_DELETED_HW = 'ksu_student_deleted_hw_v2';
 const STORAGE_KEY_EVENTS = 'ksu_student_events_v2';
 const STORAGE_KEY_DELETED_EVENTS = 'ksu_student_deleted_events_v2';
 const STORAGE_KEY_SETTINGS = 'ksu_student_settings_v2';
-const STORAGE_KEY_INITIALIZED = 'ksu_student_initialized_v2';
 const STORAGE_KEY_LAST_MODIFIED = 'ksu_student_last_modified';
+
+// Auto-purge any stale test/seed tasks from localStorage immediately
+try {
+  const currentHw = localStorage.getItem(STORAGE_KEY_HOMEWORK);
+  if (currentHw && (currentHw.includes('hw_seed_') || currentHw.includes('hw_test_'))) {
+    const parsed = JSON.parse(currentHw);
+    if (Array.isArray(parsed)) {
+      const cleaned = parsed.filter(
+        (h: any) => h && !String(h.id).startsWith('hw_seed_') && !String(h.id).startsWith('hw_test_')
+      );
+      localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleaned));
+    }
+  }
+} catch {
+  // ignore
+}
 
 export class StorageService {
   /**
@@ -77,17 +92,8 @@ export class StorageService {
    */
   static getHomework(): Homework[] {
     try {
-      const isInitialized = localStorage.getItem(STORAGE_KEY_INITIALIZED);
       const raw = localStorage.getItem(STORAGE_KEY_HOMEWORK);
       const deletedIds = new Set(this.getDeletedHomeworkIds());
-
-      if (!isInitialized && raw === null) {
-        // First run ever on this device: generate starter tasks
-        localStorage.setItem(STORAGE_KEY_INITIALIZED, 'true');
-        const seed = this.getSeedHomework().filter((h) => !deletedIds.has(h.id));
-        this.saveHomework(seed);
-        return seed;
-      }
 
       if (!raw) {
         return [];
@@ -96,8 +102,10 @@ export class StorageService {
       const parsed: Homework[] = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
 
-      // Filter out any tasks that have been deleted
-      return parsed.filter((h) => !deletedIds.has(h.id));
+      // Filter out any tasks that have been deleted or are test/seed tasks
+      return parsed.filter(
+        (h) => !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
+      );
     } catch {
       return [];
     }
@@ -109,7 +117,9 @@ export class StorageService {
   static saveHomework(items: Homework[]): void {
     try {
       const deletedIds = new Set(this.getDeletedHomeworkIds());
-      const cleanItems = items.filter((h) => !deletedIds.has(h.id));
+      const cleanItems = items.filter(
+        (h) => !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
+      );
       localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleanItems));
       this.recordLastModified();
     } catch (e) {
@@ -211,20 +221,15 @@ export class StorageService {
 
   static getEvents(): CalendarCustomEvent[] {
     try {
-      const isInitialized = localStorage.getItem(STORAGE_KEY_INITIALIZED);
       const raw = localStorage.getItem(STORAGE_KEY_EVENTS);
       const deletedIds = new Set(this.getDeletedEventIds());
-
-      if (!isInitialized && raw === null) {
-        return this.getSeedEvents().filter((e) => !deletedIds.has(e.id));
-      }
 
       if (!raw) return [];
 
       const parsed: CalendarCustomEvent[] = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
 
-      return parsed.filter((e) => !deletedIds.has(e.id));
+      return parsed.filter((e) => !deletedIds.has(e.id) && !e.id.startsWith('evt_seed_'));
     } catch {
       return [];
     }
@@ -233,7 +238,7 @@ export class StorageService {
   static saveEvents(events: CalendarCustomEvent[]): void {
     try {
       const deletedIds = new Set(this.getDeletedEventIds());
-      const cleanEvents = events.filter((e) => !deletedIds.has(e.id));
+      const cleanEvents = events.filter((e) => !deletedIds.has(e.id) && !e.id.startsWith('evt_seed_'));
       localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(cleanEvents));
       this.recordLastModified();
     } catch (e) {
@@ -341,103 +346,5 @@ export class StorageService {
       const msg = err instanceof Error ? err.message : 'Ошибка разбора JSON';
       return { success: false, countHw: 0, countEvents: 0, error: msg };
     }
-  }
-
-  /**
-   * Realistic initial homework seed for Group 8953 (only populated on brand new device)
-   */
-  private static getSeedHomework(): Homework[] {
-    const today = new Date();
-    const plusDays = (d: number) => {
-      const target = new Date(today);
-      target.setDate(today.getDate() + d);
-      return formatDateToIso(target);
-    };
-
-    return [
-      {
-        id: 'hw_seed_1',
-        title: 'Лабораторная работа №3: Классы и наследование в C#',
-        subject: 'Алгоритмизация и программирование(C#)',
-        description: 'Реализовать иерархию классов для предметной области. Оформить отчет с блок-схемами и листингом кода.',
-        assignedDate: plusDays(-4),
-        dueDate: plusDays(1),
-        dueTime: '23:59',
-        priority: 'high',
-        status: 'in_progress',
-        subtasks: [
-          { id: 'sub_1', title: 'Спроектировать базовый класс и виртуальные методы', completed: true },
-          { id: 'sub_2', title: 'Реализовать 3 класса-наследника', completed: true },
-          { id: 'sub_3', title: 'Написать юнит-тесты на проверку полиморфизма', completed: false },
-          { id: 'sub_4', title: 'Подготовить титульный лист и отчет', completed: false },
-        ],
-        materialLink: 'https://eios.kosgos.ru',
-        notes: 'Сдавать на паре в аудитории Б-208.',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'hw_seed_2',
-        title: 'Домашнее задание: Теория графов и матрицы смежности',
-        subject: 'Дискретная математика',
-        description: 'Задачи 14.1 - 14.8 из сборника задач. Найти кратчайшие пути алгоритмом Дейкстры.',
-        assignedDate: plusDays(-2),
-        dueDate: plusDays(3),
-        dueTime: '18:00',
-        priority: 'normal',
-        status: 'todo',
-        subtasks: [
-          { id: 'sub_21', title: 'Построить матрицу инцидентности', completed: false },
-          { id: 'sub_22', title: 'Выполнить пошаговую трассировку алгоритма', completed: false },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'hw_seed_3',
-        title: 'Типовой расчет по пределам и производным',
-        subject: 'Математический анализ',
-        description: 'Вариант 4. Решить задачи на правило Лопиталя и исследование функции.',
-        assignedDate: plusDays(-5),
-        dueDate: plusDays(-1), // Overdue for demo
-        dueTime: '10:00',
-        priority: 'high',
-        status: 'todo',
-        subtasks: [
-          { id: 'sub_31', title: 'Вычислить замечательные пределы', completed: true },
-          { id: 'sub_32', title: 'Построить асимптоты графика функции', completed: false },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-  }
-
-  private static getSeedEvents(): CalendarCustomEvent[] {
-    const today = new Date();
-    const plusDays = (d: number) => {
-      const target = new Date(today);
-      target.setDate(today.getDate() + d);
-      return formatDateToIso(target);
-    };
-
-    return [
-      {
-        id: 'evt_seed_1',
-        title: 'Контрольная точка по Дискретной математике',
-        date: plusDays(4),
-        type: 'test',
-        notes: 'Темы: Графы, деревья, бинарные отношения.',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'evt_seed_2',
-        title: 'Защита лабораторных работ по программированию',
-        date: plusDays(8),
-        type: 'colloquium',
-        notes: 'Сдача работ №1 - №3, аудитория Б-208.',
-        createdAt: new Date().toISOString(),
-      },
-    ];
   }
 }

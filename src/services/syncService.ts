@@ -10,6 +10,9 @@ const GIST_ID_STORAGE = 'ksu_student_gist_id';
 const CLOUD_ROOM_ID_STORAGE = 'ksu_student_cloud_room_id';
 const REST_API_BASE = 'https://api.restful-api.dev/objects';
 
+export const DEFAULT_GIST_ID = 'e2d779451fca13d7005a7453b0df880b';
+export const DEFAULT_CLOUD_ROOM = 'ff808181a09d98f701a1469c91677688';
+
 export interface CloudPayload {
   version: string;
   updatedAt: string;
@@ -41,11 +44,15 @@ export class SyncService {
   }
 
   static getGistId(): string | null {
-    return localStorage.getItem(GIST_ID_STORAGE);
+    const stored = localStorage.getItem(GIST_ID_STORAGE);
+    if (stored && stored.trim()) return stored.trim();
+    return DEFAULT_GIST_ID;
   }
 
   static getCloudRoomId(): string | null {
-    return localStorage.getItem(CLOUD_ROOM_ID_STORAGE);
+    const stored = localStorage.getItem(CLOUD_ROOM_ID_STORAGE);
+    if (stored && stored.trim()) return stored.trim();
+    return DEFAULT_CLOUD_ROOM;
   }
 
   static setCloudRoomId(roomId: string): void {
@@ -60,7 +67,7 @@ export class SyncService {
     } else {
       localStorage.removeItem(GIST_TOKEN_STORAGE);
     }
-    const cleanId = gistId.trim();
+    const cleanId = (gistId || DEFAULT_GIST_ID).trim();
     localStorage.setItem(GIST_ID_STORAGE, cleanId);
     this.setSyncKey(`GIST-${cleanId.substring(0, 8).toUpperCase()}`);
     RealtimeSyncService.setRoomCode(cleanId);
@@ -80,7 +87,7 @@ export class SyncService {
   }
 
   static isSyncConfigured(): boolean {
-    return Boolean(this.getGistId() || this.getCloudRoomId() || this.getSyncKey());
+    return true; // Permanently linked for the user
   }
 
   static clearGistCredentials(): void {
