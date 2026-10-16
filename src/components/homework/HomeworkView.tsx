@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, CheckSquare, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, CheckSquare, Sparkles, AlertCircle, QrCode, Check, Copy } from 'lucide-react';
 import { Homework, HomeworkFilters as IHomeworkFilters } from '../../types/homework';
 import { HomeworkCard } from './HomeworkCard';
 import { HomeworkFilters } from './HomeworkFilters';
 import { HomeworkFormModal } from './HomeworkFormModal';
+import { SyncService } from '../../services/syncService';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 
@@ -50,11 +51,28 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
 }) => {
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [transferUrl, setTransferUrl] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   const confirmDelete = () => {
     if (deletingId) {
       onDeleteHomework(deletingId);
       setDeletingId(null);
+    }
+  };
+
+  const handleOpenQr = async () => {
+    const url = await SyncService.createDirectTransferUrl();
+    setTransferUrl(url);
+    setIsQrModalOpen(true);
+  };
+
+  const handleCopyUrl = () => {
+    if (transferUrl) {
+      navigator.clipboard.writeText(transferUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     }
   };
 
@@ -75,13 +93,23 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          icon={<Plus className="w-4 h-4 stroke-[2.5]" />}
-          onClick={onOpenCreateModal}
-        >
-          Новое задание
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            icon={<QrCode className="w-4 h-4" />}
+            onClick={handleOpenQr}
+          >
+            Перенести на телефон
+          </Button>
+
+          <Button
+            variant="primary"
+            icon={<Plus className="w-4 h-4 stroke-[2.5]" />}
+            onClick={onOpenCreateModal}
+          >
+            Новое задание
+          </Button>
+        </div>
       </div>
 
       {/* Overall Progress Widget */}
@@ -197,6 +225,50 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
             </Button>
             <Button variant="danger" size="sm" onClick={confirmDelete}>
               Да, удалить
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* QR Transfer Modal */}
+      <Modal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        title="Мгновенный перенос на телефон"
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs sm:text-sm text-apple-gray-600 dark:text-apple-gray-300">
+            Наведите камеру любого телефона на этот QR-код — браузер откроет приложение и мгновенно перенесёт все ваши задания.
+          </p>
+
+          {transferUrl && (
+            <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/5 dark:border-white/5">
+              <div className="bg-white p-3 rounded-2xl shadow-apple-card border border-black/10">
+                <img
+                  src={SyncService.getQrCodeForUrl(transferUrl)}
+                  alt="QR Code"
+                  className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg"
+                />
+              </div>
+
+              <div className="mt-4 flex flex-col sm:flex-row items-center gap-2 w-full max-w-sm">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  icon={isCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  onClick={handleCopyUrl}
+                >
+                  {isCopied ? 'Ссылка скопирована!' : 'Скопировать прямую ссылку'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end pt-2 border-t border-black/5 dark:border-white/5">
+            <Button variant="primary" size="sm" onClick={() => setIsQrModalOpen(false)}>
+              Готово
             </Button>
           </div>
         </div>

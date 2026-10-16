@@ -49,29 +49,26 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Automatic pairing when opened from a QR code or shared link (#sync=KGU-...)
+  // Automatic data transfer when opened from a QR code (#transfer=...)
   useEffect(() => {
-    const checkHashSync = async () => {
+    const checkHashTransfer = async () => {
       const hash = window.location.hash;
-      if (hash && hash.includes('#sync=')) {
-        const key = decodeURIComponent(hash.split('#sync=')[1] || '').trim();
-        if (key) {
-          showToast('info', 'Подключение связки...', `Код: ${key}`);
-          const res = await SyncService.connectToSyncRoom(key);
-          if (res.success) {
-            homework.reload();
-            showToast('success', 'Устройства связаны!', `Загружено заданий: ${res.countHw}`);
-          } else {
-            showToast('error', 'Ошибка синхронизации', res.error);
-          }
-          // Remove hash from address bar cleanly
-          window.history.replaceState(null, '', window.location.pathname);
+      if (hash && (hash.includes('#transfer=') || hash.includes('#rawtransfer='))) {
+        showToast('info', 'Импорт заданий...', 'Распаковка данных из QR-кода');
+        const res = await SyncService.decodeTransferData(hash);
+        if (res.success) {
+          homework.reload();
+          calendar.reload();
+          showToast('success', 'Синхронизация завершена!', `Успешно перенесено заданий: ${res.countHw}`);
+        } else {
+          showToast('error', 'Ошибка импорта', res.error);
         }
+        window.history.replaceState(null, '', window.location.pathname);
       }
     };
 
-    checkHashSync();
-  }, [homework, showToast]);
+    checkHashTransfer();
+  }, [homework, calendar, showToast]);
 
   const openCreateHomework = (subject?: string) => {
     setQuickCreateSubject(subject);
@@ -218,6 +215,7 @@ export const App: React.FC = () => {
                 onShowToast={showToast}
                 onDataImported={() => {
                   homework.reload();
+                  calendar.reload();
                 }}
                 onRefreshSchedule={handleRefreshSchedule}
                 lastUpdated={schedule.lastUpdated}

@@ -3,6 +3,7 @@ import { CalendarCustomEvent, CalendarViewMode, DayEventsSummary } from '../type
 import { ParsedLesson } from '../types/schedule';
 import { Homework } from '../types/homework';
 import { StorageService } from '../services/storageService';
+import { SyncService } from '../services/syncService';
 import { formatDateToIso } from '../utils/dateUtils';
 
 export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
@@ -10,15 +11,21 @@ export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
   const [events, setEvents] = useState<CalendarCustomEvent[]>(() => StorageService.getEvents());
 
+  const reload = useCallback(() => {
+    setEvents(StorageService.getEvents());
+  }, []);
+
   const addEvent = useCallback((event: Omit<CalendarCustomEvent, 'id' | 'createdAt'>) => {
     const created = StorageService.addEvent(event);
     setEvents(StorageService.getEvents());
+    SyncService.pushToCloud();
     return created;
   }, []);
 
   const deleteEvent = useCallback((id: string) => {
     StorageService.deleteEvent(id);
     setEvents(StorageService.getEvents());
+    SyncService.pushToCloud();
   }, []);
 
   // Selected date ISO string
@@ -80,5 +87,6 @@ export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
     eventsByDate,
     addEvent,
     deleteEvent,
+    reload,
   };
 }

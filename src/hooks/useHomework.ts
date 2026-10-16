@@ -82,10 +82,11 @@ export function useHomework() {
 
   // Auto-sync from cloud when switching tabs or focusing window
   useEffect(() => {
+    let isMounted = true;
     const syncOnFocus = async () => {
       if (SyncService.getSyncKey()) {
         const res = await SyncService.pullFromCloud();
-        if (res.updated) {
+        if (res.updated && isMounted) {
           setItems(StorageService.getHomework());
         }
       }
@@ -94,7 +95,10 @@ export function useHomework() {
     window.addEventListener('focus', syncOnFocus);
     syncOnFocus(); // pull once on mount
 
-    return () => window.removeEventListener('focus', syncOnFocus);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('focus', syncOnFocus);
+    };
   }, []);
 
   // Compute dates

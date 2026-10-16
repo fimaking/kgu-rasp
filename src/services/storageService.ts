@@ -4,33 +4,114 @@ import { UserSettings, DEFAULT_SETTINGS } from '../types/settings';
 import { formatDateToIso } from '../utils/dateUtils';
 
 const STORAGE_KEY_HOMEWORK = 'ksu_student_homework_v2';
+const STORAGE_KEY_DELETED_HW = 'ksu_student_deleted_hw_v2';
 const STORAGE_KEY_EVENTS = 'ksu_student_events_v2';
+const STORAGE_KEY_DELETED_EVENTS = 'ksu_student_deleted_events_v2';
 const STORAGE_KEY_SETTINGS = 'ksu_student_settings_v2';
+const STORAGE_KEY_INITIALIZED = 'ksu_student_initialized_v2';
+const STORAGE_KEY_LAST_MODIFIED = 'ksu_student_last_modified';
 
 export class StorageService {
   /**
-   * Load all homework items
+   * Get timestamp of last local data modification
    */
-  static getHomework(): Homework[] {
+  static getLastModified(): string {
+    const stored = localStorage.getItem(STORAGE_KEY_LAST_MODIFIED);
+    if (stored) return stored;
+    const now = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY_LAST_MODIFIED, now);
+    return now;
+  }
+
+  /**
+   * Record local data modification time
+   */
+  static recordLastModified(timestamp?: string): void {
+    const time = timestamp || new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY_LAST_MODIFIED, time);
+  }
+
+  /**
+   * Get list of permanently deleted homework IDs (tombstones)
+   */
+  static getDeletedHomeworkIds(): string[] {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_HOMEWORK);
-      if (!raw) {
-        const seed = this.getSeedHomework();
-        this.saveHomework(seed);
-        return seed;
-      }
-      return JSON.parse(raw);
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_HW);
+      return raw ? JSON.parse(raw) : [];
     } catch {
-      return this.getSeedHomework();
+      return [];
     }
   }
 
   /**
-   * Save all homework items
+   * Record a deleted homework ID so it never resurrects
+   */
+  static recordDeletedHomeworkId(id: string): void {
+    try {
+      const ids = new Set(this.getDeletedHomeworkIds());
+      ids.add(id);
+      localStorage.setItem(STORAGE_KEY_DELETED_HW, JSON.stringify([...ids]));
+      this.recordLastModified();
+    } catch (e) {
+      console.error('Failed to record deleted homework ID', e);
+    }
+  }
+
+  /**
+   * Record multiple deleted homework IDs (e.g. from cloud sync)
+   */
+  static recordDeletedHomeworkIds(newIds: string[]): void {
+    if (!Array.isArray(newIds) || newIds.length === 0) return;
+    try {
+      const ids = new Set(this.getDeletedHomeworkIds());
+      newIds.forEach((id) => ids.add(id));
+      localStorage.setItem(STORAGE_KEY_DELETED_HW, JSON.stringify([...ids]));
+      this.recordLastModified();
+    } catch (e) {
+      console.error('Failed to record deleted homework IDs', e);
+    }
+  }
+
+  /**
+   * Load all active homework items (filtered against tombstones)
+   */
+  static getHomework(): Homework[] {
+    try {
+      const isInitialized = localStorage.getItem(STORAGE_KEY_INITIALIZED);
+      const raw = localStorage.getItem(STORAGE_KEY_HOMEWORK);
+      const deletedIds = new Set(this.getDeletedHomeworkIds());
+
+      if (!isInitialized && raw === null) {
+        // First run ever on this device: generate starter tasks
+        localStorage.setItem(STORAGE_KEY_INITIALIZED, 'true');
+        const seed = this.getSeedHomework().filter((h) => !deletedIds.has(h.id));
+        this.saveHomework(seed);
+        return seed;
+      }
+
+      if (!raw) {
+        return [];
+      }
+
+      const parsed: Homework[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+
+      // Filter out any tasks that have been deleted
+      return parsed.filter((h) => !deletedIds.has(h.id));
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Save all homework items (filtered against tombstones)
    */
   static saveHomework(items: Homework[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(items));
+      const deletedIds = new Set(this.getDeletedHomeworkIds());
+      const cleanItems = items.filter((h) => !deletedIds.has(h.id));
+      localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleanItems));
+      this.recordLastModified();
     } catch (e) {
       console.error('Failed to save homework', e);
     }
@@ -62,7 +143,10 @@ export class StorageService {
       items[idx] = {
         ...updated,
         updatedAt: new Date().toISOString(),
-        completedAt: updated.status === 'completed' && !updated.completedAt ? new Date().toISOString() : updated.completedAt,
+        completedAt:
+          updated.status === 'completed' && !updated.completedAt
+            ? new Date().toISOString()
+            : updated.completedAt,
       };
       this.saveHomework(items);
       return items[idx];
@@ -71,10 +155,12 @@ export class StorageService {
   }
 
   /**
-   * Delete homework
+   * Delete homework permanently (records tombstone)
    */
   static deleteHomework(id: string): void {
-    const items = this.getHomework().filter((h) => h.id !== id);
+    this.recordDeletedHomeworkId(id);
+    const deletedIds = new Set(this.getDeletedHomeworkIds());
+    const items = this.getHomework().filter((h) => h.id !== id && !deletedIds.has(h.id));
     this.saveHomework(items);
   }
 
@@ -103,19 +189,53 @@ export class StorageService {
   /**
    * Calendar Custom Events
    */
+  static getDeletedEventIds(): string[] {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_EVENTS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  static recordDeletedEventId(id: string): void {
+    try {
+      const ids = new Set(this.getDeletedEventIds());
+      ids.add(id);
+      localStorage.setItem(STORAGE_KEY_DELETED_EVENTS, JSON.stringify([...ids]));
+      this.recordLastModified();
+    } catch (e) {
+      console.error('Failed to record deleted event ID', e);
+    }
+  }
+
   static getEvents(): CalendarCustomEvent[] {
     try {
+      const isInitialized = localStorage.getItem(STORAGE_KEY_INITIALIZED);
       const raw = localStorage.getItem(STORAGE_KEY_EVENTS);
-      if (!raw) return this.getSeedEvents();
-      return JSON.parse(raw);
+      const deletedIds = new Set(this.getDeletedEventIds());
+
+      if (!isInitialized && raw === null) {
+        return this.getSeedEvents().filter((e) => !deletedIds.has(e.id));
+      }
+
+      if (!raw) return [];
+
+      const parsed: CalendarCustomEvent[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed.filter((e) => !deletedIds.has(e.id));
     } catch {
-      return this.getSeedEvents();
+      return [];
     }
   }
 
   static saveEvents(events: CalendarCustomEvent[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
+      const deletedIds = new Set(this.getDeletedEventIds());
+      const cleanEvents = events.filter((e) => !deletedIds.has(e.id));
+      localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(cleanEvents));
+      this.recordLastModified();
     } catch (e) {
       console.error('Failed to save events', e);
     }
@@ -134,7 +254,9 @@ export class StorageService {
   }
 
   static deleteEvent(id: string): void {
-    const events = this.getEvents().filter((e) => e.id !== id);
+    this.recordDeletedEventId(id);
+    const deletedIds = new Set(this.getDeletedEventIds());
+    const events = this.getEvents().filter((e) => e.id !== id && !deletedIds.has(e.id));
     this.saveEvents(events);
   }
 
@@ -168,6 +290,7 @@ export class StorageService {
       exportedAt: new Date().toISOString(),
       group: '26-ИСбо-4 (8953)',
       homework: this.getHomework(),
+      deletedHwIds: this.getDeletedHomeworkIds(),
       events: this.getEvents(),
       settings: this.getSettings(),
     };
@@ -193,6 +316,10 @@ export class StorageService {
         return { success: false, countHw: 0, countEvents: 0, error: 'Неверный формат файла' };
       }
 
+      if (Array.isArray(parsed.deletedHwIds)) {
+        this.recordDeletedHomeworkIds(parsed.deletedHwIds);
+      }
+
       if (Array.isArray(parsed.homework)) {
         this.saveHomework(parsed.homework);
       }
@@ -202,6 +329,8 @@ export class StorageService {
       if (parsed.settings && typeof parsed.settings === 'object') {
         this.saveSettings({ ...DEFAULT_SETTINGS, ...parsed.settings });
       }
+
+      this.recordLastModified();
 
       return {
         success: true,
@@ -215,7 +344,7 @@ export class StorageService {
   }
 
   /**
-   * Realistic initial homework seed for Group 8953
+   * Realistic initial homework seed for Group 8953 (only populated on brand new device)
    */
   private static getSeedHomework(): Homework[] {
     const today = new Date();
@@ -278,26 +407,6 @@ export class StorageService {
           { id: 'sub_31', title: 'Вычислить замечательные пределы', completed: true },
           { id: 'sub_32', title: 'Построить асимптоты графика функции', completed: false },
         ],
-        notes: 'Уточнить у преподавателя возможность досрочной сдачи.',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'hw_seed_4',
-        title: 'Эссе: Роль информационных технологий в цифровой экономике',
-        subject: 'Информационные технологии',
-        description: 'Объем 3-5 страниц. Рассмотреть тренды облачных вычислений и ИИ в промышленности.',
-        assignedDate: plusDays(-7),
-        dueDate: plusDays(-2),
-        dueTime: '23:59',
-        priority: 'low',
-        status: 'completed',
-        subtasks: [
-          { id: 'sub_41', title: 'Собрать литературу и источники', completed: true },
-          { id: 'sub_42', title: 'Написать черновик', completed: true },
-          { id: 'sub_43', title: 'Проверить на антиплагиат', completed: true },
-        ],
-        completedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -315,24 +424,18 @@ export class StorageService {
     return [
       {
         id: 'evt_seed_1',
-        title: 'Контрольная точка по математическому анализу',
-        type: 'test',
+        title: 'Контрольная точка по Дискретной математике',
         date: plusDays(4),
-        time: '10:10',
-        subject: 'Математический анализ',
-        room: 'Б-407',
-        notes: 'Темы: пределы, непрерывность, производная.',
+        type: 'test',
+        notes: 'Темы: Графы, деревья, бинарные отношения.',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'evt_seed_2',
-        title: 'Коллоквиум по алгоритмизации и ООП',
+        title: 'Защита лабораторных работ по программированию',
+        date: plusDays(8),
         type: 'colloquium',
-        date: plusDays(11),
-        time: '11:50',
-        subject: 'Алгоритмизация и программирование(C#)',
-        room: 'Б-208',
-        notes: 'Защита первых трёх лабораторных работ.',
+        notes: 'Сдача работ №1 - №3, аудитория Б-208.',
         createdAt: new Date().toISOString(),
       },
     ];
