@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v14';
+const CACHE_NAME = 'ksu-student-cache-v15';
 
 const STATIC_ASSETS = [
   './',
@@ -31,26 +31,33 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 1. Navigation (HTML pages): Serve from cache immediately (0ms instant startup), update in background
+  // 1. Navigation (HTML pages): Network-First with 1.2s timeout, falling back to cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
       (async () => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1200);
+          const networkResponse = await fetch(event.request, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (networkResponse && networkResponse.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          }
+        } catch {
+          // Offline or network timeout -> serve from cache
+        }
+
         const cache = await caches.open(CACHE_NAME);
-        const cachedResponse =
+        const cached =
           (await cache.match(event.request)) ||
           (await cache.match('./index.html')) ||
           (await cache.match('./'));
 
-        const networkFetch = fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          })
-          .catch(() => cachedResponse);
-
-        return cachedResponse || networkFetch;
+        if (cached) return cached;
+        // Last resort: try plain fetch without timeout
+        return fetch(event.request);
       })()
     );
     return;

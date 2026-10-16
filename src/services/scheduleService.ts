@@ -20,15 +20,31 @@ export class ScheduleService {
    * Reads from localStorage cache, or falls back to embedded dataset immediately
    */
   static getInitialSchedule(groupId = 8953): ScheduleFetchResult {
-    const cached = this.getCachedSchedule(groupId);
-    if (cached && cached.lessons.length > 0) {
-      return cached;
+    try {
+      const cached = this.getCachedSchedule(groupId);
+      if (cached && cached.lessons && cached.lessons.length > 0) {
+        return cached;
+      }
+    } catch (e) {
+      console.warn('Error reading cached schedule:', e);
     }
 
-    const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
-    const initialResult = this.processResponse(fallbackResponse, false);
-    this.cacheSchedule(groupId, fallbackResponse);
-    return initialResult;
+    try {
+      const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
+      const initialResult = this.processResponse(fallbackResponse, false);
+      this.cacheSchedule(groupId, fallbackResponse);
+      return initialResult;
+    } catch (e) {
+      console.error('Error processing fallback schedule:', e);
+      return {
+        lessons: [],
+        rawItems: [],
+        info: null as any,
+        isCyclicalSchedule: false,
+        isOffline: true,
+        lastUpdated: new Date().toISOString(),
+      };
+    }
   }
 
   /**
@@ -99,22 +115,38 @@ export class ScheduleService {
   }
 
   private static processResponse(res: ScheduleResponse, isOffline: boolean): ScheduleFetchResult {
-    const rawItems = (res.data.rasp || []).filter(isUserLesson);
-    const lessons = rawItems.map(parseRawRaspItem);
-    
-    // Sort lessons chronologically by start date/time
-    lessons.sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+    try {
+      const rawItems = (res.data?.rasp || []).filter(isUserLesson);
+      const lessons = rawItems.map(parseRawRaspItem);
+      
+      // Sort lessons chronologically by start date/time
+      lessons.sort((a, b) => {
+        const timeA = a.startDateTime ? a.startDateTime.getTime() : 0;
+        const timeB = b.startDateTime ? b.startDateTime.getTime() : 0;
+        return timeA - timeB;
+      });
 
-    const lastUpdated = res.data.info?.dateUploadingRasp || new Date().toISOString();
+      const lastUpdated = res.data?.info?.dateUploadingRasp || new Date().toISOString();
 
-    return {
-      lessons,
-      rawItems,
-      info: res.data.info,
-      isCyclicalSchedule: Boolean(res.data.isCyclicalSchedule),
-      isOffline,
-      lastUpdated,
-    };
+      return {
+        lessons,
+        rawItems,
+        info: res.data?.info || (null as any),
+        isCyclicalSchedule: Boolean(res.data?.isCyclicalSchedule),
+        isOffline,
+        lastUpdated,
+      };
+    } catch (e) {
+      console.error('Error in processResponse:', e);
+      return {
+        lessons: [],
+        rawItems: [],
+        info: null as any,
+        isCyclicalSchedule: false,
+        isOffline: true,
+        lastUpdated: new Date().toISOString(),
+      };
+    }
   }
 
   private static cacheSchedule(groupId: number, data: ScheduleResponse): void {

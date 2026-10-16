@@ -12,6 +12,37 @@
     <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)" />
     <title>КГУ Расписание & Задачи</title>
+    <!-- Auto-recovery if stale browser cache causes blank screen or 404 chunk -->
+    <script>
+      window.addEventListener('error', function(e) {
+        if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+          console.warn('Asset failed to load, auto-recovering...');
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
+                window.location.reload();
+              });
+            });
+          }
+        }
+      }, true);
+
+      // Failsafe: if root element is still empty after 2 seconds, auto-heal
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        if (root && root.children.length === 0 && !window.__APP_MOUNTED__) {
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
+                window.location.reload();
+              });
+            });
+          } else {
+            window.location.reload();
+          }
+        }
+      }, 2000);
+    </script>
   </head>
   <body class="h-full bg-apple-gray-100 dark:bg-[#121214] text-apple-gray-900 dark:text-zinc-100 antialiased selection:bg-apple-blue selection:text-white">
     <div id="root" class="h-full"></div>
