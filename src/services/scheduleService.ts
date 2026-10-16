@@ -16,37 +16,61 @@ export interface ScheduleFetchResult {
 
 export class ScheduleService {
   /**
-   * Fetch schedule for a given group ID
-   * Tries live proxy first, then localStorage cache, then embedded dataset
+   * Get schedule instantly on startup (0ms synchronous loading)
+   * Reads from localStorage cache, or falls back to embedded dataset immediately
    */
-  static async fetchSchedule(groupId = 8953, forceRefresh = false): Promise<ScheduleFetchResult> {
-    const cached = !forceRefresh ? this.getCachedSchedule(groupId) : null;
-    if (cached) {
+  static getInitialSchedule(groupId = 8953): ScheduleFetchResult {
+    const cached = this.getCachedSchedule(groupId);
+    if (cached && cached.lessons.length > 0) {
       return cached;
     }
 
+    const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
+    const initialResult = this.processResponse(fallbackResponse, false);
+    this.cacheSchedule(groupId, fallbackResponse);
+    return initialResult;
+  }
+
+  /**
+   * Fetch schedule: If not forceRefresh, return initial/cached schedule immediately without network delay!
+   * If forceRefresh, attempt fast network sync with a short 2.5s timeout.
+   */
+  static async fetchSchedule(groupId = 8953, forceRefresh = false): Promise<ScheduleFetchResult> {
+    if (!forceRefresh) {
+      // 0ms instant return - never block initial render!
+      return this.getInitialSchedule(groupId);
+    }
+
     try {
-      // Try fetching from development proxy or backend proxy
+      const isLocal =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          window.location.hostname.startsWith('192.168.'));
+
       const directTarget = `https://eios.kosgos.ru/api/Rasp?idGroup=${groupId}`;
-      const endpoints = [
-        `/api/schedule?groupId=${groupId}`,
-        `/api-eios/Rasp?idGroup=${groupId}`,
+      const endpoints: string[] = [];
+
+      if (isLocal) {
+        endpoints.push(`/api/schedule?groupId=${groupId}`, `/api-eios/Rasp?idGroup=${groupId}`);
+      }
+      endpoints.push(
         directTarget,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(directTarget)}`,
-        `https://corsproxy.io/?url=${encodeURIComponent(directTarget)}`
-      ];
+        `https://corsproxy.io/?url=${encodeURIComponent(directTarget)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(directTarget)}`
+      );
 
       let rawData: ScheduleResponse | null = null;
 
       for (const endpoint of endpoints) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s fast timeout instead of 8s
           const response = await fetch(endpoint, {
             signal: controller.signal,
             headers: {
-              'Accept': 'application/json'
-            }
+              Accept: 'application/json',
+            },
           });
           clearTimeout(timeoutId);
 
@@ -68,19 +92,10 @@ export class ScheduleService {
         return result;
       }
     } catch (err) {
-      console.warn('Network fetch failed, falling back to local storage or embedded schedule', err);
+      console.warn('Network refresh failed, using cached schedule', err);
     }
 
-    // Fallback 1: LocalStorage cache even if forceRefresh was requested
-    const savedCache = this.getCachedSchedule(groupId);
-    if (savedCache) {
-      return { ...savedCache, isOffline: true };
-    }
-
-    // Fallback 2: Embedded real schedule dataset for group 8953
-    const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
-    const fallbackResult = this.processResponse(fallbackResponse, true);
-    return fallbackResult;
+    return this.getInitialSchedule(groupId);
   }
 
   private static processResponse(res: ScheduleResponse, isOffline: boolean): ScheduleFetchResult {

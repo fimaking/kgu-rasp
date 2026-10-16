@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v13';
+const CACHE_NAME = 'ksu-student-cache-v14';
 
 const STATIC_ASSETS = [
   './',
@@ -31,26 +31,40 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 1. Navigation (HTML pages): Network-First, fall back to cache if offline
+  // 1. Navigation (HTML pages): Serve from cache immediately (0ms instant startup), update in background
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match('./index.html') || caches.match('./');
-        })
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const cachedResponse =
+          (await cache.match(event.request)) ||
+          (await cache.match('./index.html')) ||
+          (await cache.match('./'));
+
+        const networkFetch = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
+
+        return cachedResponse || networkFetch;
+      })()
     );
     return;
   }
 
-  // 2. API requests: Network-First
-  if (url.pathname.includes('/api') || url.hostname.includes('eios.kosgos.ru') || url.hostname.includes('restful-api.dev') || url.hostname.includes('corsproxy')) {
+  // 2. API / sync requests: Network-First
+  if (
+    url.pathname.includes('/api') ||
+    url.hostname.includes('eios.kosgos.ru') ||
+    url.hostname.includes('restful-api.dev') ||
+    url.hostname.includes('api.github.com') ||
+    url.hostname.includes('broker.emqx.io') ||
+    url.hostname.includes('corsproxy')
+  ) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

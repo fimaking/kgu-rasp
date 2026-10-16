@@ -13,17 +13,19 @@ import {
 import { getLessonStatus, isUserLesson } from '../utils/scheduleParser';
 
 export function useSchedule() {
-  const [lessons, setLessons] = useState<ParsedLesson[]>([]);
-  const [info, setInfo] = useState<RaspInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-
   // Settings
   const [groupId] = useState<number>(() => StorageService.getSettings().groupId);
   const [subgroupFilter, setSubgroupFilter] = useState<number>(1);
+
+  // Synchronous 0ms startup from memory / cache:
+  const [initialData] = useState(() => ScheduleService.getInitialSchedule(groupId));
+  const [lessons, setLessons] = useState<ParsedLesson[]>(() => initialData.lessons);
+  const [info, setInfo] = useState<RaspInfo | null>(() => initialData.info);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(() => initialData.isOffline);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(() => initialData.lastUpdated);
 
   // Date selection: default to today
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
@@ -33,7 +35,6 @@ export function useSchedule() {
 
   const loadData = useCallback(async (force = false) => {
     if (force) setRefreshing(true);
-    else setLoading(true);
     setError(null);
 
     try {
@@ -44,7 +45,9 @@ export function useSchedule() {
       setLastUpdated(result.lastUpdated);
     } catch (err: unknown) {
       console.error('Error fetching schedule:', err);
-      setError('Не удалось загрузить расписание. Проверьте соединение.');
+      if (force) {
+        setError('Не удалось загрузить расписание. Проверьте соединение.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -52,6 +55,7 @@ export function useSchedule() {
   }, [groupId]);
 
   useEffect(() => {
+    // Silent background refresh (never blocks initial render!)
     loadData(false);
   }, [loadData]);
 
