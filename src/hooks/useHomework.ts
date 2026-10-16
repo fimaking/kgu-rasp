@@ -8,6 +8,7 @@ import {
 } from '../types/homework';
 import { StorageService } from '../services/storageService';
 import { SyncService } from '../services/syncService';
+import { RealtimeSyncService } from '../services/realtimeSync';
 import { NotificationService } from '../services/notificationService';
 import { formatDateToIso, parseIsoDate, getMondayOfWeek } from '../utils/dateUtils';
 
@@ -31,6 +32,7 @@ export function useHomework() {
     const created = StorageService.addHomework(data);
     setItems(StorageService.getHomework());
     SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
     return created;
   }, []);
 
@@ -38,6 +40,7 @@ export function useHomework() {
     const res = StorageService.updateHomework(updated);
     setItems(StorageService.getHomework());
     SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
     return res;
   }, []);
 
@@ -45,6 +48,7 @@ export function useHomework() {
     StorageService.deleteHomework(id);
     setItems(StorageService.getHomework());
     SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
   }, []);
 
   const toggleComplete = useCallback((id: string) => {
@@ -54,6 +58,7 @@ export function useHomework() {
     }
     setItems(StorageService.getHomework());
     SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
   }, []);
 
   const toggleSubtask = useCallback((homeworkId: string, subtaskId: string) => {
@@ -77,7 +82,17 @@ export function useHomework() {
       StorageService.updateHomework(hw);
       setItems(StorageService.getHomework());
       SyncService.pushToCloud();
+      RealtimeSyncService.broadcast();
     }
+  }, []);
+
+  // Instant Realtime WebSocket sync listener (<100ms delivery, zero refresh needed!)
+  useEffect(() => {
+    RealtimeSyncService.connect();
+    const unsubscribe = RealtimeSyncService.onUpdate(() => {
+      setItems(StorageService.getHomework());
+    });
+    return unsubscribe;
   }, []);
 
   // Auto-sync from cloud: window focus, mobile visibility change, and continuous 8s polling

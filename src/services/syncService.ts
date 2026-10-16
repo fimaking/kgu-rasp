@@ -1,6 +1,7 @@
 import { Homework } from '../types/homework';
 import { CalendarCustomEvent } from '../types/calendar';
 import { StorageService } from './storageService';
+import { RealtimeSyncService } from './realtimeSync';
 
 const SYNC_KEY_STORAGE = 'ksu_student_sync_key';
 const SYNC_LAST_PULL_STORAGE = 'ksu_student_sync_last_pull';
@@ -59,8 +60,10 @@ export class SyncService {
     } else {
       localStorage.removeItem(GIST_TOKEN_STORAGE);
     }
-    localStorage.setItem(GIST_ID_STORAGE, gistId.trim());
-    this.setSyncKey(`GIST-${gistId.trim().substring(0, 8).toUpperCase()}`);
+    const cleanId = gistId.trim();
+    localStorage.setItem(GIST_ID_STORAGE, cleanId);
+    this.setSyncKey(`GIST-${cleanId.substring(0, 8).toUpperCase()}`);
+    RealtimeSyncService.setRoomCode(cleanId);
   }
 
   static setGistToken(token: string): void {
@@ -85,6 +88,7 @@ export class SyncService {
     localStorage.removeItem(GIST_ID_STORAGE);
     localStorage.removeItem(CLOUD_ROOM_ID_STORAGE);
     this.clearSyncKey();
+    RealtimeSyncService.disconnect();
   }
 
   static getLastSyncTime(): string | null {

@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { CalendarCustomEvent, CalendarViewMode, DayEventsSummary } from '../types/calendar';
 import { ParsedLesson } from '../types/schedule';
 import { Homework } from '../types/homework';
 import { StorageService } from '../services/storageService';
 import { SyncService } from '../services/syncService';
+import { RealtimeSyncService } from '../services/realtimeSync';
 import { formatDateToIso } from '../utils/dateUtils';
 
 export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
@@ -15,10 +16,17 @@ export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
     setEvents(StorageService.getEvents());
   }, []);
 
+  useEffect(() => {
+    return RealtimeSyncService.onUpdate(() => {
+      setEvents(StorageService.getEvents());
+    });
+  }, []);
+
   const addEvent = useCallback((event: Omit<CalendarCustomEvent, 'id' | 'createdAt'>) => {
     const created = StorageService.addEvent(event);
     setEvents(StorageService.getEvents());
     SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
     return created;
   }, []);
 
@@ -26,6 +34,7 @@ export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
     StorageService.deleteEvent(id);
     setEvents(StorageService.getEvents());
     SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
   }, []);
 
   // Selected date ISO string

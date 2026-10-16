@@ -516,17 +516,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400">
-                      ID связки Gist:
+                      ID связки:
                     </span>
-                    {gistToken ? (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                        Двусторонняя (Телефон ⇄ ПК)
-                      </span>
-                    ) : (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                        Только чтение (Телефон ➔ ПК)
-                      </span>
-                    )}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Живая синхронизация ⚡ (Телефон ⇄ ПК)
+                    </span>
                   </div>
                   <span className="font-mono text-xs font-bold text-apple-blue select-all">
                     {gistId}
