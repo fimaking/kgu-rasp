@@ -105,11 +105,11 @@ export class RealtimeSyncService {
     console.log(`[RealtimeSync] Connecting to room: ${room}`);
 
     try {
-      const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+      const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
         clientId: `${getDeviceId()}_${Math.random().toString(36).substring(2, 6)}`,
         clean: true,
-        reconnectPeriod: 3000,
-        connectTimeout: 10000,
+        reconnectPeriod: 2000,
+        connectTimeout: 6000,
       });
 
       this.client = client;
