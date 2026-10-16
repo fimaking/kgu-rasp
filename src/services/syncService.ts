@@ -4,7 +4,7 @@ import { StorageService } from './storageService';
 
 const SYNC_KEY_STORAGE = 'ksu_student_sync_key';
 const SYNC_LAST_PULL_STORAGE = 'ksu_student_sync_last_pull';
-const API_BASE = 'https://api.restful-api.dev/objects';
+const NTFY_BASE = 'https://ntfy.sh';
 
 export interface CloudPayload {
   version: string;
@@ -19,7 +19,7 @@ export class SyncService {
   }
 
   static setSyncKey(key: string): void {
-    localStorage.setItem(SYNC_KEY_STORAGE, key.trim());
+    localStorage.setItem(SYNC_KEY_STORAGE, key.trim().toUpperCase());
   }
 
   static clearSyncKey(): void {
@@ -32,10 +32,51 @@ export class SyncService {
   }
 
   /**
+   * Normalize room code and return safe ntfy topic name
+   */
+  private static getTopicFromKey(key: string): string {
+    const clean = key.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return `ksu_sync_${clean.toLowerCase()}`;
+  }
+
+  /**
+   * Generate an unambiguous 6-character room code (e.g. KGU-8X2M9K)
+   */
+  static generateSyncCode(): string {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `KGU-${code}`;
+  }
+
+  /**
+   * Get direct share URL for pairing with QR code or link
+   */
+  static getShareUrl(key: string): string {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    return `${origin}${pathname}#sync=${encodeURIComponent(key)}`;
+  }
+
+  /**
+   * Generate a quick QR code image URL for mobile camera scanning
+   */
+  static getQrCodeUrl(key: string): string {
+    const shareUrl = this.getShareUrl(key);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(shareUrl)}`;
+  }
+
+  /**
    * Create a new sync room in the cloud and upload current tasks
    */
   static async createSyncRoom(): Promise<{ success: boolean; syncKey?: string; error?: string }> {
     try {
+      const syncKey = this.generateSyncCode();
+      const topic = this.getTopicFromKey(syncKey);
+
       const payload: CloudPayload = {
         version: '1.0',
         updatedAt: new Date().toISOString(),
@@ -43,30 +84,23 @@ export class SyncService {
         events: StorageService.getEvents(),
       };
 
-      const response = await fetch(API_BASE, {
+      const response = await fetch(`${NTFY_BASE}/${topic}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          'Title': 'KSU_STUDENT_SYNC',
+          'Priority': 'urgent',
         },
-        body: JSON.stringify({
-          name: 'KSU_STUDENT_SYNC',
-          data: payload,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}`);
+        throw new Error(`Ошибка облака (HTTP ${response.status})`);
       }
 
-      const resJson = await response.json();
-      const rawId = resJson.id;
-      const cleanKey = `KGU-${rawId}`;
+      this.setSyncKey(syncKey);
+      localStorage.setItem(SYNC_LAST_PULL_STORAGE, payload.updatedAt);
 
-      this.setSyncKey(cleanKey);
-      localStorage.setItem(SYNC_LAST_PULL_STORAGE, new Date().toISOString());
-
-      return { success: true, syncKey: cleanKey };
+      return { success: true, syncKey };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Ошибка соединения с облаком';
       return { success: false, error: msg };
@@ -79,13 +113,16 @@ export class SyncService {
   static async connectToSyncRoom(
     inputKey: string
   ): Promise<{ success: boolean; countHw?: number; countEvents?: number; error?: string }> {
-    const rawId = inputKey.trim().replace(/^KGU-/, '');
-    if (!rawId) {
-      return { success: false, error: 'Неверный формат ключа' };
+    const raw = inputKey.trim().toUpperCase();
+    if (!raw) {
+      return { success: false, error: 'Введите код связки' };
     }
 
+    const cleanKey = raw.startsWith('KGU-') ? raw : `KGU-${raw}`;
+    const topic = this.getTopicFromKey(cleanKey);
+
     try {
-      const response = await fetch(`${API_BASE}/${rawId}`, {
+      const response = await fetch(`${NTFY_BASE}/${topic}/json?poll=1`, {
         headers: {
           'Accept': 'application/json',
         },
@@ -93,26 +130,52 @@ export class SyncService {
 
       if (!response.ok) {
         if (response.status === 404) {
-          return { success: false, error: 'Ключ синхронизации не найден. Проверьте код.' };
+          return { success: false, error: 'Код связки не найден. Проверьте правильность ввода.' };
         }
         throw new Error(`HTTP Error ${response.status}`);
       }
 
-      const resJson = await response.json();
-      const cloudData: CloudPayload = resJson.data;
+      const text = await response.text();
+      const lines = text.trim().split('\n').filter(Boolean);
 
-      if (!cloudData || !Array.isArray(cloudData.homework)) {
-        return { success: false, error: 'Облачные данные имеют некорректный формат' };
+      let cloudData: CloudPayload | null = null;
+
+      // Read from latest message to oldest
+      for (let i = lines.length - 1; i >= 0; i--) {
+        try {
+          const msg = JSON.parse(lines[i]);
+          if (msg.event === 'message') {
+            if (msg.attachment && msg.attachment.url) {
+              const fileRes = await fetch(msg.attachment.url);
+              if (fileRes.ok) {
+                cloudData = await fileRes.json();
+                break;
+              }
+            } else if (msg.message) {
+              cloudData = JSON.parse(msg.message);
+              break;
+            }
+          }
+        } catch {
+          // ignore parsing error and continue
+        }
       }
 
-      // Save to local storage
+      if (!cloudData || !Array.isArray(cloudData.homework)) {
+        return {
+          success: false,
+          error: 'Данные связки пока не найдены в облаке. Убедитесь, что на первом устройстве была нажата кнопка «Создать код».',
+        };
+      }
+
+      // Save downloaded data into local storage
       StorageService.saveHomework(cloudData.homework);
       if (Array.isArray(cloudData.events)) {
         StorageService.saveEvents(cloudData.events);
       }
 
-      this.setSyncKey(`KGU-${rawId}`);
-      localStorage.setItem(SYNC_LAST_PULL_STORAGE, new Date().toISOString());
+      this.setSyncKey(cleanKey);
+      localStorage.setItem(SYNC_LAST_PULL_STORAGE, cloudData.updatedAt || new Date().toISOString());
 
       return {
         success: true,
@@ -132,7 +195,7 @@ export class SyncService {
     const key = this.getSyncKey();
     if (!key) return false;
 
-    const rawId = key.replace(/^KGU-/, '');
+    const topic = this.getTopicFromKey(key);
 
     try {
       const payload: CloudPayload = {
@@ -142,20 +205,17 @@ export class SyncService {
         events: StorageService.getEvents(),
       };
 
-      const response = await fetch(`${API_BASE}/${rawId}`, {
-        method: 'PUT',
+      const response = await fetch(`${NTFY_BASE}/${topic}`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          'Title': 'KSU_STUDENT_SYNC',
+          'Priority': 'urgent',
         },
-        body: JSON.stringify({
-          name: 'KSU_STUDENT_SYNC',
-          data: payload,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        localStorage.setItem(SYNC_LAST_PULL_STORAGE, new Date().toISOString());
+        localStorage.setItem(SYNC_LAST_PULL_STORAGE, payload.updatedAt);
         return true;
       }
       return false;
@@ -171,10 +231,10 @@ export class SyncService {
     const key = this.getSyncKey();
     if (!key) return { updated: false };
 
-    const rawId = key.replace(/^KGU-/, '');
+    const topic = this.getTopicFromKey(key);
 
     try {
-      const response = await fetch(`${API_BASE}/${rawId}`, {
+      const response = await fetch(`${NTFY_BASE}/${topic}/json?poll=1`, {
         headers: {
           'Accept': 'application/json',
         },
@@ -182,16 +242,41 @@ export class SyncService {
 
       if (!response.ok) return { updated: false };
 
-      const resJson = await response.json();
-      const cloudData: CloudPayload = resJson.data;
+      const text = await response.text();
+      const lines = text.trim().split('\n').filter(Boolean);
+
+      let cloudData: CloudPayload | null = null;
+      for (let i = lines.length - 1; i >= 0; i--) {
+        try {
+          const msg = JSON.parse(lines[i]);
+          if (msg.event === 'message') {
+            if (msg.attachment && msg.attachment.url) {
+              const fileRes = await fetch(msg.attachment.url);
+              if (fileRes.ok) {
+                cloudData = await fileRes.json();
+                break;
+              }
+            } else if (msg.message) {
+              cloudData = JSON.parse(msg.message);
+              break;
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
 
       if (cloudData && Array.isArray(cloudData.homework)) {
-        StorageService.saveHomework(cloudData.homework);
-        if (Array.isArray(cloudData.events)) {
-          StorageService.saveEvents(cloudData.events);
+        const lastLocal = localStorage.getItem(SYNC_LAST_PULL_STORAGE);
+        // If updatedAt is newer or different, save
+        if (!lastLocal || cloudData.updatedAt !== lastLocal) {
+          StorageService.saveHomework(cloudData.homework);
+          if (Array.isArray(cloudData.events)) {
+            StorageService.saveEvents(cloudData.events);
+          }
+          localStorage.setItem(SYNC_LAST_PULL_STORAGE, cloudData.updatedAt);
+          return { updated: true, countHw: cloudData.homework.length };
         }
-        localStorage.setItem(SYNC_LAST_PULL_STORAGE, new Date().toISOString());
-        return { updated: true, countHw: cloudData.homework.length };
       }
 
       return { updated: false };

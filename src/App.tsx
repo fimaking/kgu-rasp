@@ -14,6 +14,7 @@ import { useSchedule } from './hooks/useSchedule';
 import { useHomework } from './hooks/useHomework';
 import { useCalendar } from './hooks/useCalendar';
 import { useTheme } from './hooks/useTheme';
+import { SyncService } from './services/syncService';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('today');
@@ -47,6 +48,30 @@ export const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Automatic pairing when opened from a QR code or shared link (#sync=KGU-...)
+  useEffect(() => {
+    const checkHashSync = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('#sync=')) {
+        const key = decodeURIComponent(hash.split('#sync=')[1] || '').trim();
+        if (key) {
+          showToast('info', 'Подключение связки...', `Код: ${key}`);
+          const res = await SyncService.connectToSyncRoom(key);
+          if (res.success) {
+            homework.reload();
+            showToast('success', 'Устройства связаны!', `Загружено заданий: ${res.countHw}`);
+          } else {
+            showToast('error', 'Ошибка синхронизации', res.error);
+          }
+          // Remove hash from address bar cleanly
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+    };
+
+    checkHashSync();
+  }, [homework, showToast]);
 
   const openCreateHomework = (subject?: string) => {
     setQuickCreateSubject(subject);

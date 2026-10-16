@@ -16,6 +16,7 @@ import {
   Copy,
   RefreshCw,
   Link2,
+  QrCode,
 } from 'lucide-react';
 import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
@@ -376,17 +377,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {syncKey ? (
-          <div className="space-y-3.5">
-            <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/5 dark:border-white/5 space-y-2">
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/5 dark:border-white/5 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-apple-gray-500">
-                Ваш личный синхро-ключ:
+                Ваш личный код связки:
               </p>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   readOnly
                   value={syncKey}
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-mono text-xs sm:text-sm font-bold text-apple-blue select-all"
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-mono text-sm sm:text-base font-bold text-apple-blue select-all text-center tracking-wider"
                 />
                 <Button
                   variant="secondary"
@@ -397,9 +398,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   {isCopied ? 'Скопировано!' : 'Копировать'}
                 </Button>
               </div>
-              <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
-                💡 Введите этот код в настройках на втором устройстве (на ПК или телефоне), чтобы они объединились.
-              </p>
+
+              {/* QR Code section for camera pairing */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 border-t border-black/5 dark:border-white/5">
+                <div className="bg-white p-2.5 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
+                  <img
+                    src={SyncService.getQrCodeUrl(syncKey)}
+                    alt="QR-код для связки"
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="space-y-1.5 text-center sm:text-left">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-apple-blue/10 text-apple-blue text-[11px] font-bold">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Быстрое подключение без ввода текста</span>
+                  </div>
+                  <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 leading-relaxed">
+                    Наведите камеру смартфона на этот QR-код — откроется сайт приложения и все ваши домашние задания автоматически перенесутся на телефон!
+                  </p>
+                  <p className="text-[11px] text-apple-gray-400">
+                    Или введите код <span className="font-mono font-bold text-apple-blue">{syncKey}</span> вручную в Настройках на телефоне.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -415,7 +437,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <button
                 onClick={handleDisconnect}
-                className="text-xs text-apple-gray-400 hover:text-apple-red transition-colors"
+                className="text-xs text-apple-gray-400 hover:text-apple-red transition-colors py-1 px-2 rounded-lg hover:bg-apple-red/5"
               >
                 Отвязать устройство
               </button>
