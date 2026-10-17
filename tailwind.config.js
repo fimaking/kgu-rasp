@@ -9,6 +9,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
+          'var(--font-family-app)',
           '-apple-system',
           'BlinkMacSystemFont',
           '"SF Pro Display"',
@@ -22,7 +23,7 @@ export default {
       },
       colors: {
         apple: {
-          blue: '#007AFF',
+          blue: 'rgb(var(--color-accent-rgb, 0 122 255) / <alpha-value>)',
           indigo: '#5856D6',
           purple: '#AF52DE',
           pink: '#FF2D55',

@@ -391,3 +391,21 @@ export function getNextLessonDeadline(
   };
 }
 
+/**
+ * Formats a teacher's full name to compact initials if requested.
+ * E.g., "Иванов Иван Иванович" -> "Иванов И. И."
+ */
+export function formatTeacherName(fullName?: string, useInitials = false): string {
+  if (!fullName || fullName === 'Преподаватель не указан') return fullName || 'Преподаватель не указан';
+  if (!useInitials) return fullName;
+
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length < 2) return fullName;
+
+  const lastName = parts[0];
+  const firstInitial = parts[1]?.[0] ? `${parts[1][0]}.` : '';
+  const middleInitial = parts[2]?.[0] ? ` ${parts[2][0]}.` : '';
+
+  return `${lastName} ${firstInitial}${middleInitial}`.trim();
+}
+

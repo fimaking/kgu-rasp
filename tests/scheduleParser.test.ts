@@ -9,6 +9,7 @@ import {
   parseKsuDateTime,
   findNextLessonForSubject,
   getNextLessonDeadline,
+  formatTeacherName,
 } from '../src/utils/scheduleParser';
 import { ScheduleService } from '../src/services/scheduleService';
 import { ParsedLesson, RawRaspItem } from '../types/schedule';
@@ -218,6 +219,28 @@ describe('scheduleParser', () => {
       expect(deadline.dueDate).toBe('2026-10-24');
       expect(deadline.dueTime).toBe('12:00');
       expect(deadline.nextLesson).toBeNull();
+    });
+  });
+
+  describe('formatTeacherName', () => {
+    it('returns full name unchanged when useInitials is false', () => {
+      expect(formatTeacherName('Иванов Иван Иванович', false)).toBe('Иванов Иван Иванович');
+      expect(formatTeacherName('Петрова Анна', false)).toBe('Петрова Анна');
+    });
+
+    it('formats full 3-part names into compact initials', () => {
+      expect(formatTeacherName('Иванов Иван Иванович', true)).toBe('Иванов И. И.');
+      expect(formatTeacherName('Смирнова Елена Сергеевна', true)).toBe('Смирнова Е. С.');
+    });
+
+    it('formats 2-part names into compact single initial', () => {
+      expect(formatTeacherName('Петрова Анна', true)).toBe('Петрова А.');
+    });
+
+    it('handles single word or missing teacher gracefully', () => {
+      expect(formatTeacherName('Иванов', true)).toBe('Иванов');
+      expect(formatTeacherName('Преподаватель не указан', true)).toBe('Преподаватель не указан');
+      expect(formatTeacherName(undefined, true)).toBe('Преподаватель не указан');
     });
   });
 });

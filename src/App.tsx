@@ -30,7 +30,7 @@ export const App: React.FC = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Hooks
-  const { themeMode, isDark, setThemeMode } = useTheme();
+  const theme = useTheme();
   const schedule = useSchedule();
   const homework = useHomework();
   const calendar = useCalendar(schedule.lessons, homework.allItems);
@@ -166,9 +166,9 @@ export const App: React.FC = () => {
         dueTodayCount={homework.dueTodayList.length}
         overdueCount={homework.overdueList.length}
         groupName={schedule.groupName || schedule.info?.group?.name || '26-ИСбо-4'}
-        themeMode={themeMode}
-        isDark={isDark}
-        onToggleTheme={() => setThemeMode(isDark ? 'light' : 'dark')}
+        themeMode={theme.themeMode}
+        isDark={theme.isDark}
+        onToggleTheme={() => theme.setThemeMode(theme.isDark ? 'light' : 'dark')}
         onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
       />
 
@@ -283,8 +283,27 @@ export const App: React.FC = () => {
 
             {currentTab === 'settings' && (
               <SettingsView
-                themeMode={themeMode}
-                onThemeChange={setThemeMode}
+                themeMode={theme.themeMode}
+                onThemeChange={theme.setThemeMode}
+                visualTheme={theme.visualTheme}
+                onVisualThemeChange={theme.setVisualTheme}
+                accentColor={theme.accentColor}
+                onAccentColorChange={theme.setAccentColor}
+                fontFamily={theme.fontFamily}
+                onFontFamilyChange={theme.setFontFamily}
+                fontScale={theme.fontScale}
+                onFontScaleChange={theme.setFontScale}
+                appRadius={theme.appRadius}
+                onAppRadiusChange={theme.setAppRadius}
+                cardStyle={theme.cardStyle}
+                onCardStyleChange={theme.setCardStyle}
+                scheduleDensity={theme.scheduleDensity}
+                onScheduleDensityChange={theme.setScheduleDensity}
+                reducedMotion={theme.reducedMotion}
+                onReducedMotionChange={theme.setReducedMotion}
+                showTeacherInitials={theme.showTeacherInitials}
+                onShowTeacherInitialsChange={theme.setShowTeacherInitials}
+                onResetCustomizations={theme.resetCustomizations}
                 groupId={schedule.groupId}
                 groupName={schedule.groupName}
                 subgroupPreference={schedule.subgroupFilter}

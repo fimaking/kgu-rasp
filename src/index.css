@@ -225,5 +225,167 @@
   transform: scale(0.985) translateY(0);
 }
 
+/* ==========================================================================
+   APP CUSTOMIZATION ENGINE (Themes, Fonts, Radii, Styles)
+   ========================================================================== */
 
+:root {
+  --color-accent-rgb: 0 122 255;
+  --color-accent-hex: #007AFF;
+  --font-family-app: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+}
 
+/* Font Families */
+html[data-font="system"] {
+  --font-family-app: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+}
+html[data-font="inter"] {
+  --font-family-app: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+html[data-font="roboto"] {
+  --font-family-app: "Roboto", "Segoe UI", sans-serif;
+}
+html[data-font="nunito"] {
+  --font-family-app: "Nunito", "Segoe UI", sans-serif;
+}
+html[data-font="mono"] {
+  --font-family-app: "JetBrains Mono", "SF Mono", Consolas, monospace;
+}
+html[data-font="serif"] {
+  --font-family-app: "PT Serif", Georgia, serif;
+}
+
+/* Font Scales */
+html[data-font-scale="compact"] {
+  font-size: 14.5px;
+}
+html[data-font-scale="normal"] {
+  font-size: 16px;
+}
+html[data-font-scale="large"] {
+  font-size: 17.5px;
+}
+
+/* Border Radius Customization */
+html[data-radius="compact"] .rounded-3xl {
+  border-radius: 1rem !important;
+}
+html[data-radius="compact"] .rounded-2\.5xl {
+  border-radius: 0.85rem !important;
+}
+html[data-radius="compact"] .rounded-2xl {
+  border-radius: 0.75rem !important;
+}
+
+html[data-radius="soft"] .rounded-3xl {
+  border-radius: 2rem !important;
+}
+html[data-radius="soft"] .rounded-2\.5xl {
+  border-radius: 1.6rem !important;
+}
+html[data-radius="soft"] .rounded-2xl {
+  border-radius: 1.35rem !important;
+}
+
+/* Card Visual Styles (Glass vs Flat Solid vs Bordered) */
+html[data-card-style="solid"] .backdrop-blur-xl,
+html[data-card-style="solid"] .backdrop-blur-2xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-card-style="solid"]:not(.dark) .bg-white\/70,
+html[data-card-style="solid"]:not(.dark) .bg-white\/60,
+html[data-card-style="solid"]:not(.dark) .bg-white\/75 {
+  background-color: #ffffff !important;
+}
+html[data-card-style="solid"].dark .dark\:bg-zinc-900\/70,
+html[data-card-style="solid"].dark .dark\:bg-zinc-900\/60,
+html[data-card-style="solid"].dark .dark\:bg-\[\#1c1c1e\]\/95,
+html[data-card-style="solid"].dark .dark\:bg-\[\#18181b\]\/85 {
+  background-color: #1c1c1e !important;
+}
+
+html[data-card-style="bordered"] .shadow-apple-card,
+html[data-card-style="bordered"] .shadow-apple-sm {
+  border-width: 1.5px !important;
+  border-color: rgba(var(--color-accent-rgb), 0.25) !important;
+}
+
+/* Visual Theme Palettes */
+/* 1. OLED Black (Pure AMOLED 000000) */
+html.dark[data-visual-theme="oled"] body,
+html.dark[data-visual-theme="oled"] .dark\:bg-\[\#121214\] {
+  background-color: #000000 !important;
+}
+html.dark[data-visual-theme="oled"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="oled"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="oled"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="oled"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(10, 10, 10, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 2. Midnight Navy */
+html.dark[data-visual-theme="midnight"] body,
+html.dark[data-visual-theme="midnight"] .dark\:bg-\[\#121214\] {
+  background-color: #080d1a !important;
+}
+html.dark[data-visual-theme="midnight"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="midnight"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="midnight"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="midnight"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(14, 23, 42, 0.88) !important;
+  border-color: rgba(56, 189, 248, 0.15) !important;
+}
+
+/* 3. Nordic Forest */
+html.dark[data-visual-theme="emerald"] body,
+html.dark[data-visual-theme="emerald"] .dark\:bg-\[\#121214\] {
+  background-color: #04120b !important;
+}
+html.dark[data-visual-theme="emerald"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="emerald"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="emerald"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="emerald"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(6, 26, 18, 0.88) !important;
+  border-color: rgba(52, 199, 89, 0.16) !important;
+}
+
+/* 4. Warm Sunset */
+html.dark[data-visual-theme="sunset"] body,
+html.dark[data-visual-theme="sunset"] .dark\:bg-\[\#121214\] {
+  background-color: #140d11 !important;
+}
+html.dark[data-visual-theme="sunset"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="sunset"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="sunset"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="sunset"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(28, 18, 24, 0.88) !important;
+  border-color: rgba(255, 149, 0, 0.15) !important;
+}
+html:not(.dark)[data-visual-theme="sunset"] body,
+html:not(.dark)[data-visual-theme="sunset"] .bg-apple-gray-100 {
+  background-color: #f7f3ee !important;
+}
+
+/* 5. Cyberpunk */
+html.dark[data-visual-theme="cyber"] body,
+html.dark[data-visual-theme="cyber"] .dark\:bg-\[\#121214\] {
+  background-color: #090910 !important;
+}
+html.dark[data-visual-theme="cyber"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="cyber"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="cyber"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="cyber"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(15, 15, 24, 0.92) !important;
+  border-color: rgba(0, 240, 255, 0.22) !important;
+}
+
+/* Reduced Motion Mode */
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+}

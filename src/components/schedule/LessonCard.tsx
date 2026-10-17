@@ -1,7 +1,7 @@
 import { MapPin, User, ChevronRight } from 'lucide-react';
 import { ParsedLesson } from '../../types/schedule';
 import { LessonTypeBadge } from '../ui/Badge';
-import { getLessonStatus } from '../../utils/scheduleParser';
+import { getLessonStatus, formatTeacherName } from '../../utils/scheduleParser';
 
 interface LessonCardProps {
   lesson: ParsedLesson;
@@ -12,6 +12,8 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onClick }) => {
   const status = getLessonStatus(lesson);
   const isCurrent = status.status === 'current';
   const isPassed = status.status === 'passed';
+  const useInitials = typeof document !== 'undefined' && document.documentElement.getAttribute('data-initials') === 'true';
+  const teacherName = formatTeacherName(lesson.teacher, useInitials);
 
   return (
     <div
@@ -68,7 +70,7 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onClick }) => {
 
         <div className="flex items-center gap-1.5">
           <User className="w-3.5 h-3.5 text-apple-gray-400 shrink-0" />
-          <span className="truncate max-w-[140px] sm:max-w-none">{lesson.teacher}</span>
+          <span className="truncate max-w-[140px] sm:max-w-none">{teacherName}</span>
           <ChevronRight className="w-3.5 h-3.5 text-apple-gray-400 group-hover:text-apple-blue group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>
