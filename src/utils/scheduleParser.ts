@@ -1,8 +1,32 @@
 import { RawRaspItem, ParsedLesson, LessonType } from '../types/schedule';
-import { formatDateToIso } from './dateUtils';
+import { formatDateToIso, parseIsoDate } from './dateUtils';
 
-export function parseLessonType(rawDiscipline: string): { type: LessonType; label: string } {
-  const d = rawDiscipline.trim().toLowerCase();
+export function parseKsuDateTime(isoDateTimeStr?: string, fallbackDateStr?: string, fallbackTime?: string): Date {
+  if (isoDateTimeStr && typeof isoDateTimeStr === 'string') {
+    const parts = isoDateTimeStr.split('T');
+    if (parts.length === 2) {
+      const [y, m, d] = parts[0].split('-').map(Number);
+      const [h, min, s] = parts[1].split(':').map(Number);
+      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        return new Date(y, m - 1, d, h || 0, min || 0, s || 0);
+      }
+    }
+    const d = new Date(isoDateTimeStr);
+    if (!isNaN(d.getTime())) return d;
+  }
+  if (fallbackDateStr) {
+    const base = parseIsoDate(fallbackDateStr);
+    if (fallbackTime && fallbackTime.includes(':')) {
+      const [h, min] = fallbackTime.split(':').map(Number);
+      base.setHours(h || 0, min || 0, 0, 0);
+    }
+    return base;
+  }
+  return new Date();
+}
+
+export function parseLessonType(rawDiscipline?: string): { type: LessonType; label: string } {
+  const d = (rawDiscipline || '').trim().toLowerCase();
   if (d.startsWith('лек')) {
     return { type: 'lecture', label: 'Лекция' };
   }
@@ -21,8 +45,8 @@ export function parseLessonType(rawDiscipline: string): { type: LessonType; labe
   return { type: 'other', label: 'Занятие' };
 }
 
-export function cleanSubjectName(rawDiscipline: string): string {
-  let cleaned = rawDiscipline.trim();
+export function cleanSubjectName(rawDiscipline?: string): string {
+  let cleaned = (rawDiscipline || '').trim();
 
   // Strip prefix like "лек ", "пр ", "лаб ", "зач ", "экз "
   cleaned = cleaned.replace(/^(?:лек|пр|лаб|экз|зач)\s+/i, '');
@@ -32,7 +56,7 @@ export function cleanSubjectName(rawDiscipline: string): string {
   cleaned = cleaned.replace(/\(п\/г\s*\d+\)/gi, '');
   cleaned = cleaned.trim();
 
-  return cleaned;
+  return cleaned || 'Без названия';
 }
 
 export function parseSubgroup(item: RawRaspItem): number {
@@ -153,9 +177,9 @@ export function parseRawRaspItem(item: RawRaspItem): ParsedLesson {
   const { building, auditorium } = parseBuildingAndAuditorium(item.аудитория || '');
   const badgeColors = getLessonBadgeColors(type);
 
-  // Parse start / end dates
-  const startDateTime = new Date(item.датаНачала);
-  const endDateTime = new Date(item.датаОкончания);
+  // Parse start / end dates safely
+  const startDateTime = parseKsuDateTime(item.датаНачала, item.дата, item.начало);
+  const endDateTime = parseKsuDateTime(item.датаОкончания, item.дата, item.конец);
   const dateStr = formatDateToIso(startDateTime);
 
   return {

@@ -24,9 +24,29 @@ export function formatDateToIso(d: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+export function pluralizeRussian(count: number, one: string, few: string, many: string): string {
+  const abs = Math.abs(Math.round(count)) % 100;
+  const rem = abs % 10;
+  if (abs > 10 && abs < 20) return `${count} ${many}`;
+  if (rem > 1 && rem < 5) return `${count} ${few}`;
+  if (rem === 1) return `${count} ${one}`;
+  return `${count} ${many}`;
+}
+
 export function parseIsoDate(iso: string): Date {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  if (!iso || typeof iso !== 'string') {
+    return new Date();
+  }
+  const dateOnly = iso.includes('T') ? iso.split('T')[0] : iso.trim();
+  const parts = dateOnly.split('-').map(Number);
+
+  if (parts.length >= 3 && !parts.some(isNaN)) {
+    const [year, month, day] = parts;
+    return new Date(year, month - 1, day);
+  }
+
+  const fallback = new Date(iso);
+  return isNaN(fallback.getTime()) ? new Date() : fallback;
 }
 
 export function formatRussianDate(d: Date, withYear = false): string {
@@ -115,8 +135,15 @@ export function formatRelativeDeadline(dueDateIso: string, dueTime = '23:59'): {
 
   if (diffDays < 0 || isExactOverdue) {
     const daysAgo = Math.abs(diffDays);
+    const overdueLabel =
+      daysAgo === 0
+        ? `Просрочено (${dueTime})`
+        : daysAgo === 1
+        ? 'Просрочено вчера'
+        : `Просрочено на ${pluralizeRussian(daysAgo, 'день', 'дня', 'дней')}`;
+
     return {
-      label: daysAgo === 0 ? `Просрочено (${dueTime})` : daysAgo === 1 ? 'Просрочено вчера' : `Просрочено на ${daysAgo} дн.`,
+      label: overdueLabel,
       isOverdue: true,
       isDueToday: false,
       isDueTomorrow: false,

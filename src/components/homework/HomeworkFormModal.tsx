@@ -4,6 +4,7 @@ import { Homework, Priority, HomeworkStatus, Subtask } from '../../types/homewor
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { formatDateToIso } from '../../utils/dateUtils';
+import { sanitizeUrl } from '../../services/storageService';
 
 interface HomeworkFormModalProps {
   isOpen: boolean;
@@ -136,6 +137,15 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       newErrors.subject = 'Пожалуйста, выберите или укажите предмет';
     }
 
+    const trimmedLink = materialLink.trim();
+    let safeLink: string | undefined = undefined;
+    if (trimmedLink) {
+      safeLink = sanitizeUrl(trimmedLink);
+      if (!safeLink) {
+        newErrors.title = 'Ссылка должна начинаться с http:// или https://';
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -151,7 +161,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       priority,
       status,
       subtasks,
-      materialLink: materialLink.trim() || undefined,
+      materialLink: safeLink,
       notes: notes.trim() || undefined,
     });
 
@@ -197,6 +207,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
             type="text"
             placeholder="Например, Лабораторная работа №3 или Эссе"
             value={title}
+            maxLength={200}
             onChange={(e) => setTitle(e.target.value)}
             className={`w-full px-3.5 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all ${
               errors.title
@@ -248,6 +259,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
                 type="text"
                 placeholder="Введите название предмета..."
                 value={customSubject}
+                maxLength={100}
                 onChange={(e) => setCustomSubject(e.target.value)}
                 className={`w-full px-3.5 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all ${
                   errors.subject ? 'border-rose-500' : 'border-black/10 dark:border-white/10'
@@ -369,6 +381,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
             rows={3}
             placeholder="Требования, номер варианта, указания преподавателя..."
             value={description}
+            maxLength={3000}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-3.5 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-xs sm:text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all resize-none"
           />
@@ -386,6 +399,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               type="text"
               placeholder="Добавить шаг, например 'Написать теорию'..."
               value={newSubtaskTitle}
+              maxLength={150}
               onChange={(e) => setNewSubtaskTitle(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -442,6 +456,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               type="url"
               placeholder="https://..."
               value={materialLink}
+              maxLength={500}
               onChange={(e) => setMaterialLink(e.target.value)}
               className="w-full px-3 py-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-xs text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
             />
@@ -455,6 +470,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               type="text"
               placeholder="Краткая заметка для себя..."
               value={notes}
+              maxLength={1000}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-3 py-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-xs text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
             />

@@ -1,5 +1,5 @@
-import { Homework } from '../types/homework';
-import { CalendarCustomEvent } from '../types/calendar';
+import { Homework, Priority, HomeworkStatus } from '../types/homework';
+import { CalendarCustomEvent, EventType } from '../types/calendar';
 import { UserSettings, DEFAULT_SETTINGS } from '../types/settings';
 import { formatDateToIso } from '../utils/dateUtils';
 
@@ -24,6 +24,81 @@ try {
   }
 } catch {
   // ignore
+}
+
+export function sanitizeUrl(url?: string): string | undefined {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/.test(trimmed) && !trimmed.includes('://')) {
+    return `https://${trimmed}`;
+  }
+  return undefined;
+}
+
+function sanitizeHomework(item: any): Homework | null {
+  if (!item || typeof item !== 'object') return null;
+  if (typeof item.id !== 'string' || !item.id.trim()) return null;
+  if (typeof item.title !== 'string' || !item.title.trim()) return null;
+  if (typeof item.subject !== 'string' || !item.subject.trim()) return null;
+
+  const validPriorities: Priority[] = ['low', 'normal', 'high'];
+  const priority = validPriorities.includes(item.priority) ? (item.priority as Priority) : 'normal';
+
+  const validStatuses: HomeworkStatus[] = ['todo', 'in_progress', 'completed'];
+  const status = validStatuses.includes(item.status) ? (item.status as HomeworkStatus) : 'todo';
+
+  const subtasks = Array.isArray(item.subtasks)
+    ? item.subtasks
+        .filter((s: any) => s && typeof s === 'object' && typeof s.id === 'string' && typeof s.title === 'string')
+        .map((s: any) => ({
+          id: String(s.id).slice(0, 50),
+          title: String(s.title).slice(0, 300),
+          completed: Boolean(s.completed),
+        }))
+    : [];
+
+  return {
+    id: String(item.id).slice(0, 100),
+    title: String(item.title).slice(0, 300),
+    subject: String(item.subject).slice(0, 200),
+    description: typeof item.description === 'string' ? item.description.slice(0, 5000) : undefined,
+    assignedDate: typeof item.assignedDate === 'string' ? item.assignedDate.slice(0, 30) : formatDateToIso(new Date()),
+    dueDate: typeof item.dueDate === 'string' ? item.dueDate.slice(0, 30) : formatDateToIso(new Date()),
+    dueTime: typeof item.dueTime === 'string' ? item.dueTime.slice(0, 10) : '23:59',
+    priority,
+    status,
+    subtasks,
+    materialLink: sanitizeUrl(item.materialLink),
+    notes: typeof item.notes === 'string' ? item.notes.slice(0, 2000) : undefined,
+    createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+    updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : new Date().toISOString(),
+  };
+}
+
+function sanitizeEvent(item: any): CalendarCustomEvent | null {
+  if (!item || typeof item !== 'object') return null;
+  if (typeof item.id !== 'string' || !item.id.trim()) return null;
+  if (typeof item.title !== 'string' || !item.title.trim()) return null;
+  if (typeof item.date !== 'string' || !item.date.trim()) return null;
+
+  const validTypes: EventType[] = ['test', 'exam', 'colloquium', 'deadline', 'consultation', 'other'];
+  const type: EventType = validTypes.includes(item.type) ? (item.type as EventType) : 'other';
+
+  return {
+    id: String(item.id).slice(0, 100),
+    title: String(item.title).slice(0, 300),
+    date: String(item.date).slice(0, 30),
+    time: typeof item.time === 'string' ? item.time.slice(0, 10) : undefined,
+    type,
+    subject: typeof item.subject === 'string' ? item.subject.slice(0, 200) : undefined,
+    room: typeof item.room === 'string' ? item.room.slice(0, 50) : undefined,
+    notes: typeof item.notes === 'string' ? item.notes.slice(0, 3000) : undefined,
+    color: typeof item.color === 'string' ? item.color.slice(0, 30) : undefined,
+    createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+  };
 }
 
 export class StorageService {
@@ -312,7 +387,7 @@ export class StorageService {
   }
 
   /**
-   * Import data from JSON string
+   * Import data from JSON string with strict schema validation
    */
   static importData(jsonString: string): { success: boolean; countHw: number; countEvents: number; error?: string } {
     try {
@@ -322,15 +397,32 @@ export class StorageService {
       }
 
       if (Array.isArray(parsed.deletedHwIds)) {
-        this.recordDeletedHomeworkIds(parsed.deletedHwIds);
+        const safeIds = parsed.deletedHwIds.filter((id: any) => typeof id === 'string').map(String);
+        this.recordDeletedHomeworkIds(safeIds);
       }
 
+      let countHw = 0;
       if (Array.isArray(parsed.homework)) {
-        this.saveHomework(parsed.homework);
+        const validHomework: Homework[] = [];
+        for (const item of parsed.homework) {
+          const sanitized = sanitizeHomework(item);
+          if (sanitized) validHomework.push(sanitized);
+        }
+        this.saveHomework(validHomework);
+        countHw = validHomework.length;
       }
+
+      let countEvents = 0;
       if (Array.isArray(parsed.events)) {
-        this.saveEvents(parsed.events);
+        const validEvents: CalendarCustomEvent[] = [];
+        for (const item of parsed.events) {
+          const sanitized = sanitizeEvent(item);
+          if (sanitized) validEvents.push(sanitized);
+        }
+        this.saveEvents(validEvents);
+        countEvents = validEvents.length;
       }
+
       if (parsed.settings && typeof parsed.settings === 'object') {
         this.saveSettings({ ...DEFAULT_SETTINGS, ...parsed.settings });
       }
@@ -339,8 +431,8 @@ export class StorageService {
 
       return {
         success: true,
-        countHw: Array.isArray(parsed.homework) ? parsed.homework.length : 0,
-        countEvents: Array.isArray(parsed.events) ? parsed.events.length : 0,
+        countHw,
+        countEvents,
       };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Ошибка разбора JSON';

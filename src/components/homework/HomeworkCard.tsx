@@ -11,6 +11,7 @@ import {
 import { Homework } from '../../types/homework';
 import { PriorityBadge, StatusBadge } from '../ui/Badge';
 import { formatRelativeDeadline } from '../../utils/dateUtils';
+import { sanitizeUrl } from '../../services/storageService';
 
 interface HomeworkCardProps {
   homework: Homework;
@@ -29,6 +30,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 }) => {
   const isCompleted = homework.status === 'completed';
   const deadlineInfo = formatRelativeDeadline(homework.dueDate, homework.dueTime);
+  const safeMaterialLink = sanitizeUrl(homework.materialLink);
 
   const completedSubtasks = homework.subtasks.filter((s) => s.completed).length;
   const totalSubtasks = homework.subtasks.length;
@@ -168,9 +170,9 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
             {/* Notes / Material links */}
             <div className="flex items-center gap-3">
-              {homework.materialLink && (
+              {safeMaterialLink && (
                 <a
-                  href={homework.materialLink}
+                  href={safeMaterialLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-apple-blue hover:underline font-medium"
