@@ -88,6 +88,12 @@ export const TodayView: React.FC<TodayViewProps> = ({
         </button>
       </div>
 
+      {/* Hero: Current or Next Pair */}
+      <NextPairBanner
+        currentOrNext={currentOrNextLesson}
+        todayLessonsCount={todayLessons.length}
+      />
+
       {/* Quick Stats Grid */}
       <QuickStats
         todayLessonsCount={todayLessons.length}
@@ -95,12 +101,6 @@ export const TodayView: React.FC<TodayViewProps> = ({
         overdueHomeworkCount={overdueList.length}
         dueTodayHomeworkCount={dueTodayList.length}
         onNavigateToTab={onNavigateToTab}
-      />
-
-      {/* Hero: Current or Next Pair */}
-      <NextPairBanner
-        currentOrNext={currentOrNextLesson}
-        todayLessonsCount={todayLessons.length}
       />
 
       {/* Two-column layout: Today's pairs & Today's tasks */}

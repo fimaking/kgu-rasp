@@ -51,14 +51,16 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
   return (
     <>
-      {/* Floating Action Button for mobile */}
-      <button
-        onClick={onOpenCreateHomework}
-        className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-apple-float flex items-center justify-center transition-all duration-200 ease-out active:scale-90 hover:scale-105"
-        aria-label="Добавить домашнее задание"
-      >
-        <Plus className="w-6 h-6 stroke-[2.5]" />
-      </button>
+      {/* Floating Action Button for mobile (only in homework tab) */}
+      {currentTab === 'homework' && (
+        <button
+          onClick={onOpenCreateHomework}
+          className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-apple-float flex items-center justify-center transition-all duration-200 ease-out active:scale-90 hover:scale-105 animate-modal-spring"
+          aria-label="Добавить домашнее задание"
+        >
+          <Plus className="w-6 h-6 stroke-[2.5]" />
+        </button>
+      )}
 
       {/* Docked bottom navigation bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/85 dark:bg-[#18181b]/85 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-around select-none">
