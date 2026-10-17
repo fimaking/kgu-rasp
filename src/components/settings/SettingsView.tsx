@@ -18,6 +18,8 @@ import {
   QrCode,
   Link2,
   AlertTriangle,
+  Users,
+  RotateCw,
 } from 'lucide-react';
 import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
@@ -238,6 +240,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     onShowToast('info', 'Синхронизация отключена');
   };
 
+  const formatLastSync = (iso: string | null) => {
+    if (!iso) return 'Не синхронизировано';
+    try {
+      const d = new Date(iso);
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+      return `КГУ EIOS: ${d.getDate()} ${months[d.getMonth()]}, ${hours}:${mins}`;
+    } catch {
+      return 'Синхронизировано';
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200 select-none pb-12">
       {/* Title */}
@@ -289,13 +304,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>Группа студента и подгруппа</span>
         </h3>
 
-        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-2">
+        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-apple-gray-500 font-medium">Группа в ЭИОС КГУ:</span>
             <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
               26-ИСбо-4 (ID: 8953)
             </span>
           </div>
+
           <div className="flex items-center justify-between">
             <span className="text-xs text-apple-gray-500 font-medium">Официальный сайт:</span>
             <a
@@ -308,11 +324,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-black/5 dark:border-white/5">
+            <span className="text-xs text-apple-gray-500 font-medium">Выбранная подгруппа:</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue border border-apple-blue/20 text-xs font-semibold">
+              <Users className="w-3.5 h-3.5 shrink-0" />
+              <span>1 подгруппа • Немецкий</span>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
-            <span className="text-xs text-apple-gray-500 font-medium">Синхронизация данных:</span>
-            <span className="text-xs text-apple-gray-600 dark:text-apple-300">
-              {lastUpdated ? `Обновлено сервером: ${lastUpdated}` : 'Автономный режим'}
-            </span>
+            <span className="text-xs text-apple-gray-500 font-medium">Статус синхронизации:</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{formatLastSync(lastUpdated)}</span>
+              </div>
+              <button
+                onClick={onRefreshSchedule}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-all duration-200 ease-out active:scale-90"
+                title="Обновить расписание с сайта КГУ"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
