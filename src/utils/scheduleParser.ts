@@ -59,38 +59,47 @@ export function cleanSubjectName(rawDiscipline?: string): string {
   return cleaned || 'Без названия';
 }
 
-export function parseSubgroup(item: RawRaspItem): number {
+export function parseSubgroup(item: { номерПодгруппы?: number; дисциплина?: string; rawDiscipline?: string }): number {
   if (item.номерПодгруппы && item.номерПодгруппы > 0) {
     return item.номерПодгруппы;
   }
-  const d = item.дисциплина.toLowerCase();
+  const d = (item.дисциплина || item.rawDiscipline || '').toLowerCase();
   if (d.includes('п/г 1') || d.includes('1 п/г') || d.includes('подгруппа 1')) return 1;
   if (d.includes('п/г 2') || d.includes('2 п/г') || d.includes('подгруппа 2')) return 2;
   return 0; // Entire group
 }
 
 /**
- * Personalization filter: User attends 1st subgroup and German language only.
- * Excludes:
- * 1. Foreign languages other than German (English 1, English 2, French)
- * 2. 2nd subgroup classes (subgroup 2)
+ * Filter lessons by subgroup preference (0 = all, 1 = sub 1, 2 = sub 2)
+ * For user's default group 8953 (26-ИСбо-4), preserves German language preference.
  */
-export function isUserLesson(lesson: {
-  rawDiscipline?: string;
-  дисциплина?: string;
-  subgroup?: number;
-  номерПодгруппы?: number;
-}): boolean {
+export function filterLessonsBySubgroup(
+  lesson: {
+    rawDiscipline?: string;
+    дисциплина?: string;
+    subgroup?: number;
+    номерПодгруппы?: number;
+  },
+  subgroupPreference: number = 0,
+  groupId: number = 8953
+): boolean {
   const rawDiscipline = (lesson.rawDiscipline || lesson.дисциплина || '').toLowerCase();
 
-  const isForeignLang =
-    rawDiscipline.includes('иностранный язык') ||
-    rawDiscipline.includes('англ') ||
-    rawDiscipline.includes('франц') ||
-    rawDiscipline.includes('немец');
+  // If group 8953 (26-ИСбо-4), preserve user's German language preference if foreign language
+  if (groupId === 8953) {
+    const isForeignLang =
+      rawDiscipline.includes('иностранный язык') ||
+      rawDiscipline.includes('англ') ||
+      rawDiscipline.includes('франц') ||
+      rawDiscipline.includes('немец');
 
-  if (isForeignLang) {
-    return rawDiscipline.includes('немец');
+    if (isForeignLang && !rawDiscipline.includes('немец')) {
+      return false;
+    }
+  }
+
+  if (subgroupPreference === 0) {
+    return true; // Show all subgroups
   }
 
   const sg =
@@ -98,7 +107,19 @@ export function isUserLesson(lesson: {
       ? lesson.subgroup
       : parseSubgroup(lesson as RawRaspItem);
 
-  return sg === 0 || sg === 1;
+  return sg === 0 || sg === subgroupPreference;
+}
+
+/**
+ * Personalization filter: User attends 1st subgroup and German language only.
+ */
+export function isUserLesson(lesson: {
+  rawDiscipline?: string;
+  дисциплина?: string;
+  subgroup?: number;
+  номерПодгруппы?: number;
+}): boolean {
+  return filterLessonsBySubgroup(lesson, 1, 8953);
 }
 
 export function parseBuildingAndAuditorium(rawAud: string): { building: string; auditorium: string } {

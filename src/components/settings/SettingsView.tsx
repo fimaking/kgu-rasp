@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Users,
   RotateCw,
+  ChevronRight,
 } from 'lucide-react';
 import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
@@ -30,8 +31,11 @@ import { Button } from '../ui/Button';
 interface SettingsViewProps {
   themeMode: ThemeMode;
   onThemeChange: (mode: ThemeMode) => void;
+  groupId?: number;
+  groupName?: string;
   subgroupPreference?: number;
   onSubgroupChange?: (sg: number) => void;
+  onOpenGroupSelect?: () => void;
   onShowToast: (type: 'success' | 'error' | 'info', title: string, msg?: string) => void;
   onDataImported: () => void;
   onRefreshSchedule: () => void;
@@ -41,6 +45,10 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   themeMode,
   onThemeChange,
+  groupId = 8953,
+  groupName = '26-ИСбо-4',
+  subgroupPreference = 1,
+  onOpenGroupSelect,
   onShowToast,
   onDataImported,
   onRefreshSchedule,
@@ -299,23 +307,47 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Section 2: Subgroup and Group details */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
-        <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
-          <GraduationCap className="w-5 h-5 text-apple-blue" />
-          <span>Группа студента и подгруппа</span>
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-apple-blue" />
+            <span>Группа студента и подгруппа</span>
+          </h3>
+          {onOpenGroupSelect && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Users className="w-3.5 h-3.5 text-apple-blue" />}
+              onClick={onOpenGroupSelect}
+            >
+              Сменить группу
+            </Button>
+          )}
+        </div>
 
         <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-apple-gray-500 font-medium">Группа в ЭИОС КГУ:</span>
-            <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
-              26-ИСбо-4 (ID: 8953)
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
+                {groupName} (ID: {groupId})
+              </span>
+              {onOpenGroupSelect && (
+                <button
+                  type="button"
+                  onClick={onOpenGroupSelect}
+                  className="p-1 rounded-lg text-apple-blue hover:bg-apple-blue/10 transition-colors"
+                  title="Выбрать другую группу"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-xs text-apple-gray-500 font-medium">Официальный сайт:</span>
             <a
-              href="https://eios.kosgos.ru/WebApp/#/Rasp/Group/8953"
+              href={`https://eios.kosgos.ru/WebApp/#/Rasp/Group/${groupId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-apple-blue font-semibold hover:underline flex items-center gap-1"
@@ -329,7 +361,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="text-xs text-apple-gray-500 font-medium">Выбранная подгруппа:</span>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue border border-apple-blue/20 text-xs font-semibold">
               <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>1 подгруппа • Немецкий</span>
+              <span>
+                {subgroupPreference === 0
+                  ? 'Вся группа'
+                  : subgroupPreference === 1
+                  ? groupId === 8953
+                    ? '1 подгруппа • Немецкий'
+                    : '1-я подгруппа'
+                  : '2-я подгруппа'}
+              </span>
             </div>
           </div>
 
@@ -356,17 +396,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-2">
             Профиль расписания
           </label>
-          <div className="p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 flex items-center justify-between">
+          <div
+            onClick={onOpenGroupSelect}
+            className="p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 flex items-center justify-between cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition-all"
+          >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center font-bold text-xs">
-                1
+                {subgroupPreference === 0 ? 'Все' : subgroupPreference}
               </div>
               <div>
                 <p className="text-xs font-bold text-apple-gray-900 dark:text-white">
-                  1-я подгруппа • Немецкий язык
+                  {subgroupPreference === 0
+                    ? 'Вся группа (без фильтрации)'
+                    : `${subgroupPreference}-я подгруппа ${groupId === 8953 && subgroupPreference === 1 ? '• Немецкий язык' : ''}`}
                 </p>
                 <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
-                  Автоматически отфильтрованы 2-я подгруппа, английский и французский языки
+                  {subgroupPreference === 0
+                    ? 'Показываются пары обеих подгрупп'
+                    : groupId === 8953
+                    ? 'Автоматически отфильтрованы 2-я подгруппа, английский и французский языки'
+                    : `Показываются общие пары и ${subgroupPreference}-я подгруппа`}
                 </p>
               </div>
             </div>

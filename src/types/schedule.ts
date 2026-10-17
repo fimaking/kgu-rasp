@@ -94,3 +94,11 @@ export interface WeekDaySchedule {
   isPast: boolean;
   lessons: ParsedLesson[];
 }
+
+export interface KsuGroup {
+  id: number;
+  name: string;
+  kurs?: number;
+  facul?: string;
+  facultyID?: number;
+}

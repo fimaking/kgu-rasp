@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCw } from 'lucide-react';
+import { RotateCw, ChevronDown } from 'lucide-react';
 import { formatRussianDate, formatDayOfWeek } from '../../utils/dateUtils';
 
 interface HeaderProps {
@@ -8,6 +8,7 @@ interface HeaderProps {
   groupName?: string;
   subgroupFilter?: number;
   onSubgroupChange?: (sg: number) => void;
+  onOpenGroupSelect?: () => void;
   onRefresh: () => void;
   refreshing: boolean;
   isOffline?: boolean;
@@ -18,6 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   title,
   subtitle,
   groupName,
+  subgroupFilter,
+  onOpenGroupSelect,
   onRefresh,
   refreshing,
 }) => {
@@ -31,14 +34,25 @@ export const Header: React.FC<HeaderProps> = ({
           {title || dateFormatted}
         </h2>
         {groupName && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold bg-apple-blue/10 dark:bg-apple-blue/15 border border-apple-blue/20 text-apple-blue shadow-apple-sm shrink-0 select-none">
+          <button
+            type="button"
+            onClick={onOpenGroupSelect}
+            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold bg-apple-blue/10 dark:bg-apple-blue/15 border border-apple-blue/25 text-apple-blue shadow-apple-sm shrink-0 select-none hover:bg-apple-blue/20 active:scale-95 transition-all cursor-pointer group"
+            title="Выбрать другую группу или подгруппу"
+          >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-apple-blue opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-apple-blue"></span>
             </span>
             <span className="font-medium opacity-80">Группа</span>
             <span className="font-bold">{groupName}</span>
-          </div>
+            {subgroupFilter !== undefined && subgroupFilter > 0 && (
+              <span className="text-[11px] opacity-80 font-medium border-l border-apple-blue/30 pl-1.5">
+                {subgroupFilter} п/г
+              </span>
+            )}
+            <ChevronDown className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity ml-0.5" />
+          </button>
         )}
         {subtitle && (
           <p className="text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400 font-medium w-full">

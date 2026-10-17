@@ -1,6 +1,7 @@
-import { ScheduleResponse, RawRaspItem, ParsedLesson, RaspInfo } from '../types/schedule';
-import { parseRawRaspItem, isUserLesson } from '../utils/scheduleParser';
+import { ScheduleResponse, RawRaspItem, ParsedLesson, RaspInfo, KsuGroup } from '../types/schedule';
+import { parseRawRaspItem } from '../utils/scheduleParser';
 import initialScheduleData from '../data/initialSchedule.json';
+import ksuGroupsData from '../data/ksuGroups.json';
 
 const STORAGE_KEY_SCHEDULE = 'ksu_schedule_cache_v3';
 const STORAGE_KEY_TIMESTAMP = 'ksu_schedule_last_sync';
@@ -16,6 +17,13 @@ export interface ScheduleFetchResult {
 
 export class ScheduleService {
   /**
+   * Get all 381 available groups in KSU (with faculties and courses)
+   */
+  static getAvailableGroups(): KsuGroup[] {
+    return ksuGroupsData as KsuGroup[];
+  }
+
+  /**
    * Get schedule instantly on startup (0ms synchronous loading)
    * Reads from localStorage cache, or falls back to embedded dataset immediately
    */
@@ -29,22 +37,25 @@ export class ScheduleService {
       console.warn('Error reading cached schedule:', e);
     }
 
-    try {
-      const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
-      const initialResult = this.processResponse(fallbackResponse, false);
-      this.cacheSchedule(groupId, fallbackResponse);
-      return initialResult;
-    } catch (e) {
-      console.error('Error processing fallback schedule:', e);
-      return {
-        lessons: [],
-        rawItems: [],
-        info: null as any,
-        isCyclicalSchedule: false,
-        isOffline: true,
-        lastUpdated: new Date().toISOString(),
-      };
+    if (groupId === 8953) {
+      try {
+        const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
+        const initialResult = this.processResponse(fallbackResponse, false);
+        this.cacheSchedule(groupId, fallbackResponse);
+        return initialResult;
+      } catch (e) {
+        console.error('Error processing fallback schedule:', e);
+      }
     }
+
+    return {
+      lessons: [],
+      rawItems: [],
+      info: null as any,
+      isCyclicalSchedule: false,
+      isOffline: true,
+      lastUpdated: new Date().toISOString(),
+    };
   }
 
   /**
@@ -116,7 +127,7 @@ export class ScheduleService {
 
   private static processResponse(res: ScheduleResponse, isOffline: boolean): ScheduleFetchResult {
     try {
-      const rawItems = (res.data?.rasp || []).filter(isUserLesson);
+      const rawItems = res.data?.rasp || [];
       const lessons = rawItems.map(parseRawRaspItem);
       
       // Sort lessons chronologically by start date/time
@@ -160,7 +171,9 @@ export class ScheduleService {
 
   static getCachedSchedule(groupId: number): ScheduleFetchResult | null {
     try {
-      const raw = localStorage.getItem(`${STORAGE_KEY_SCHEDULE}_${groupId}`);
+      const raw =
+        localStorage.getItem(`${STORAGE_KEY_SCHEDULE}_${groupId}`) ||
+        (groupId === 8953 ? localStorage.getItem(STORAGE_KEY_SCHEDULE) : null);
       if (!raw) return null;
       const parsed = JSON.parse(raw) as ScheduleResponse;
       if (!parsed || !parsed.data || !Array.isArray(parsed.data.rasp)) return null;

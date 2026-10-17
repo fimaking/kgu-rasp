@@ -10,12 +10,15 @@ import {
   formatDayOfWeek,
   formatShortDayOfWeek,
 } from '../utils/dateUtils';
-import { getLessonStatus, isUserLesson } from '../utils/scheduleParser';
+import { getLessonStatus, filterLessonsBySubgroup } from '../utils/scheduleParser';
 
 export function useSchedule() {
   // Settings
-  const [groupId] = useState<number>(() => StorageService.getSettings().groupId);
-  const [subgroupFilter, setSubgroupFilter] = useState<number>(1);
+  const [groupId, setGroupId] = useState<number>(() => StorageService.getSettings().groupId || 8953);
+  const [groupName, setGroupName] = useState<string>(() => StorageService.getSettings().groupName || '26-ИСбо-4');
+  const [subgroupFilter, setSubgroupFilter] = useState<number>(
+    () => StorageService.getSettings().subgroupPreference ?? 1
+  );
 
   // Synchronous 0ms startup from memory / cache:
   const [initialData] = useState(() => ScheduleService.getInitialSchedule(groupId));
@@ -33,37 +36,71 @@ export function useSchedule() {
     getMondayOfWeek(new Date())
   );
 
-  const loadData = useCallback(async (force = false) => {
-    if (force) setRefreshing(true);
-    setError(null);
+  const loadData = useCallback(
+    async (force = false, targetGroupId?: number) => {
+      const idToFetch = typeof targetGroupId === 'number' ? targetGroupId : groupId;
+      if (force) setRefreshing(true);
+      setError(null);
 
-    try {
-      const result = await ScheduleService.fetchSchedule(groupId, force);
-      setLessons(result.lessons);
-      setInfo(result.info);
-      setIsOffline(result.isOffline);
-      setLastUpdated(result.lastUpdated);
-    } catch (err: unknown) {
-      console.error('Error fetching schedule:', err);
-      if (force) {
-        setError('Не удалось загрузить расписание. Проверьте соединение.');
+      try {
+        const result = await ScheduleService.fetchSchedule(idToFetch, force);
+        setLessons(result.lessons);
+        setInfo(result.info);
+        setIsOffline(result.isOffline);
+        setLastUpdated(result.lastUpdated);
+      } catch (err: unknown) {
+        console.error('Error fetching schedule:', err);
+        if (force) {
+          setError('Не удалось загрузить расписание. Проверьте соединение.');
+        }
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [groupId]);
+    },
+    [groupId]
+  );
 
   useEffect(() => {
     // Silent background refresh (never blocks initial render!)
     loadData(false);
   }, [loadData]);
 
-  const updateSubgroupFilter = (sg: number) => {
+  const updateSubgroupFilter = useCallback((sg: number) => {
     setSubgroupFilter(sg);
     const s = StorageService.getSettings();
     StorageService.saveSettings({ ...s, subgroupPreference: sg });
-  };
+  }, []);
+
+  const changeGroup = useCallback(
+    async (newGroupId: number, newGroupName: string, newSubgroup?: number) => {
+      setGroupId(newGroupId);
+      setGroupName(newGroupName);
+      const sg = typeof newSubgroup === 'number' ? newSubgroup : subgroupFilter;
+      if (typeof newSubgroup === 'number') {
+        setSubgroupFilter(newSubgroup);
+      }
+      const currentSettings = StorageService.getSettings();
+      StorageService.saveSettings({
+        ...currentSettings,
+        groupId: newGroupId,
+        groupName: newGroupName,
+        subgroupPreference: sg,
+      });
+
+      const cached = ScheduleService.getCachedSchedule(newGroupId);
+      if (cached && cached.lessons.length > 0) {
+        setLessons(cached.lessons);
+        setInfo(cached.info);
+        setLastUpdated(cached.lastUpdated);
+      } else {
+        setLoading(true);
+      }
+
+      await loadData(true, newGroupId);
+    },
+    [loadData, subgroupFilter]
+  );
 
   // Real-time minute ticker for live countdowns & schedule status
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
@@ -86,10 +123,10 @@ export function useSchedule() {
     };
   }, []);
 
-  // Filter lessons specifically for user (1st subgroup + German language)
+  // Filter lessons dynamically according to current subgroupFilter and groupId
   const filteredLessons = useMemo(() => {
-    return lessons.filter(isUserLesson);
-  }, [lessons]);
+    return lessons.filter((l) => filterLessonsBySubgroup(l, subgroupFilter, groupId));
+  }, [lessons, subgroupFilter, groupId]);
 
   // Lessons for today (uses currentTime for automatic midnight / day transition)
   const todayDateStr = formatDateToIso(currentTime);
@@ -187,8 +224,11 @@ export function useSchedule() {
     setSelectedDate,
     selectedWeekMonday,
     setSelectedWeekMonday,
+    groupId,
+    groupName,
     subgroupFilter,
     setSubgroupFilter: updateSubgroupFilter,
+    changeGroup,
     subjects,
     prevWeek,
     nextWeek,

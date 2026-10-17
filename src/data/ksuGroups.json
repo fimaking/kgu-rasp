@@ -1,0 +1,2669 @@
+[
+  {
+    "id": 8604,
+    "name": "21-РЛбз-3",
+    "kurs": 6,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8605,
+    "name": "21-ЭБсз-1",
+    "kurs": 6,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8606,
+    "name": "22-Абз-2",
+    "kurs": 5,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8607,
+    "name": "22-БГбз-3",
+    "kurs": 5,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8608,
+    "name": "22-ДИбо-5",
+    "kurs": 5,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8609,
+    "name": "22-ДОбз-6",
+    "kurs": 5,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8610,
+    "name": "22-ИИбз-4",
+    "kurs": 5,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8611,
+    "name": "22-ИНбо-4",
+    "kurs": 5,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8612,
+    "name": "22-ЛДбз-7",
+    "kurs": 5,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8613,
+    "name": "22-МЗбз-3",
+    "kurs": 5,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8614,
+    "name": "22-МТбо-1",
+    "kurs": 5,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8615,
+    "name": "22-МФбо-5",
+    "kurs": 5,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8616,
+    "name": "22-НОбз-3",
+    "kurs": 5,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8617,
+    "name": "22-НПбо-7",
+    "kurs": 5,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8618,
+    "name": "22-ОДбо-1",
+    "kurs": 5,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8619,
+    "name": "22-ПЗбз-5",
+    "kurs": 5,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8620,
+    "name": "22-ПКбв-1",
+    "kurs": 5,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8621,
+    "name": "22-РДбз-5",
+    "kurs": 5,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8622,
+    "name": "22-РЛбз-3",
+    "kurs": 5,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8623,
+    "name": "22-РЛбо-3",
+    "kurs": 5,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8624,
+    "name": "22-СРбз-2",
+    "kurs": 5,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8625,
+    "name": "22-ТДбв-7",
+    "kurs": 5,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8626,
+    "name": "22-ФБбо-8",
+    "kurs": 5,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8627,
+    "name": "22-ФЗбз-10",
+    "kurs": 5,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8628,
+    "name": "22-ЭБбв-2",
+    "kurs": 5,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8629,
+    "name": "22-ЭБсз-1",
+    "kurs": 5,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8630,
+    "name": "22-ЭБсо-1",
+    "kurs": 5,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8631,
+    "name": "22-Юбв-1",
+    "kurs": 5,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8632,
+    "name": "22-Юбс-4",
+    "kurs": 5,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8633,
+    "name": "23-Абз-2",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 9012,
+    "name": "23-Або-26к",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8634,
+    "name": "23-Або-6",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8635,
+    "name": "23-Ббо-4",
+    "kurs": 4,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8636,
+    "name": "23-БГбз-3",
+    "kurs": 4,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8689,
+    "name": "23-ГУбо-3",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8637,
+    "name": "23-ДИбо-5",
+    "kurs": 4,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8638,
+    "name": "23-ДОбз-6",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8661,
+    "name": "23-ДОспо-1",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8639,
+    "name": "23-ДПбо-9",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8640,
+    "name": "23-Жбо-2",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8641,
+    "name": "23-ИБбо-6",
+    "kurs": 4,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8642,
+    "name": "23-Ибо-1",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8643,
+    "name": "23-ИИбз-4",
+    "kurs": 4,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8645,
+    "name": "23-ИНбо-4",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8646,
+    "name": "23-ИСбо-1",
+    "kurs": 4,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8647,
+    "name": "23-ИСбо-2",
+    "kurs": 4,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8644,
+    "name": "23-ИСбо-3",
+    "kurs": 4,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8648,
+    "name": "23-ИСбо-4",
+    "kurs": 4,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8649,
+    "name": "23-ИФбо-6",
+    "kurs": 4,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8650,
+    "name": "23-КПбо-2",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8651,
+    "name": "23-КШбо-3",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8652,
+    "name": "23-Лбо-2",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8653,
+    "name": "23-ЛДбо-6",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8654,
+    "name": "23-Мбо-5",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8655,
+    "name": "23-МГбо-5",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8656,
+    "name": "23-МТбо-1",
+    "kurs": 4,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8657,
+    "name": "23-МФбо-5",
+    "kurs": 4,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8658,
+    "name": "23-НОбз-3",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8659,
+    "name": "23-НПбо-7",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8662,
+    "name": "23-НПспо-1",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8663,
+    "name": "23-ОДбо-1",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8999,
+    "name": "23-ОТаз-1",
+    "kurs": 4,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8664,
+    "name": "23-ПМбо-1",
+    "kurs": 4,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8665,
+    "name": "23-ПОбз-5",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8666,
+    "name": "23-ПОбо-5",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8667,
+    "name": "23-РДбз-5",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8668,
+    "name": "23-РДбо-1",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8669,
+    "name": "23-РЛбз-3",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8670,
+    "name": "23-РЛбо-3",
+    "kurs": 4,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8671,
+    "name": "23-СДбо-1",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8672,
+    "name": "23-СРбз-2",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8673,
+    "name": "23-СРбо-2",
+    "kurs": 4,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8674,
+    "name": "23-ТБбо-2",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8675,
+    "name": "23-ТДбв-7",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8660,
+    "name": "23-ТДспо-8",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 9010,
+    "name": "23-ТМбо-26к",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8676,
+    "name": "23-ТМбо-8",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8677,
+    "name": "23-ТМбо-9к",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8678,
+    "name": "23-ФБбо-8",
+    "kurs": 4,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8679,
+    "name": "23-Фбо-2",
+    "kurs": 4,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8680,
+    "name": "23-ФЗбз-10",
+    "kurs": 4,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8681,
+    "name": "23-Хбо-3",
+    "kurs": 4,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8682,
+    "name": "23-ХОбо-5",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8683,
+    "name": "23-ХПбо-10",
+    "kurs": 4,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8684,
+    "name": "23-ЭБбо-1",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8685,
+    "name": "23-ЭБсз-1",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8686,
+    "name": "23-ЭБсо-1",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8687,
+    "name": "23-ЭФбв-2",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8688,
+    "name": "23-ЭФбо-2",
+    "kurs": 4,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8691,
+    "name": "23-Юбо-1",
+    "kurs": 4,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8692,
+    "name": "23-Юбо-2",
+    "kurs": 4,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8690,
+    "name": "23-Юбс-4",
+    "kurs": 4,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8693,
+    "name": "23-ЮСаз-1",
+    "kurs": 4,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8694,
+    "name": "24-Абз-2",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8695,
+    "name": "24-Або-6",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8696,
+    "name": "24-АУао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8697,
+    "name": "24-Ббо-4",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8698,
+    "name": "24-БГбз-3",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8699,
+    "name": "24-Бмв-4",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8773,
+    "name": "24-ГУбо-3",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8700,
+    "name": "24-Дао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8701,
+    "name": "24-ДИбо-5",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8702,
+    "name": "24-ДОбз-6",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8731,
+    "name": "24-ДОспо-1",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8703,
+    "name": "24-ДПбо-9",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8704,
+    "name": "24-Иао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8705,
+    "name": "24-ИБбо-6",
+    "kurs": 3,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8706,
+    "name": "24-ИИбз-4",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8707,
+    "name": "24-ИИмз-3",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8708,
+    "name": "24-ИМбо-3",
+    "kurs": 3,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8709,
+    "name": "24-ИНбо-4",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8710,
+    "name": "24-ИСбо-1",
+    "kurs": 3,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8711,
+    "name": "24-ИСбо-2",
+    "kurs": 3,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8712,
+    "name": "24-ИТбо-4",
+    "kurs": 3,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8713,
+    "name": "24-ИФбз-6",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8714,
+    "name": "24-ИФбо-6",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8715,
+    "name": "24-КПбо-2",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8716,
+    "name": "24-КШбо-3",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8717,
+    "name": "24-Лбо-2",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8718,
+    "name": "24-ЛДбз-7",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8719,
+    "name": "24-ЛДбо-6",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8720,
+    "name": "24-МАмз-5",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8721,
+    "name": "24-Мбо-5",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8722,
+    "name": "24-МГбо-5",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8746,
+    "name": "24-МГмз-1",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8723,
+    "name": "24-МЗбз-3",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8724,
+    "name": "24-МЗмз-1",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8725,
+    "name": "24-МТбо-1",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8726,
+    "name": "24-МФбо-5",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8727,
+    "name": "24-НИбо-7",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8728,
+    "name": "24-НОбз-3",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8732,
+    "name": "24-НПспо-1",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8733,
+    "name": "24-ОДбо-1",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8734,
+    "name": "24-ОПао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8735,
+    "name": "24-ПОбз-5",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8736,
+    "name": "24-ПОбо-5",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8737,
+    "name": "24-ПЭмв-1",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8738,
+    "name": "24-РДбз-5",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8739,
+    "name": "24-РЛбз-3",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8740,
+    "name": "24-РЛбо-3",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8741,
+    "name": "24-РЯао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8742,
+    "name": "24-СГмз-5",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8743,
+    "name": "24-СДбо-1",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8744,
+    "name": "24-СИмз-1",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8745,
+    "name": "24-СЛмз-8",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8747,
+    "name": "24-СРбз-2",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8748,
+    "name": "24-СРбо-2",
+    "kurs": 3,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8749,
+    "name": "24-ТБбо-2",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8730,
+    "name": "24-ТГспо-1",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8750,
+    "name": "24-ТДбв-7",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8729,
+    "name": "24-ТДспо-8",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8751,
+    "name": "24-ТМао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 9011,
+    "name": "24-ТМбо-26к",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8752,
+    "name": "24-ТМбо-8",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8753,
+    "name": "24-ТПбо-1",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8754,
+    "name": "24-ТТао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8755,
+    "name": "24-ТУбз-1",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8756,
+    "name": "24-УКбо-1",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8757,
+    "name": "24-ФБбо-8",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8758,
+    "name": "24-Фбо-2",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8759,
+    "name": "24-ФЗбз-10",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8760,
+    "name": "24-ФЛбо-1",
+    "kurs": 3,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8761,
+    "name": "24-ФШбо-1",
+    "kurs": 3,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8762,
+    "name": "24-Хбо-3",
+    "kurs": 3,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8763,
+    "name": "24-ХОбо-5",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8764,
+    "name": "24-ХПбо-10",
+    "kurs": 3,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8765,
+    "name": "24-Эао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8766,
+    "name": "24-ЭБбо-1",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8768,
+    "name": "24-ЭБмз-1",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8769,
+    "name": "24-ЭБсз-1",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8770,
+    "name": "24-ЭБсо-1",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8771,
+    "name": "24-ЭТао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8772,
+    "name": "24-ЭФбо-2",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8767,
+    "name": "24-ЭЭбо-6",
+    "kurs": 3,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8775,
+    "name": "24-Юбо-1",
+    "kurs": 3,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8776,
+    "name": "24-Юбо-2",
+    "kurs": 3,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8774,
+    "name": "24-Юбс-4",
+    "kurs": 3,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8777,
+    "name": "24-ЮКмз-1",
+    "kurs": 3,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8779,
+    "name": "24-ЮПмз-4",
+    "kurs": 3,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8778,
+    "name": "24-ЮСмз-2",
+    "kurs": 3,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8780,
+    "name": "24-ЮУао-1",
+    "kurs": 3,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8781,
+    "name": "25-Абз-2",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8782,
+    "name": "25-Або-6",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8783,
+    "name": "25-АУао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8784,
+    "name": "25-Ббо-4",
+    "kurs": 2,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8785,
+    "name": "25-Бмв-4",
+    "kurs": 2,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8860,
+    "name": "25-ГУбо-3",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8787,
+    "name": "25-Дао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8788,
+    "name": "25-ДИбо-5",
+    "kurs": 2,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8813,
+    "name": "25-ДОспо-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8789,
+    "name": "25-ДПбо-9",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8790,
+    "name": "25-Жбо-2",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8791,
+    "name": "25-ИБбо-6",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8792,
+    "name": "25-ИИбз-4",
+    "kurs": 2,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8796,
+    "name": "25-ИИбо-1",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8793,
+    "name": "25-ИМбо-3",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8794,
+    "name": "25-ИНбо-4",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8795,
+    "name": "25-ИСбо-2",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8797,
+    "name": "25-ИСмо-2",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8798,
+    "name": "25-ИТбо-4",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8799,
+    "name": "25-ИФбз-6",
+    "kurs": 2,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8800,
+    "name": "25-КПбо-2",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8801,
+    "name": "25-КШбо-3",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8598,
+    "name": "25-ЛДбо-6",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8802,
+    "name": "25-Мао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8803,
+    "name": "25-Мбо-5",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8804,
+    "name": "25-МГбо-5",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8786,
+    "name": "25-МКбо-1",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8805,
+    "name": "25-Ммо-1",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8806,
+    "name": "25-Ммо-3",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8807,
+    "name": "25-МОао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8808,
+    "name": "25-МТбо-1",
+    "kurs": 2,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8809,
+    "name": "25-МФбо-5",
+    "kurs": 2,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8810,
+    "name": "25-НМбо-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8814,
+    "name": "25-НПспо-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8816,
+    "name": "25-ОДбо-1",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8817,
+    "name": "25-ОПмо-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8818,
+    "name": "25-ОСао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8815,
+    "name": "25-ПДспо-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8819,
+    "name": "25-ПМбо-1",
+    "kurs": 2,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8820,
+    "name": "25-ПОбз-5",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8821,
+    "name": "25-ПОбо-5",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8822,
+    "name": "25-ППмо-2",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8823,
+    "name": "25-ПСао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8824,
+    "name": "25-ПЭмв-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8825,
+    "name": "25-РДбз-5",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8826,
+    "name": "25-РЛбо-3",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8827,
+    "name": "25-СГмз-5",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8828,
+    "name": "25-СДбо-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8829,
+    "name": "25-СИмз-1",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8830,
+    "name": "25-СКмо-3",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8831,
+    "name": "25-СМмз-7",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8832,
+    "name": "25-СРбв-2",
+    "kurs": 2,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8812,
+    "name": "25-ТГспо-1",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8833,
+    "name": "25-ТДбв-7",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8834,
+    "name": "25-ТДмв-5",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8811,
+    "name": "25-ТДспо-8",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8835,
+    "name": "25-ТМао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8836,
+    "name": "25-ТМбо-8",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8837,
+    "name": "25-ТПао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8838,
+    "name": "25-ТПбо-1",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8839,
+    "name": "25-ТПмо-1",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8960,
+    "name": "25-ТТао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8840,
+    "name": "25-ТУбз-1",
+    "kurs": 2,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8841,
+    "name": "25-ТШмо-2",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8842,
+    "name": "25-ТЭао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8843,
+    "name": "25-УСмо-4",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8844,
+    "name": "25-ФБбо-8",
+    "kurs": 2,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8845,
+    "name": "25-ФЗбз-10",
+    "kurs": 2,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8846,
+    "name": "25-Фмо-2",
+    "kurs": 2,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8847,
+    "name": "25-ФШбо-1",
+    "kurs": 2,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8848,
+    "name": "25-Хбо-3",
+    "kurs": 2,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 9003,
+    "name": "25-ХОао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8849,
+    "name": "25-ХОбо-5",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8850,
+    "name": "25-ХОмо-3",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8851,
+    "name": "25-ХПбо-10",
+    "kurs": 2,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8852,
+    "name": "25-ЭАмз-3",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8853,
+    "name": "25-Эао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8854,
+    "name": "25-ЭБбо-1",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8855,
+    "name": "25-ЭБсз-1",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8856,
+    "name": "25-ЭБсо-1",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8857,
+    "name": "25-ЭКао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8858,
+    "name": "25-ЭТао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8859,
+    "name": "25-ЭФбо-2",
+    "kurs": 2,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8862,
+    "name": "25-Юбо-1",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8863,
+    "name": "25-Юбо-2",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8864,
+    "name": "25-Юбо-3",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8861,
+    "name": "25-Юбс-4",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8865,
+    "name": "25-ЮКмз-1",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8866,
+    "name": "25-ЮСмз-2",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8867,
+    "name": "25-ЮСмо-1",
+    "kurs": 2,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8868,
+    "name": "25-ЮТао-1",
+    "kurs": 2,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8978,
+    "name": "26-Абз-2",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8869,
+    "name": "26-Або-6",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8870,
+    "name": "26-АУао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8871,
+    "name": "26-Ббо-4",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8872,
+    "name": "26-БГбз-3",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8936,
+    "name": "26-БИбо-4",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8972,
+    "name": "26-Бмв-4",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8985,
+    "name": "26-ВПао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8986,
+    "name": "26-Дао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8873,
+    "name": "26-ДИбо-5",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8903,
+    "name": "26-ДОспо-1",
+    "kurs": 1,
+    "facul": "К��лледж",
+    "facultyID": 43
+  },
+  {
+    "id": 8874,
+    "name": "26-ДПбо-9",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8875,
+    "name": "26-Жбо-2",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8987,
+    "name": "26-Иао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8949,
+    "name": "26-ИБбо-6",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8877,
+    "name": "26-ИИбз-4",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8879,
+    "name": "26-ИНбо-4",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8880,
+    "name": "26-ИОбз-4",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8954,
+    "name": "26-ИСбо-1",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8881,
+    "name": "26-ИСбо-2",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 9000,
+    "name": "26-ИСбо-3",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8953,
+    "name": "26-ИСбо-4",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8878,
+    "name": "26-ИСбо-5",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8882,
+    "name": "26-ИСмо-2",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8884,
+    "name": "26-ИФбо-6",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 9005,
+    "name": "26-ИЭбз-01",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8885,
+    "name": "26-КПбо-2",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8886,
+    "name": "26-КШбо-3",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8887,
+    "name": "26-ЛДбо-6",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8979,
+    "name": "26-МАмз-5",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8888,
+    "name": "26-Мао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8889,
+    "name": "26-Мбо-5",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8890,
+    "name": "26-МВбо-1",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8918,
+    "name": "26-МГмз-1",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8980,
+    "name": "26-МЗмз-1",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8892,
+    "name": "26-Ммо-1",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8893,
+    "name": "26-Ммо-3",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8894,
+    "name": "26-МОао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8895,
+    "name": "26-МФбо-5",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8896,
+    "name": "26-НДбо-1",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8897,
+    "name": "26-НОбз-3",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8904,
+    "name": "26-НПспо-1",
+    "kurs": 1,
+    "facul": "Колледж",
+    "facultyID": 43
+  },
+  {
+    "id": 8906,
+    "name": "26-ОДбо-1",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8988,
+    "name": "26-ОПао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8907,
+    "name": "26-ОПмо-1",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8989,
+    "name": "26-ОСао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8905,
+    "name": "26-ПДспо-1",
+    "kurs": 1,
+    "facul": "Колледж",
+    "facultyID": 43
+  },
+  {
+    "id": 8948,
+    "name": "26-ПМбо-1",
+    "kurs": 1,
+    "facul": "ИВИТШ",
+    "facultyID": 36
+  },
+  {
+    "id": 8909,
+    "name": "26-ПОбз-5",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 9001,
+    "name": "26-ПОбз-6",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8910,
+    "name": "26-ПОбо-5",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8911,
+    "name": "26-ПОбо-6",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8912,
+    "name": "26-ПЭмв-1",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8981,
+    "name": "26-РДбз-5",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8982,
+    "name": "26-РЕбз-1",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8990,
+    "name": "26-РЛао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8913,
+    "name": "26-РЛбо-3",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8914,
+    "name": "26-СГмз-5",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8915,
+    "name": "26-СДбо-1",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8916,
+    "name": "26-СИмз-1",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8917,
+    "name": "26-СКмо-3",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8973,
+    "name": "26-СРбо-2",
+    "kurs": 1,
+    "facul": "ИПП",
+    "facultyID": 30
+  },
+  {
+    "id": 8900,
+    "name": "26-СРспо-2",
+    "kurs": 1,
+    "facul": "Колледж",
+    "facultyID": 43
+  },
+  {
+    "id": 9006,
+    "name": "26-ТБбо-02",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8902,
+    "name": "26-ТГспо-1",
+    "kurs": 1,
+    "facul": "Колледж",
+    "facultyID": 43
+  },
+  {
+    "id": 8919,
+    "name": "26-ТДбв-7",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8974,
+    "name": "26-ТДмв-5",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8898,
+    "name": "26-ТДспо-8",
+    "kurs": 1,
+    "facul": "Колледж",
+    "facultyID": 43
+  },
+  {
+    "id": 8991,
+    "name": "26-ТИао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 9007,
+    "name": "26-ТИбо-02",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8920,
+    "name": "26-ТМао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8921,
+    "name": "26-ТМбо-8",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8922,
+    "name": "26-ТПао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8923,
+    "name": "26-ТПмо-1",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8924,
+    "name": "26-ТТао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8983,
+    "name": "26-ТУбз-1",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8992,
+    "name": "26-ТЭао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8975,
+    "name": "26-УСмо-4",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8925,
+    "name": "26-ФБбо-8",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8926,
+    "name": "26-Фбо-2",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8927,
+    "name": "26-ФЗбз-10",
+    "kurs": 1,
+    "facul": "ИКИ",
+    "facultyID": 29
+  },
+  {
+    "id": 8984,
+    "name": "26-ФЛмз-1",
+    "kurs": 1,
+    "facul": "ИГНИСТ",
+    "facultyID": 27
+  },
+  {
+    "id": 8928,
+    "name": "26-Фмо-2",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8929,
+    "name": "26-Хбо-3",
+    "kurs": 1,
+    "facul": "ИФМЕН",
+    "facultyID": 24
+  },
+  {
+    "id": 8998,
+    "name": "26-ХОао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8930,
+    "name": "26-ХОбо-5",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8931,
+    "name": "26-ХОмо-3",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8932,
+    "name": "26-ХПбо-10",
+    "kurs": 1,
+    "facul": "ИПТД",
+    "facultyID": 42
+  },
+  {
+    "id": 8994,
+    "name": "26-Эао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8934,
+    "name": "26-ЭБсз-1",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8935,
+    "name": "26-ЭБсо-1",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8995,
+    "name": "26-ЭТао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8937,
+    "name": "26-ЭФмз-1",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8933,
+    "name": "26-ЭЭбо-1",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8976,
+    "name": "26-ЭЭбо-2",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8938,
+    "name": "26-ЭЭбо-3",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8891,
+    "name": "26-ЭЭбо-5",
+    "kurs": 1,
+    "facul": "ИУЭФ",
+    "facultyID": 32
+  },
+  {
+    "id": 8940,
+    "name": "26-Юбо-1",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8941,
+    "name": "26-Юбо-2",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8942,
+    "name": "26-Юбо-3",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8939,
+    "name": "26-Юбс-4",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8943,
+    "name": "26-ЮКмз-1",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8977,
+    "name": "26-ЮПмо-2",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8944,
+    "name": "26-ЮСмз-2",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 9002,
+    "name": "26-ЮСмз-3",
+    "kurs": 1,
+    "facul": "ЮИН",
+    "facultyID": 33
+  },
+  {
+    "id": 8901,
+    "name": "26-Юспо-5",
+    "kurs": 1,
+    "facul": "Колледж",
+    "facultyID": 43
+  },
+  {
+    "id": 8996,
+    "name": "26-ЮТао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8997,
+    "name": "26-ЮУао-1",
+    "kurs": 1,
+    "facul": "АСП",
+    "facultyID": 35
+  },
+  {
+    "id": 8971,
+    "name": "Нет",
+    "kurs": null,
+    "facul": "КГУ",
+    "facultyID": null
+  }
+]

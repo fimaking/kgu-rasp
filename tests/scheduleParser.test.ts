@@ -4,11 +4,13 @@ import {
   cleanSubjectName,
   parseSubgroup,
   isUserLesson,
+  filterLessonsBySubgroup,
   parseBuildingAndAuditorium,
   parseKsuDateTime,
   findNextLessonForSubject,
   getNextLessonDeadline,
 } from '../src/utils/scheduleParser';
+import { ScheduleService } from '../src/services/scheduleService';
 import { ParsedLesson, RawRaspItem } from '../types/schedule';
 
 describe('scheduleParser', () => {
@@ -88,6 +90,36 @@ describe('scheduleParser', () => {
       expect(isUserLesson({ rawDiscipline: 'пр Иностранный язык (английский 1)' })).toBe(false);
       expect(isUserLesson({ rawDiscipline: 'пр Английский язык' })).toBe(false);
       expect(isUserLesson({ rawDiscipline: 'пр Французский язык' })).toBe(false);
+    });
+  });
+
+  describe('filterLessonsBySubgroup across any group', () => {
+    it('returns true for all lessons when subgroupPreference is 0 (all subgroups)', () => {
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лаб Физика', subgroup: 1 }, 0, 8611)).toBe(true);
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лаб Физика', subgroup: 2 }, 0, 8611)).toBe(true);
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лек Математика', subgroup: 0 }, 0, 8611)).toBe(true);
+    });
+
+    it('filters for subgroup 1 or subgroup 2 correctly for any group', () => {
+      // Subgroup 1 preference:
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лаб Физика', subgroup: 1 }, 1, 8611)).toBe(true);
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лаб Физика', subgroup: 2 }, 1, 8611)).toBe(false);
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лек Математика', subgroup: 0 }, 1, 8611)).toBe(true);
+
+      // Subgroup 2 preference:
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лаб Физика', subgroup: 1 }, 2, 8611)).toBe(false);
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лаб Физика', subgroup: 2 }, 2, 8611)).toBe(true);
+      expect(filterLessonsBySubgroup({ rawDiscipline: 'лек Математика', subgroup: 0 }, 2, 8611)).toBe(true);
+    });
+
+    it('loads all 381 available groups from ScheduleService.getAvailableGroups', () => {
+      const groups = ScheduleService.getAvailableGroups();
+      expect(Array.isArray(groups)).toBe(true);
+      expect(groups.length).toBe(381);
+      const isbo4 = groups.find((g) => g.id === 8953);
+      expect(isbo4).toBeDefined();
+      expect(isbo4?.name).toBe('26-ИСбо-4');
+      expect(isbo4?.facul).toBe('ИВИТШ');
     });
   });
 
