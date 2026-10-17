@@ -62,9 +62,10 @@ export function useSchedule() {
   );
 
   useEffect(() => {
-    // Silent background refresh (never blocks initial render!)
-    loadData(false);
-  }, [loadData]);
+    // Silent background refresh on mount
+    loadData(false, groupId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateSubgroupFilter = useCallback((sg: number) => {
     setSubgroupFilter(sg);
@@ -207,6 +208,11 @@ export function useSchedule() {
     setSelectedWeekMonday(getMondayOfWeek(now));
   };
 
+  const goToDate = (date: Date) => {
+    setSelectedDate(date);
+    setSelectedWeekMonday(getMondayOfWeek(date));
+  };
+
   return {
     lessons: filteredLessons,
     allLessons: lessons,
@@ -233,6 +239,7 @@ export function useSchedule() {
     prevWeek,
     nextWeek,
     goToToday,
+    goToDate,
     refresh: () => loadData(true),
   };
 }

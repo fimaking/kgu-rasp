@@ -4,12 +4,15 @@ import {
   LayoutGrid,
   Calendar as CalendarIcon,
   BookOpen,
+  Info,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { ParsedLesson, WeekDaySchedule, RaspInfo } from '../../types/schedule';
 import { WeekNavigator } from './WeekNavigator';
 import { DayCard } from './DayCard';
 import { LessonModal } from './LessonModal';
-import { isSameDay, formatDateToIso } from '../../utils/dateUtils';
+import { isSameDay, formatDateToIso, formatRussianDate } from '../../utils/dateUtils';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
 
 interface ScheduleViewProps {
@@ -20,6 +23,7 @@ interface ScheduleViewProps {
   onPrevWeek: () => void;
   onNextWeek: () => void;
   onGoToToday: () => void;
+  onGoToDate?: (date: Date) => void;
   subgroupFilter: number;
   onSubgroupChange: (sg: number) => void;
   onOpenCreateHomeworkForSubject: (options: {
@@ -38,17 +42,42 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onPrevWeek,
   onNextWeek,
   onGoToToday,
+  onGoToDate,
   onOpenCreateHomeworkForSubject,
 }) => {
-  const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => new Date());
-  // Default to single day view so Today's schedule opens immediately
-  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('single');
+  const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => {
+    const now = new Date();
+    if (now.getDay() === 0) {
+      const mon = new Date(now);
+      mon.setDate(now.getDate() - 6);
+      return mon;
+    }
+    return now;
+  });
+
+  // Default to grid on desktop or on Sunday so the full week's schedule is immediately visible
+  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      return 'grid';
+    }
+    if (new Date().getDay() === 0) {
+      return 'grid';
+    }
+    return 'single';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
 
   const handleGoToToday = () => {
     onGoToToday();
-    setSelectedDayDate(new Date());
+    const now = new Date();
+    if (now.getDay() === 0) {
+      const mon = new Date(now);
+      mon.setDate(now.getDate() - 6);
+      setSelectedDayDate(mon);
+    } else {
+      setSelectedDayDate(now);
+    }
   };
 
   const handlePrevWeek = () => {
@@ -124,6 +153,18 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       }
     );
   }, [filteredWeekSchedule, selectedDayDate]);
+  // Total lessons scheduled for this week
+  const totalWeekLessons = useMemo(() => {
+    return weekSchedule.reduce((acc, d) => acc + d.lessons.length, 0);
+  }, [weekSchedule]);
+
+  // Nearest upcoming lesson in the group's semester schedule
+  const nearestLesson = useMemo(() => {
+    if (allLessons.length === 0) return null;
+    const todayStr = formatDateToIso(new Date());
+    const future = allLessons.filter((l) => l.dateStr >= todayStr);
+    return future.length > 0 ? future[0] : allLessons[allLessons.length - 1];
+  }, [allLessons]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -198,6 +239,48 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         days={daysSummary}
         info={info}
       />
+
+      {/* Empty State: If the group has 0 lessons total in the semester */}
+      {allLessons.length === 0 && (
+        <div className="p-8 sm:p-12 rounded-3xl bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/10 text-center space-y-3 shadow-apple-card">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+            <Info className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-apple-gray-900 dark:text-white">
+            У группы {info?.group?.name || ''} нет занятий в расписании КГУ
+          </h3>
+          <p className="text-xs text-apple-gray-500 dark:text-apple-gray-400 max-w-md mx-auto">
+            На официальном сайте КГУ для этой группы пока не внесены пары (учебная практика, сессия или каникулы).
+          </p>
+        </div>
+      )}
+
+      {/* Guide Banner: If group has lessons, but current week is empty */}
+      {allLessons.length > 0 && totalWeekLessons === 0 && nearestLesson && (
+        <div className="p-4 rounded-2.5xl bg-apple-blue/10 dark:bg-apple-blue/15 border border-apple-blue/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-apple-gray-900 dark:text-white animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-apple-blue shrink-0" />
+            <span>
+              На выбранной неделе занятий нет. Ближайшие пары в расписании:{' '}
+              <span className="font-bold text-apple-blue">
+                {nearestLesson.dayName}, {formatRussianDate(nearestLesson.startDateTime)}
+              </span>.
+            </span>
+          </div>
+          {onGoToDate && (
+            <button
+              onClick={() => {
+                onGoToDate(nearestLesson.startDateTime);
+                setSelectedDayDate(nearestLesson.startDateTime);
+              }}
+              className="inline-flex items-center gap-1 font-bold text-apple-blue hover:underline shrink-0"
+            >
+              <span>Перейти к занятиям</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Schedule Display */}
       {viewLayout === 'grid' ? (

@@ -221,6 +221,7 @@ export const App: React.FC = () => {
                 onPrevWeek={schedule.prevWeek}
                 onNextWeek={schedule.nextWeek}
                 onGoToToday={schedule.goToToday}
+                onGoToDate={schedule.goToDate}
                 subgroupFilter={schedule.subgroupFilter}
                 onSubgroupChange={schedule.setSubgroupFilter}
                 onOpenCreateHomeworkForSubject={(options) => openCreateHomework(options)}

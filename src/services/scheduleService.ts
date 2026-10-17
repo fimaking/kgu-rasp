@@ -59,13 +59,13 @@ export class ScheduleService {
   }
 
   /**
-   * Fetch schedule: If not forceRefresh, return initial/cached schedule immediately without network delay!
-   * If forceRefresh, attempt fast network sync with a short 2.5s timeout.
+   * Fetch schedule: If not forceRefresh and cached schedule exists, return it immediately (0ms).
+   * Otherwise, fetch from bundled static schedules, local proxy, or fallback CDN.
    */
   static async fetchSchedule(groupId = 8953, forceRefresh = false): Promise<ScheduleFetchResult> {
-    if (!forceRefresh) {
-      // 0ms instant return - never block initial render!
-      return this.getInitialSchedule(groupId);
+    const cached = this.getCachedSchedule(groupId);
+    if (!forceRefresh && cached && cached.lessons && cached.lessons.length > 0) {
+      return cached;
     }
 
     try {
@@ -75,24 +75,35 @@ export class ScheduleService {
           window.location.hostname === '127.0.0.1' ||
           window.location.hostname.startsWith('192.168.'));
 
-      const directTarget = `https://eios.kosgos.ru/api/Rasp?idGroup=${groupId}`;
       const endpoints: string[] = [];
 
+      // 1. In local dev, Vite proxy to KSU is fast and direct
       if (isLocal) {
-        endpoints.push(`/api/schedule?groupId=${groupId}`, `/api-eios/Rasp?idGroup=${groupId}`);
+        endpoints.push(`/api-eios/Rasp?idGroup=${groupId}`);
       }
+
+      // 2. Relative static schedules (bundled in PWA, 100% reliable, same origin, 0 CORS)
+      if (typeof window !== 'undefined') {
+        const basePath = import.meta.env.BASE_URL || './';
+        const cleanBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
+        endpoints.push(`${cleanBase}schedules/${groupId}.json`);
+        endpoints.push(`./schedules/${groupId}.json`);
+      }
+
+      // 3. Fallback CDN on GitHub (has Access-Control-Allow-Origin: *)
       endpoints.push(
-        directTarget,
-        `https://corsproxy.io/?url=${encodeURIComponent(directTarget)}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(directTarget)}`
+        `https://raw.githubusercontent.com/fimaking/kgu-rasp/main/public/schedules/${groupId}.json`
       );
+
+      // 4. Direct KSU API
+      endpoints.push(`https://eios.kosgos.ru/api/Rasp?idGroup=${groupId}`);
 
       let rawData: ScheduleResponse | null = null;
 
       for (const endpoint of endpoints) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s fast timeout instead of 8s
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
           const response = await fetch(endpoint, {
             signal: controller.signal,
             headers: {
@@ -103,7 +114,7 @@ export class ScheduleService {
 
           if (response.ok) {
             const data = await response.json();
-            if (data && data.data && Array.isArray(data.data.rasp) && data.data.rasp.length > 0) {
+            if (data && data.data && Array.isArray(data.data.rasp)) {
               rawData = data;
               break;
             }
@@ -120,6 +131,10 @@ export class ScheduleService {
       }
     } catch (err) {
       console.warn('Network refresh failed, using cached schedule', err);
+    }
+
+    if (cached) {
+      return cached;
     }
 
     return this.getInitialSchedule(groupId);

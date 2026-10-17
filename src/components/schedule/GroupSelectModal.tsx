@@ -52,7 +52,7 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
   // Filter groups
   const filteredGroups = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return allGroups.filter((group) => {
+    const result = allGroups.filter((group: KsuGroup) => {
       // Faculty filter
       if (selectedFaculty !== 'all' && group.facul !== selectedFaculty) {
         return false;
@@ -69,6 +69,15 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
         return matchesName || matchesFacul || matchesCourse;
       }
       return true;
+    });
+
+    return result.sort((a, b) => {
+      const aCount = a.lessonsCount || 0;
+      const bCount = b.lessonsCount || 0;
+      if ((aCount > 0) !== (bCount > 0)) {
+        return bCount - aCount;
+      }
+      return a.name.localeCompare(b.name, 'ru');
     });
   }, [allGroups, searchQuery, selectedFaculty, selectedCourse]);
 
@@ -276,6 +285,15 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
                           {group.kurs && (
                             <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-400 font-medium">
                               {group.kurs} курс
+                            </span>
+                          )}
+                          {typeof group.lessonsCount === 'number' && group.lessonsCount > 0 ? (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">
+                              {group.lessonsCount} пар
+                            </span>
+                          ) : (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-apple-gray-400 font-medium">
+                              Нет пар
                             </span>
                           )}
                         </div>

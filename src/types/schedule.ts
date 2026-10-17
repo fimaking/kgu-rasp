@@ -101,4 +101,5 @@ export interface KsuGroup {
   kurs?: number;
   facul?: string;
   facultyID?: number;
+  lessonsCount?: number;
 }
