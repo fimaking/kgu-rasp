@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v31';
+const CACHE_NAME = 'ksu-student-cache-v32';
 
 const STATIC_ASSETS = [
   './',

@@ -88,7 +88,37 @@ export const TodayView: React.FC<TodayViewProps> = ({
         </button>
       </div>
 
-      {/* Quick Stats Grid (4 badges) */}
+      {/* 1. Hero: Current or Next Pair (вверху) */}
+      <NextPairBanner
+        currentOrNext={currentOrNextLesson}
+        todayLessonsCount={todayLessons.length}
+      />
+
+      {/* 2. Today's pairs (после нее пары на сегодня) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white flex items-center gap-2">
+            <span>Пары на сегодня</span>
+            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-500">
+              {todayLessons.length}
+            </span>
+          </h3>
+
+          <button
+            onClick={() => onNavigateToTab('schedule')}
+            className="text-xs font-semibold text-apple-blue hover:underline"
+          >
+            Смотреть неделю
+          </button>
+        </div>
+
+        <TodayLessonsList
+          lessons={todayLessons}
+          onSelectLesson={(l) => setSelectedLesson(l)}
+        />
+      </div>
+
+      {/* 3. Quick Stats Grid (4 плашки: перенесены вниз перед заданиями и дедлайнами) */}
       <QuickStats
         todayLessonsCount={todayLessons.length}
         activeHomeworkCount={activeHomeworkCount}
@@ -97,55 +127,22 @@ export const TodayView: React.FC<TodayViewProps> = ({
         onNavigateToTab={onNavigateToTab}
       />
 
-      {/* Hero: Current or Next Pair */}
-      <NextPairBanner
-        currentOrNext={currentOrNextLesson}
-        todayLessonsCount={todayLessons.length}
-      />
-
-      {/* Two-column layout: Today's pairs & Today's tasks */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Today's schedule (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white flex items-center gap-2">
-              <span>Пары на сегодня</span>
-              <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-500">
-                {todayLessons.length}
-              </span>
-            </h3>
-
-            <button
-              onClick={() => onNavigateToTab('schedule')}
-              className="text-xs font-semibold text-apple-blue hover:underline"
-            >
-              Смотреть неделю
-            </button>
-          </div>
-
-          <TodayLessonsList
-            lessons={todayLessons}
-            onSelectLesson={(l) => setSelectedLesson(l)}
-          />
+      {/* 4. Homework & Deadlines (задания и дедлайны) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white">
+            Задания и дедлайны
+          </h3>
         </div>
 
-        {/* Right Column: Homework & Deadlines (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white">
-              Задания и дедлайны
-            </h3>
-          </div>
-
-          <TodayHomeworkWidget
-            dueTodayList={dueTodayList}
-            overdueList={overdueList}
-            onToggleComplete={onToggleCompleteHomework}
-            onOpenCreateModal={onOpenCreateHomework}
-            onViewAllHomework={() => onNavigateToTab('homework')}
-            onSelectHomework={onSelectHomework}
-          />
-        </div>
+        <TodayHomeworkWidget
+          dueTodayList={dueTodayList}
+          overdueList={overdueList}
+          onToggleComplete={onToggleCompleteHomework}
+          onOpenCreateModal={onOpenCreateHomework}
+          onViewAllHomework={() => onNavigateToTab('homework')}
+          onSelectHomework={onSelectHomework}
+        />
       </div>
 
       {/* Lesson details modal */}

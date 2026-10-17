@@ -48,7 +48,7 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
       {lessons.map((lesson) => {
         const status = getLessonStatus(lesson, now);
         const isCurrent = status.status === 'current';
