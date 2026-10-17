@@ -1,5 +1,15 @@
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type VisualTheme = 'classic' | 'oled' | 'midnight' | 'emerald' | 'sunset' | 'cyber';
+export type VisualTheme =
+  | 'cyber-violet'
+  | 'electric-mint'
+  | 'acid-lime'
+  | 'monochrome'
+  | 'classic'
+  | 'oled'
+  | 'midnight'
+  | 'emerald'
+  | 'sunset'
+  | 'cyber';
 export type FontFamily = 'system' | 'inter' | 'roboto' | 'nunito' | 'mono' | 'serif';
 export type FontScale = 'compact' | 'normal' | 'large';
 export type AppRadius = 'compact' | 'normal' | 'soft';
@@ -62,7 +72,11 @@ export interface AccentColorOption {
 }
 
 export const ACCENT_COLORS: AccentColorOption[] = [
-  { id: 'blue', name: 'Синий', hex: '#007AFF', rgb: '0 122 255' },
+  { id: 'neon-purple', name: 'Кибер-пурпур', hex: '#B5179E', rgb: '181 23 158' },
+  { id: 'electric-mint', name: 'Электро-мята', hex: '#00F5A0', rgb: '0 245 160' },
+  { id: 'acid-lime', name: 'Кислотный лайм', hex: '#D4FF00', rgb: '212 255 0' },
+  { id: 'pure-white', name: 'Монохром', hex: '#E4E4E7', rgb: '228 228 231' },
+  { id: 'blue', name: 'Синий Apple', hex: '#007AFF', rgb: '0 122 255' },
   { id: 'indigo', name: 'Индиго', hex: '#5856D6', rgb: '88 86 214' },
   { id: 'purple', name: 'Фиолетовый', hex: '#AF52DE', rgb: '175 82 222' },
   { id: 'pink', name: 'Розовый', hex: '#FF2D55', rgb: '255 45 85' },
@@ -85,6 +99,38 @@ export interface VisualThemeOption {
 }
 
 export const VISUAL_THEMES: VisualThemeOption[] = [
+  {
+    id: 'cyber-violet',
+    name: 'Cyber Violet',
+    description: 'Кибер-пурпурные и неоновые фиолетовые акценты на глубоком темном фоне (Music Player)',
+    previewColorDark: '#0B0516',
+    previewColorLight: '#F7F3FB',
+    accentDefault: '#B5179E',
+  },
+  {
+    id: 'electric-mint',
+    name: 'Electric Mint',
+    description: 'Электрическая мята и бирюзовые неоновые акценты на графитовом фоне (Fintech)',
+    previewColorDark: '#0A1118',
+    previewColorLight: '#F0FDF8',
+    accentDefault: '#00F5A0',
+  },
+  {
+    id: 'acid-lime',
+    name: 'Acid Lime',
+    description: 'Кислотно-лаймовые и желтые неоновые акценты на древесно-угольном фоне (Sports Startup)',
+    previewColorDark: '#11140E',
+    previewColorLight: '#F8FAF0',
+    accentDefault: '#D4FF00',
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome Reader',
+    description: 'Минималистичный монохром с мягким белым текстом и многослойными серыми карточками (E-Reader)',
+    previewColorDark: '#111114',
+    previewColorLight: '#F4F4F5',
+    accentDefault: '#E4E4E7',
+  },
   {
     id: 'classic',
     name: 'Apple Classic',

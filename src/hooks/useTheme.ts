@@ -94,9 +94,17 @@ export function useTheme() {
           else if (visualTheme === 'emerald') metaTheme.setAttribute('content', '#05140E');
           else if (visualTheme === 'sunset') metaTheme.setAttribute('content', '#171114');
           else if (visualTheme === 'cyber') metaTheme.setAttribute('content', '#0A0A10');
+          else if (visualTheme === 'cyber-violet') metaTheme.setAttribute('content', '#0B0516');
+          else if (visualTheme === 'electric-mint') metaTheme.setAttribute('content', '#081016');
+          else if (visualTheme === 'acid-lime') metaTheme.setAttribute('content', '#0F120E');
+          else if (visualTheme === 'monochrome') metaTheme.setAttribute('content', '#0E0E11');
           else metaTheme.setAttribute('content', '#121214');
         } else {
           if (visualTheme === 'sunset') metaTheme.setAttribute('content', '#F7F3EE');
+          else if (visualTheme === 'cyber-violet') metaTheme.setAttribute('content', '#F7F3FB');
+          else if (visualTheme === 'electric-mint') metaTheme.setAttribute('content', '#F0FDF8');
+          else if (visualTheme === 'acid-lime') metaTheme.setAttribute('content', '#F8FAF0');
+          else if (visualTheme === 'monochrome') metaTheme.setAttribute('content', '#F4F4F5');
           else metaTheme.setAttribute('content', '#F2F2F7');
         }
       }

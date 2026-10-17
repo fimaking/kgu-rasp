@@ -415,7 +415,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   key={vt.id}
                   type="button"
-                  onClick={() => onVisualThemeChange(vt.id)}
+                  onClick={() => {
+                    onVisualThemeChange(vt.id);
+                    if (vt.accentDefault) {
+                      onAccentColorChange(vt.accentDefault);
+                    }
+                  }}
                   className={`p-3 rounded-2xl text-left transition-all relative overflow-hidden active:scale-[0.98] flex flex-col justify-between ${
                     isSelected
                       ? 'bg-apple-blue/10 dark:bg-apple-blue/15 border-2 border-apple-blue shadow-apple-sm'

@@ -70,8 +70,8 @@ describe('App Customization & Theming Suite', () => {
     expect(retrieved.reducedMotion).toBe(true);
   });
 
-  it('validates ACCENT_COLORS contains 11 Apple colors with valid rgb channels', () => {
-    expect(ACCENT_COLORS.length).toBeGreaterThanOrEqual(11);
+  it('validates ACCENT_COLORS contains signature and Apple colors with valid rgb channels', () => {
+    expect(ACCENT_COLORS.length).toBeGreaterThanOrEqual(15);
     for (const color of ACCENT_COLORS) {
       expect(color.hex).toMatch(/^#[0-9A-Fa-f]{6}$/);
       expect(color.rgb).toMatch(/^\d{1,3} \d{1,3} \d{1,3}$/);
@@ -79,10 +79,14 @@ describe('App Customization & Theming Suite', () => {
     }
   });
 
-  it('validates all 6 VISUAL_THEMES have unique IDs and contrasting preview colors', () => {
-    expect(VISUAL_THEMES.length).toBe(6);
+  it('validates VISUAL_THEMES covers the 4 showcase dark themes plus classic options', () => {
+    expect(VISUAL_THEMES.length).toBe(10);
     const themeIds = VISUAL_THEMES.map((t) => t.id);
-    expect(new Set(themeIds).size).toBe(6);
+    expect(new Set(themeIds).size).toBe(10);
+    expect(themeIds).toContain('cyber-violet');
+    expect(themeIds).toContain('electric-mint');
+    expect(themeIds).toContain('acid-lime');
+    expect(themeIds).toContain('monochrome');
     expect(themeIds).toContain('classic');
     expect(themeIds).toContain('oled');
     expect(themeIds).toContain('midnight');
@@ -93,6 +97,7 @@ describe('App Customization & Theming Suite', () => {
     for (const theme of VISUAL_THEMES) {
       expect(theme.previewColorDark).toMatch(/^#[0-9A-Fa-f]{6}$/);
       expect(theme.previewColorLight).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(theme.accentDefault).toMatch(/^#[0-9A-Fa-f]{6}$/);
     }
   });
 
