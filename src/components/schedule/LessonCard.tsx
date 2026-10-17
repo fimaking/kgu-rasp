@@ -16,7 +16,7 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className={`group p-4 rounded-2.5xl backdrop-blur-xl border transition-all cursor-pointer relative overflow-hidden select-none ${
+      className={`group p-4 rounded-2.5xl backdrop-blur-xl border transition-all duration-200 ease-out cursor-pointer relative overflow-hidden select-none active:scale-[0.985] hover:-translate-y-0.5 ${
         isCurrent
           ? 'bg-blue-500/10 dark:bg-blue-500/15 border-apple-blue/50 shadow-apple-card ring-2 ring-apple-blue/20'
           : isPassed

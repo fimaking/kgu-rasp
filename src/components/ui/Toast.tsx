@@ -41,7 +41,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: () => void }> = ({
   };
 
   return (
-    <div className="pointer-events-auto flex items-start gap-3 p-4 bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-apple-float animate-in slide-in-from-bottom-3 duration-200">
+    <div className="pointer-events-auto flex items-start gap-3 p-4 bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-apple-float animate-toast-spring transition-all duration-200">
       {icons[toast.type]}
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-semibold text-apple-gray-900 dark:text-white leading-tight">
@@ -55,7 +55,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: () => void }> = ({
       </div>
       <button
         onClick={onDismiss}
-        className="p-1 -mr-1 text-apple-gray-400 hover:text-apple-gray-600 dark:hover:text-white rounded-full transition-colors"
+        className="p-1 -mr-1 text-apple-gray-400 hover:text-apple-gray-600 dark:hover:text-white rounded-full transition-all duration-150 active:scale-90"
       >
         <X className="w-4 h-4" />
       </button>

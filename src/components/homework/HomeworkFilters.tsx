@@ -49,7 +49,7 @@ export const HomeworkFilters: React.FC<HomeworkFiltersProps> = ({
             <button
               key={tab.id}
               onClick={() => onFilterChange({ ...filters, tab: tab.id })}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl whitespace-nowrap transition-all duration-150 ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.96] ${
                 isActive
                   ? 'bg-white dark:bg-zinc-800 text-apple-gray-900 dark:text-white shadow-apple-sm font-bold scale-[1.01]'
                   : 'text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-gray-900 dark:hover:text-white'

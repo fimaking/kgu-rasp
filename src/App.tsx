@@ -184,10 +184,11 @@ export const App: React.FC = () => {
           lastUpdated={schedule.lastUpdated}
         />
 
-        {/* Scrollable View Area with Smooth Entrance */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-28 md:pb-8 animate-app-entrance">
+        {/* Scrollable View Area with Smooth Transitions */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-28 md:pb-8">
           <div className="max-w-7xl mx-auto">
-            {currentTab === 'today' && (
+            <div key={currentTab} className="animate-tab-transition">
+              {currentTab === 'today' && (
               <TodayView
                 todayLessons={schedule.todayLessons}
                 allLessons={schedule.lessons}
@@ -289,6 +290,7 @@ export const App: React.FC = () => {
                 lastUpdated={schedule.lastUpdated}
               />
             )}
+            </div>
           </div>
         </main>
       </div>

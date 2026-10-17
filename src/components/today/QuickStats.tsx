@@ -21,7 +21,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       {/* Lessons today */}
       <div
         onClick={() => onNavigateToTab('schedule')}
-        className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all cursor-pointer group"
+        className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group"
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-apple-gray-400">
@@ -47,7 +47,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       {/* Due Today */}
       <div
         onClick={() => onNavigateToTab('homework')}
-        className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all cursor-pointer group"
+        className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group"
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-apple-gray-400">
@@ -71,7 +71,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       {/* Overdue */}
       <div
         onClick={() => onNavigateToTab('homework')}
-        className={`p-4 sm:p-5 rounded-3xl backdrop-blur-xl border transition-all cursor-pointer group ${
+        className={`p-4 sm:p-5 rounded-3xl backdrop-blur-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group ${
           overdueHomeworkCount > 0
             ? 'bg-rose-500/5 dark:bg-rose-500/10 border-rose-500/20 shadow-apple-card'
             : 'bg-white/70 dark:bg-zinc-900/70 border-black/5 dark:border-white/10 shadow-apple-card'
@@ -111,7 +111,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       {/* Active homework */}
       <div
         onClick={() => onNavigateToTab('homework')}
-        className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all cursor-pointer group"
+        className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group"
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-apple-gray-400">

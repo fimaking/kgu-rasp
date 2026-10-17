@@ -54,7 +54,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       {/* Floating Action Button for mobile */}
       <button
         onClick={onOpenCreateHomework}
-        className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-apple-float flex items-center justify-center active:scale-95 transition-transform"
+        className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-apple-float flex items-center justify-center transition-all duration-200 ease-out active:scale-90 hover:scale-105"
         aria-label="Добавить домашнее задание"
       >
         <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -68,7 +68,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-150 ${
+              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
                 isActive
                   ? 'text-apple-blue font-semibold scale-105'
                   : 'text-apple-gray-500 dark:text-apple-gray-400 hover:text-apple-gray-800'
@@ -78,7 +78,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                 {tab.icon}
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span
-                    className={`absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center ${
+                    className={`absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center animate-check-pop ${
                       tab.badgeColor || 'bg-apple-blue'
                     }`}
                   >

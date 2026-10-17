@@ -44,16 +44,16 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md animate-backdrop-fade"
         onClick={onClose}
       />
 
-      {/* Dialog Card */}
+      {/* Dialog Card with Apple Spring Entrance */}
       <div
-        className={`relative w-full ${widthClasses[maxWidth]} bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-apple-float overflow-hidden z-10 transition-all transform scale-100 animate-in zoom-in-95 duration-150`}
+        className={`relative w-full ${widthClasses[maxWidth]} bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-apple-float overflow-hidden z-10 animate-modal-spring`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

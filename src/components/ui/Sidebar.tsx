@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Quick Add Homework Button */}
       <button
         onClick={onOpenCreateHomework}
-        className="flex items-center justify-center gap-2 w-full py-2.5 px-4 mb-5 rounded-2xl bg-apple-blue hover:bg-blue-600 text-white font-medium text-sm shadow-apple-sm transition-all duration-150 active:scale-[0.98]"
+        className="flex items-center justify-center gap-2 w-full py-2.5 px-4 mb-5 rounded-2xl bg-apple-blue hover:bg-blue-600 text-white font-medium text-sm shadow-apple-sm transition-all duration-200 ease-out active:scale-[0.96] hover:shadow-md"
       >
         <Plus className="w-4 h-4 stroke-[2.5]" />
         <span>Новое задание</span>
@@ -102,21 +102,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`flex items-center justify-between w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all duration-150 ${
+              className={`flex items-center justify-between w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ease-out active:scale-[0.97] ${
                 isActive
                   ? 'bg-black/5 dark:bg-white/10 text-apple-blue dark:text-apple-blue font-semibold shadow-sm'
                   : 'text-apple-gray-600 dark:text-apple-gray-400 hover:bg-black/[0.03] dark:hover:bg-white/[0.05] hover:text-apple-gray-900 dark:hover:text-white'
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={isActive ? 'text-apple-blue' : 'text-current'}>
+                <span className={`transition-transform duration-200 ${isActive ? 'text-apple-blue scale-110' : 'text-current'}`}>
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
               </div>
               {item.badge !== undefined && item.badge > 0 && (
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                  className={`text-xs px-2 py-0.5 rounded-full font-bold transition-all duration-200 ${
                     item.badgeVariant === 'red'
                       ? 'bg-rose-500 text-white'
                       : 'bg-apple-blue/15 text-apple-blue dark:bg-apple-blue/25'
@@ -134,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between px-2">
         <button
           onClick={onToggleTheme}
-          className="flex items-center gap-2 p-2 rounded-xl text-xs font-medium text-apple-gray-500 hover:text-apple-gray-900 dark:text-apple-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          className="flex items-center gap-2 p-2 rounded-xl text-xs font-medium text-apple-gray-500 hover:text-apple-gray-900 dark:text-apple-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200 ease-out active:scale-95"
           title="Сменить тему"
         >
           {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-apple-indigo" />}

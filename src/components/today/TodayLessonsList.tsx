@@ -39,11 +39,11 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
           <div
             key={lesson.id}
             onClick={() => onSelectLesson(lesson)}
-            className={`group p-4 sm:p-5 rounded-3xl backdrop-blur-xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            className={`group p-4 sm:p-5 rounded-3xl backdrop-blur-xl border transition-all duration-200 ease-out cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 active:scale-[0.985] hover:-translate-y-0.5 ${
               isCurrent
                 ? 'bg-blue-500/5 dark:bg-blue-500/10 border-apple-blue/40 shadow-apple-hover ring-2 ring-apple-blue/20'
                 : isPassed
-                ? 'bg-white/40 dark:bg-zinc-900/40 border-black/5 dark:border-white/5 opacity-60 hover:opacity-100'
+                ? 'bg-white/40 dark:bg-zinc-900/40 border-black/5 dark:border-white/5 opacity-60 hover:opacity-100 hover:shadow-apple-sm'
                 : 'bg-white/80 dark:bg-zinc-900/80 border-black/5 dark:border-white/10 hover:shadow-apple-hover'
             }`}
           >

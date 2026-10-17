@@ -132,4 +132,98 @@
   animation: appPageEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Tab Switching Liquid Transition */
+@keyframes tabTransition {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.996);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-tab-transition {
+  animation: tabTransition 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Modal Spring Dialog Entrance */
+@keyframes modalSpring {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-spring {
+  animation: modalSpring 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Modal Backdrop Smooth Fade */
+@keyframes backdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-backdrop-fade {
+  animation: backdropFade 0.22s ease-out forwards;
+}
+
+/* Toast Spring Entrance */
+@keyframes toastSpring {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-spring {
+  animation: toastSpring 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Checkbox Pop Animation */
+@keyframes checkPop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-check-pop {
+  animation: checkPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Apple-style interactive card micro-interactions */
+.apple-card-interactive {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
+}
+.apple-card-interactive:hover {
+  transform: translateY(-2px);
+}
+.apple-card-interactive:active {
+  transform: scale(0.985) translateY(0);
+}
+
+
 

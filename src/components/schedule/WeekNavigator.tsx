@@ -44,7 +44,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onPrevWeek}
-            className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-colors"
+            className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
             title="Предыдущая неделя"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -52,7 +52,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
           <button
             onClick={onGoToToday}
-            className="px-3.5 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue font-semibold text-xs transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue font-semibold text-xs transition-all duration-200 ease-out active:scale-95 flex items-center gap-1.5"
           >
             <CalendarIcon className="w-3.5 h-3.5" />
             <span>Сегодня</span>
@@ -60,7 +60,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
           <button
             onClick={onNextWeek}
-            className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-colors"
+            className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
             title="Следующая неделя"
           >
             <ChevronRight className="w-4 h-4" />
@@ -87,7 +87,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <button
               key={idx}
               onClick={() => onSelectDay(day.date)}
-              className={`flex flex-col items-center py-2 px-1 sm:px-2 rounded-2xl transition-all duration-150 ${
+              className={`flex flex-col items-center py-2 px-1 sm:px-2 rounded-2xl transition-all duration-200 ease-out active:scale-95 ${
                 isSelected
                   ? 'bg-apple-blue text-white shadow-apple-sm font-semibold scale-102'
                   : day.isToday

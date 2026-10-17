@@ -37,9 +37,9 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
   return (
     <div
-      className={`group p-4 sm:p-5 rounded-3xl backdrop-blur-xl border transition-all select-none ${
+      className={`group p-4 sm:p-5 rounded-3xl backdrop-blur-xl border select-none transition-all duration-200 ease-out hover:-translate-y-0.5 ${
         isCompleted
-          ? 'bg-white/40 dark:bg-zinc-900/40 border-black/5 dark:border-white/5 opacity-70 hover:opacity-100'
+          ? 'bg-white/40 dark:bg-zinc-900/40 border-black/5 dark:border-white/5 opacity-70 hover:opacity-100 hover:shadow-apple-sm'
           : deadlineInfo.isOverdue
           ? 'bg-rose-500/[0.04] dark:bg-rose-500/[0.08] border-rose-500/20 shadow-apple-card hover:shadow-apple-hover'
           : 'bg-white/80 dark:bg-zinc-900/80 border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover'
@@ -49,18 +49,18 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
         {/* Apple Reminders circular checkmark */}
         <button
           onClick={() => onToggleComplete(homework.id)}
-          className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 active:scale-90 ${
+          className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ease-out shrink-0 active:scale-75 ${
             isCompleted
-              ? 'bg-apple-blue border-apple-blue text-white shadow-apple-sm'
+              ? 'bg-apple-blue border-apple-blue text-white shadow-apple-sm scale-100'
               : deadlineInfo.isOverdue
               ? 'border-rose-400 hover:border-rose-500 hover:bg-rose-500/10'
-              : 'border-apple-gray-300 dark:border-apple-gray-600 hover:border-apple-blue hover:bg-apple-blue/10'
+              : 'border-apple-gray-300 dark:border-apple-gray-600 hover:border-apple-blue hover:bg-apple-blue/10 hover:scale-105'
           }`}
           title={isCompleted ? 'Отметить как невыполненное' : 'Отметить как выполненное'}
         >
           <Check
-            className={`w-3.5 h-3.5 stroke-[3] transition-opacity ${
-              isCompleted ? 'opacity-100' : 'opacity-0 hover:opacity-60'
+            className={`w-3.5 h-3.5 stroke-[3] transition-all duration-200 ${
+              isCompleted ? 'opacity-100 scale-100 animate-check-pop' : 'opacity-0 scale-50'
             }`}
           />
         </button>

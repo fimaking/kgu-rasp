@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onRefresh}
             disabled={refreshing}
-            className="p-1.5 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-all duration-200 ease-out active:scale-90 disabled:opacity-50"
             title="Обновить расписание с сайта КГУ"
           >
             <RotateCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-apple-blue' : ''}`} />
