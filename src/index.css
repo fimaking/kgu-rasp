@@ -52,15 +52,50 @@
   }
 }
 
-@keyframes splashProgress {
+@keyframes splashFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes splashGreetingSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splashProgress4s {
   0% {
     width: 0%;
   }
-  50% {
-    width: 72%;
+  25% {
+    width: 32%;
+  }
+  65% {
+    width: 78%;
+  }
+  85% {
+    width: 93%;
   }
   100% {
     width: 100%;
+  }
+}
+
+@keyframes bounceShort {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(4deg);
   }
 }
 
@@ -79,10 +114,24 @@
   animation: splashSpring 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-splash-progress {
-  animation: splashProgress 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+.animate-splash-float {
+  animation: splashFloat 3s ease-in-out infinite;
+}
+
+.animate-splash-greeting {
+  animation: splashGreetingSlide 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.animate-splash-progress-4s {
+  animation: splashProgress4s 3.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-bounce-short {
+  animation: bounceShort 2s ease-in-out infinite;
+  display: inline-block;
 }
 
 .animate-app-entrance {
   animation: appPageEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
