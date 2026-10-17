@@ -33,7 +33,6 @@ export class RealtimeSyncService {
   private static currentRoom: string | null = null;
   private static subscribers: Set<SyncCallback> = new Set();
   private static isConnected: boolean = false;
-  private static publishTimer: any = null;
   private static isListeningToOnline: boolean = false;
 
   /**
@@ -79,7 +78,7 @@ export class RealtimeSyncService {
   /**
    * Notify all React listeners
    */
-  private static notifySubscribers(): void {
+  public static notifySubscribers(): void {
     for (const cb of this.subscribers) {
       try {
         cb();
@@ -99,15 +98,27 @@ export class RealtimeSyncService {
     const room = roomCode || this.getRoomCode();
     if (!room) return;
 
-    // Listen for online recovery once
+    // Listen for online recovery and tab visibility
     if (!this.isListeningToOnline) {
       this.isListeningToOnline = true;
       window.addEventListener('online', () => {
-        console.log('[RealtimeSync] Network back online. Reconnecting and polling...');
+        console.log('[RealtimeSync] Network back online. Reconnecting and pulling...');
         this.connect();
         this.pullLatest();
         this.broadcast();
       });
+
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            console.log('[RealtimeSync] Visibility visible. Verifying SSE connection and pulling latest...');
+            if (!this.eventSource || this.eventSource.readyState === EventSource.CLOSED) {
+              this.connect();
+            }
+            this.pullLatest();
+          }
+        });
+      }
     }
 
     if (this.eventSource && this.currentRoom === room && this.isConnected) {
@@ -204,7 +215,7 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Fetch latest payload from cloud topic cache
+   * Fetch latest payload from cloud topic cache (skips echoes from self to find latest peer update)
    */
   static async pullLatestPayload(): Promise<RealtimeSyncPayload | null> {
     try {
@@ -217,7 +228,32 @@ export class RealtimeSyncService {
       const text = await res.text();
       if (!text.trim()) return null;
 
+      const currentDevId = getDeviceId();
       const lines = text.trim().split('\n');
+
+      // 1. First priority: Find newest message from another device
+      for (let i = lines.length - 1; i >= 0; i--) {
+        try {
+          const item = JSON.parse(lines[i]);
+          if (item.event === 'message') {
+            let p: RealtimeSyncPayload | null = null;
+            if (item.attachment && item.attachment.url) {
+              const fileRes = await fetch(item.attachment.url);
+              p = await fileRes.json();
+            } else if (item.message) {
+              p = JSON.parse(item.message);
+            }
+
+            if (p && p.senderId && p.senderId !== currentDevId) {
+              return p;
+            }
+          }
+        } catch {
+          // ignore corrupted lines
+        }
+      }
+
+      // 2. Fallback: Any valid message in cache
       for (let i = lines.length - 1; i >= 0; i--) {
         try {
           const item = JSON.parse(lines[i]);
@@ -231,9 +267,10 @@ export class RealtimeSyncService {
             }
           }
         } catch {
-          // ignore corrupted lines
+          // ignore
         }
       }
+
       return null;
     } catch (e) {
       console.warn('[RealtimeSync] pullLatestPayload error', e);
@@ -242,19 +279,30 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Smart merge remote payload with local data
+   * Smart merge remote payload with local data and notify UI immediately
    */
   static applyPayload(data: RealtimeSyncPayload): boolean {
     try {
-      // 1. Tombstones (deleted items stay deleted permanently)
+      // 1. Capture snapshot of local state BEFORE applying any remote changes
+      const prevHomework = StorageService.getHomework();
+      const prevEvents = StorageService.getEvents();
+      const prevDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+
+      // 2. Check and record tombstones (deleted items stay deleted permanently)
+      let hasNewTombstones = false;
       if (Array.isArray(data.deletedHwIds) && data.deletedHwIds.length > 0) {
+        for (const id of data.deletedHwIds) {
+          if (!prevDeletedIds.has(id)) {
+            hasNewTombstones = true;
+          }
+        }
         StorageService.recordDeletedHomeworkIds(data.deletedHwIds);
       }
       const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
 
-      // 2. Smart merge homework
+      // 3. Smart merge homework
       const remoteHw = (data.homework || []).filter((h) => !allDeletedIds.has(h.id));
-      const localHw = StorageService.getHomework().filter((h) => !allDeletedIds.has(h.id));
+      const localHw = prevHomework.filter((h) => !allDeletedIds.has(h.id));
 
       const mergedMap = new Map<string, Homework>();
       for (const h of remoteHw) {
@@ -278,44 +326,48 @@ export class RealtimeSyncService {
       }
 
       const finalHw = Array.from(mergedMap.values());
-      const localRaw = JSON.stringify(localHw);
-      const finalRaw = JSON.stringify(finalHw);
-      const changed = localRaw !== finalRaw;
+      StorageService.saveHomework(finalHw);
 
-      if (changed) {
-        StorageService.saveHomework(finalHw);
-      }
-
-      // 3. Smart merge custom events
-      if (Array.isArray(data.events) && data.events.length > 0) {
-        const localEvents = StorageService.getEvents();
+      // 4. Smart merge custom events
+      let eventsChanged = false;
+      if (Array.isArray(data.events)) {
         const eventMap = new Map<string, CalendarCustomEvent>();
         for (const e of data.events) {
           eventMap.set(e.id, e);
         }
-        for (const e of localEvents) {
+        for (const e of prevEvents) {
           if (!eventMap.has(e.id)) {
             eventMap.set(e.id, e);
             localHadUniqueOrNewer = true;
           }
         }
-        StorageService.saveEvents(Array.from(eventMap.values()));
+        const finalEvents = Array.from(eventMap.values());
+        if (JSON.stringify(prevEvents) !== JSON.stringify(finalEvents)) {
+          eventsChanged = true;
+          StorageService.saveEvents(finalEvents);
+        }
       }
 
-      // 4. Update last modified
+      // 5. Detect changes compared to BEFORE payload was applied
+      const hwChanged =
+        hasNewTombstones ||
+        prevHomework.length !== finalHw.length ||
+        JSON.stringify(prevHomework) !== JSON.stringify(finalHw);
+
       StorageService.recordLastModified(data.updatedAt || new Date().toISOString());
 
-      // 5. Notify UI immediately
-      if (changed) {
+      // 6. ALWAYS notify UI subscribers immediately if homework, tombstones or events changed!
+      if (hwChanged || eventsChanged) {
+        console.log('[RealtimeSync] Changes applied (created/deleted/updated). Notifying subscribers...');
         this.notifySubscribers();
       }
 
-      // 6. If local had unique/newer items that remote was missing, broadcast back merged state
+      // 7. If local had items that remote was missing, broadcast back merged state
       if (localHadUniqueOrNewer) {
         this.broadcast();
       }
 
-      return changed;
+      return hwChanged || eventsChanged;
     } catch (err) {
       console.error('[RealtimeSync] applyPayload error', err);
       return false;
@@ -323,41 +375,34 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Broadcast state to all other connected devices instantly (< 150ms)
+   * Broadcast state to all other connected devices instantly without delay
    */
   static broadcast(): void {
-    if (this.publishTimer) {
-      clearTimeout(this.publishTimer);
-    }
+    const topic = this.getTopicName();
 
-    // Small debounce to batch rapid state changes
-    this.publishTimer = setTimeout(async () => {
-      this.publishTimer = null;
-      const topic = this.getTopicName();
+    const payload: RealtimeSyncPayload = {
+      version: '1.0',
+      senderId: getDeviceId(),
+      updatedAt: new Date().toISOString(),
+      homework: StorageService.getHomework(),
+      events: StorageService.getEvents(),
+      deletedHwIds: StorageService.getDeletedHomeworkIds(),
+    };
 
-      const payload: RealtimeSyncPayload = {
-        version: '1.0',
-        senderId: getDeviceId(),
-        updatedAt: new Date().toISOString(),
-        homework: StorageService.getHomework(),
-        events: StorageService.getEvents(),
-        deletedHwIds: StorageService.getDeletedHomeworkIds(),
-      };
-
-      try {
-        console.log(`[RealtimeSync] Broadcasting update to ${topic}...`);
-        await fetch(`https://ntfy.sh/${topic}`, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    console.log(`[RealtimeSync] Broadcasting update to ${topic}...`);
+    fetch(`https://ntfy.sh/${topic}`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(() => {
         console.log(`[RealtimeSync] Broadcast successfully delivered!`);
-      } catch (err) {
+      })
+      .catch((err) => {
         console.warn('[RealtimeSync] Broadcast failed, will retry on online', err);
-      }
-    }, 150);
+      });
   }
 
   /**

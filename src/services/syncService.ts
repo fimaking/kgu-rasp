@@ -479,16 +479,27 @@ export class SyncService {
       return { updated: false };
     }
 
-    // 1. Merge tombstones (any task deleted on either device stays deleted permanently)
+    // 1. Snapshot local state BEFORE applying remote data
+    const prevHomework = StorageService.getHomework();
+    const prevEvents = StorageService.getEvents();
+    const prevDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+
+    // 2. Merge tombstones (any task deleted on either device stays deleted permanently)
+    let hasNewTombstones = false;
     const allRemoteTombstones: string[] = [];
     if (Array.isArray(gistPayload?.deletedHwIds)) allRemoteTombstones.push(...gistPayload.deletedHwIds);
     if (Array.isArray(roomPayload?.deletedHwIds)) allRemoteTombstones.push(...roomPayload.deletedHwIds);
     if (allRemoteTombstones.length > 0) {
+      for (const id of allRemoteTombstones) {
+        if (!prevDeletedIds.has(id)) {
+          hasNewTombstones = true;
+        }
+      }
       StorageService.recordDeletedHomeworkIds(allRemoteTombstones);
     }
     const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
 
-    // 2. Collect remote homework items from both sources (prefer newer item)
+    // 3. Collect remote homework items from both sources (prefer newer item)
     const remoteHwMap = new Map<string, Homework>();
     const feedHw = (list?: Homework[]) => {
       if (!Array.isArray(list)) return;
@@ -510,8 +521,8 @@ export class SyncService {
     feedHw(gistPayload?.homework);
     feedHw(roomPayload?.homework);
 
-    // 3. Smart Merge with local tasks
-    const localHw = StorageService.getHomework().filter((h) => !allDeletedIds.has(h.id));
+    // 4. Smart Merge with local tasks
+    const localHw = prevHomework.filter((h) => !allDeletedIds.has(h.id));
     const mergedMap = new Map<string, Homework>(remoteHwMap);
 
     let localHadUniqueOrNewer = false;
@@ -532,34 +543,41 @@ export class SyncService {
     }
 
     const finalHw = Array.from(mergedMap.values());
+    StorageService.saveHomework(finalHw);
 
-    // Check if local tasks changed
-    const localRaw = JSON.stringify(localHw);
-    const finalRaw = JSON.stringify(finalHw);
-    const hasLocalChanges = localRaw !== finalRaw;
-
-    if (hasLocalChanges) {
-      StorageService.saveHomework(finalHw);
-    }
-
-    // 4. Merge custom calendar events
+    // 5. Merge custom calendar events
+    let eventsChanged = false;
     const remoteEvents = [...(gistPayload?.events || []), ...(roomPayload?.events || [])];
     if (remoteEvents.length > 0) {
-      const localEvents = StorageService.getEvents();
       const eventMap = new Map<string, CalendarCustomEvent>();
       for (const e of remoteEvents) {
         eventMap.set(e.id, e);
       }
-      for (const e of localEvents) {
+      for (const e of prevEvents) {
         if (!eventMap.has(e.id)) {
           eventMap.set(e.id, e);
           localHadUniqueOrNewer = true;
         }
       }
-      StorageService.saveEvents(Array.from(eventMap.values()));
+      const finalEvents = Array.from(eventMap.values());
+      if (JSON.stringify(prevEvents) !== JSON.stringify(finalEvents)) {
+        eventsChanged = true;
+        StorageService.saveEvents(finalEvents);
+      }
     }
 
-    // 5. If local had newer changes or merged data, push back so all devices stay in sync!
+    // Check if local tasks or tombstones changed compared to before pull
+    const hasLocalChanges =
+      hasNewTombstones ||
+      prevHomework.length !== finalHw.length ||
+      JSON.stringify(prevHomework) !== JSON.stringify(finalHw) ||
+      eventsChanged;
+
+    if (hasLocalChanges) {
+      RealtimeSyncService.notifySubscribers();
+    }
+
+    // 6. If local had newer changes or merged data, push back so all devices stay in sync!
     if (localHadUniqueOrNewer) {
       this.pushToCloud();
     }

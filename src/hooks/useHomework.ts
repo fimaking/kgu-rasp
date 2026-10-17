@@ -86,7 +86,7 @@ export function useHomework() {
     }
   }, []);
 
-  // Instant Realtime WebSocket sync listener (<100ms delivery, zero refresh needed!)
+  // Instant Realtime sync listener (<100ms delivery, zero refresh needed!)
   useEffect(() => {
     RealtimeSyncService.connect();
     const unsubscribe = RealtimeSyncService.onUpdate(() => {
@@ -95,7 +95,18 @@ export function useHomework() {
     return unsubscribe;
   }, []);
 
-  // Auto-sync from cloud: window focus, mobile visibility change, and continuous 8s polling
+  // Multi-tab storage sync on the same device
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.key || e.key.includes('homework') || e.key.includes('deleted_hw')) {
+        setItems(StorageService.getHomework());
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Auto-sync from cloud: window focus, mobile visibility change, and snappy 2.5s polling
   useEffect(() => {
     let isMounted = true;
 
@@ -111,6 +122,7 @@ export function useHomework() {
 
     const handleVisibility = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        RealtimeSyncService.connect();
         performSync();
       }
     };
@@ -118,8 +130,8 @@ export function useHomework() {
     window.addEventListener('focus', handleVisibility);
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // Poll every 8 seconds while page is visible
-    const timer = setInterval(performSync, 8000);
+    // Poll every 2.5 seconds while page is visible
+    const timer = setInterval(performSync, 2500);
 
     // Initial sync
     performSync();

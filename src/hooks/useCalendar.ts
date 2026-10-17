@@ -22,6 +22,17 @@ export function useCalendar(lessons: ParsedLesson[], homeworks: Homework[]) {
     });
   }, []);
 
+  // Multi-tab storage sync on the same device
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.key || e.key.includes('events') || e.key.includes('deleted_events')) {
+        setEvents(StorageService.getEvents());
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const addEvent = useCallback((event: Omit<CalendarCustomEvent, 'id' | 'createdAt'>) => {
     const created = StorageService.addEvent(event);
     setEvents(StorageService.getEvents());
