@@ -10,6 +10,7 @@ import { WeekNavigator } from './WeekNavigator';
 import { DayCard } from './DayCard';
 import { LessonModal } from './LessonModal';
 import { isSameDay, formatDateToIso } from '../../utils/dateUtils';
+import { getNextLessonDeadline } from '../../utils/scheduleParser';
 
 interface ScheduleViewProps {
   weekSchedule: WeekDaySchedule[];
@@ -21,11 +22,12 @@ interface ScheduleViewProps {
   onGoToToday: () => void;
   subgroupFilter: number;
   onSubgroupChange: (sg: number) => void;
-  onOpenCreateHomeworkForSubject: (subject: string) => void;
+  onOpenCreateHomeworkForSubject: (options: { subject: string; dueDate?: string; dueTime?: string }) => void;
 }
 
 export const ScheduleView: React.FC<ScheduleViewProps> = ({
   weekSchedule,
+  allLessons,
   info,
   selectedWeekMonday,
   onPrevWeek,
@@ -220,10 +222,16 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       {activeLessonModal && (
         <LessonModal
           lesson={activeLessonModal}
+          allLessons={allLessons}
           onClose={() => setActiveLessonModal(null)}
-          onAddHomeworkForSubject={(subj) => {
+          onAddHomeworkForSubject={(lesson) => {
             setActiveLessonModal(null);
-            onOpenCreateHomeworkForSubject(subj);
+            const deadline = getNextLessonDeadline(lesson, allLessons);
+            onOpenCreateHomeworkForSubject({
+              subject: lesson.subject,
+              dueDate: deadline.dueDate,
+              dueTime: deadline.dueTime,
+            });
           }}
         />
       )}

@@ -11,6 +11,8 @@ interface HomeworkFormModalProps {
   onSubmit: (data: Omit<Homework, 'id' | 'createdAt' | 'updatedAt'>) => void;
   initialData?: Homework | null;
   defaultSubject?: string;
+  defaultDueDate?: string;
+  defaultDueTime?: string;
   subjectsList: string[];
 }
 
@@ -20,6 +22,8 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
   onSubmit,
   initialData,
   defaultSubject,
+  defaultDueDate,
+  defaultDueTime,
   subjectsList,
 }) => {
   const [title, setTitle] = useState('');
@@ -65,9 +69,16 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
     } else {
       // New form reset
       setTitle('');
-      if (defaultSubject && subjectsList.includes(defaultSubject)) {
-        setSubject(defaultSubject);
-        setIsCustomSubject(false);
+      if (defaultSubject) {
+        const matched = subjectsList.find((s) => s.toLowerCase() === defaultSubject.toLowerCase());
+        if (matched) {
+          setSubject(matched);
+          setIsCustomSubject(false);
+        } else {
+          setSubject('custom');
+          setCustomSubject(defaultSubject);
+          setIsCustomSubject(true);
+        }
       } else if (subjectsList.length > 0) {
         setSubject(subjectsList[0]);
         setIsCustomSubject(false);
@@ -77,10 +88,16 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       }
       setDescription('');
       setAssignedDate(formatDateToIso(new Date()));
-      const d = new Date();
-      d.setDate(d.getDate() + 3);
-      setDueDate(formatDateToIso(d));
-      setDueTime('23:59');
+
+      if (defaultDueDate) {
+        setDueDate(defaultDueDate);
+      } else {
+        const d = new Date();
+        d.setDate(d.getDate() + 3);
+        setDueDate(formatDateToIso(d));
+      }
+
+      setDueTime(defaultDueTime || '23:59');
       setPriority('normal');
       setStatus('todo');
       setMaterialLink('');
@@ -88,7 +105,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       setSubtasks([]);
     }
     setErrors({});
-  }, [initialData, defaultSubject, subjectsList, isOpen]);
+  }, [initialData, defaultSubject, defaultDueDate, defaultDueTime, subjectsList, isOpen]);
 
   const handleAddSubtask = () => {
     if (!newSubtaskTitle.trim()) return;
@@ -148,6 +165,23 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       maxWidth="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Next Lesson Auto-Deadline Banner */}
+        {defaultDueDate && defaultDueTime && !initialData && (
+          <div className="p-3.5 rounded-2xl bg-apple-blue/10 dark:bg-apple-blue/20 border border-apple-blue/20 flex items-center gap-3 text-xs text-apple-blue dark:text-blue-300 font-medium animate-in fade-in">
+            <Clock className="w-4 h-4 shrink-0 text-apple-blue" />
+            <span>
+              Срок сдачи автоматически установлен к началу следующей пары:{' '}
+              <strong className="font-semibold text-apple-gray-900 dark:text-white">
+                {defaultDueDate}
+              </strong>{' '}
+              в{' '}
+              <strong className="font-semibold text-apple-gray-900 dark:text-white">
+                {defaultDueTime}
+              </strong>
+            </span>
+          </div>
+        )}
+
         {/* Title */}
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-1.5">

@@ -3,6 +3,7 @@ import { Sparkles, CalendarDays } from 'lucide-react';
 import { ParsedLesson, RaspInfo } from '../../types/schedule';
 import { Homework } from '../../types/homework';
 import { getGreeting, formatRussianDate, formatDayOfWeek } from '../../utils/dateUtils';
+import { getNextLessonDeadline } from '../../utils/scheduleParser';
 import { QuickStats } from './QuickStats';
 import { NextPairBanner } from './NextPairBanner';
 import { TodayLessonsList } from './TodayLessonsList';
@@ -11,6 +12,7 @@ import { LessonModal } from '../schedule/LessonModal';
 
 interface TodayViewProps {
   todayLessons: ParsedLesson[];
+  allLessons?: ParsedLesson[];
   currentOrNextLesson: {
     lesson: ParsedLesson;
     status: 'current' | 'upcoming';
@@ -26,12 +28,13 @@ interface TodayViewProps {
   info: RaspInfo | null;
   onNavigateToTab: (tab: 'schedule' | 'homework' | 'calendar') => void;
   onToggleCompleteHomework: (id: string) => void;
-  onOpenCreateHomework: () => void;
+  onOpenCreateHomework: (options?: { subject?: string; dueDate?: string; dueTime?: string }) => void;
   onSelectHomework: (hw: Homework) => void;
 }
 
 export const TodayView: React.FC<TodayViewProps> = ({
   todayLessons,
+  allLessons = [],
   currentOrNextLesson,
   dueTodayList,
   overdueList,
@@ -149,10 +152,16 @@ export const TodayView: React.FC<TodayViewProps> = ({
       {selectedLesson && (
         <LessonModal
           lesson={selectedLesson}
+          allLessons={allLessons}
           onClose={() => setSelectedLesson(null)}
-          onAddHomeworkForSubject={() => {
+          onAddHomeworkForSubject={(lesson) => {
             setSelectedLesson(null);
-            onOpenCreateHomework();
+            const deadline = getNextLessonDeadline(lesson, allLessons);
+            onOpenCreateHomework({
+              subject: lesson.subject,
+              dueDate: deadline.dueDate,
+              dueTime: deadline.dueTime,
+            });
           }}
         />
       )}

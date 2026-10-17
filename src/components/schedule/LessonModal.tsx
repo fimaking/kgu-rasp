@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Clock,
   MapPin,
@@ -12,23 +12,28 @@ import { ParsedLesson } from '../../types/schedule';
 import { Modal } from '../ui/Modal';
 import { LessonTypeBadge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { formatRussianDate, formatDayOfWeek } from '../../utils/dateUtils';
-import { getLessonStatus } from '../../utils/scheduleParser';
+import { formatRussianDate, formatDayOfWeek, parseIsoDate } from '../../utils/dateUtils';
+import { getLessonStatus, getNextLessonDeadline } from '../../utils/scheduleParser';
 
 interface LessonModalProps {
   lesson: ParsedLesson | null;
   onClose: () => void;
-  onAddHomeworkForSubject: (subject: string) => void;
+  onAddHomeworkForSubject: (lesson: ParsedLesson) => void;
+  allLessons?: ParsedLesson[];
 }
 
 export const LessonModal: React.FC<LessonModalProps> = ({
   lesson,
   onClose,
   onAddHomeworkForSubject,
+  allLessons = [],
 }) => {
   if (!lesson) return null;
 
   const status = getLessonStatus(lesson);
+  const nextDeadline = useMemo(() => {
+    return getNextLessonDeadline(lesson, allLessons);
+  }, [lesson, allLessons]);
 
   return (
     <Modal isOpen={Boolean(lesson)} onClose={onClose} maxWidth="md">
@@ -152,6 +157,22 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           </a>
         )}
 
+        {/* Next lesson deadline hint */}
+        {nextDeadline && (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/5 dark:border-white/5 text-xs text-apple-gray-600 dark:text-apple-gray-300">
+            <Clock className="w-3.5 h-3.5 text-apple-blue shrink-0" />
+            <span>
+              След. пара по предмету:{' '}
+              <strong className="font-semibold text-apple-gray-900 dark:text-white">
+                {nextDeadline.nextLesson
+                  ? `${formatRussianDate(nextDeadline.nextLesson.startDateTime)}, ${nextDeadline.dueTime}`
+                  : `${formatRussianDate(parseIsoDate(nextDeadline.dueDate))}, ${nextDeadline.dueTime}`}
+              </strong>{' '}
+              (срок сдачи)
+            </span>
+          </div>
+        )}
+
         {/* Footer Actions */}
         <div className="pt-2 flex items-center justify-between gap-3">
           <Button variant="ghost" size="md" onClick={onClose}>
@@ -163,7 +184,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             size="md"
             icon={<PlusCircle className="w-4 h-4" />}
             onClick={() => {
-              onAddHomeworkForSubject(lesson.subject);
+              onAddHomeworkForSubject(lesson);
             }}
           >
             Добавить ДЗ по предмету

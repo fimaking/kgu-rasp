@@ -22,6 +22,8 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('today');
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [quickCreateSubject, setQuickCreateSubject] = useState<string | undefined>(undefined);
+  const [quickCreateDueDate, setQuickCreateDueDate] = useState<string | undefined>(undefined);
+  const [quickCreateDueTime, setQuickCreateDueTime] = useState<string | undefined>(undefined);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Hooks
@@ -97,9 +99,36 @@ export const App: React.FC = () => {
     checkHashTransfer();
   }, [homework, calendar, showToast]);
 
-  const openCreateHomework = (subject?: string) => {
-    setQuickCreateSubject(subject);
+  const openCreateHomework = (
+    options?:
+      | {
+          subject?: string;
+          dueDate?: string;
+          dueTime?: string;
+        }
+      | string
+  ) => {
+    if (typeof options === 'string') {
+      setQuickCreateSubject(options);
+      setQuickCreateDueDate(undefined);
+      setQuickCreateDueTime(undefined);
+    } else if (options) {
+      setQuickCreateSubject(options.subject);
+      setQuickCreateDueDate(options.dueDate);
+      setQuickCreateDueTime(options.dueTime);
+    } else {
+      setQuickCreateSubject(undefined);
+      setQuickCreateDueDate(undefined);
+      setQuickCreateDueTime(undefined);
+    }
     setIsQuickCreateOpen(true);
+  };
+
+  const closeQuickCreate = () => {
+    setIsQuickCreateOpen(false);
+    setQuickCreateSubject(undefined);
+    setQuickCreateDueDate(undefined);
+    setQuickCreateDueTime(undefined);
   };
 
   const handleRefreshSchedule = async () => {
@@ -155,6 +184,7 @@ export const App: React.FC = () => {
             {currentTab === 'today' && (
               <TodayView
                 todayLessons={schedule.todayLessons}
+                allLessons={schedule.lessons}
                 currentOrNextLesson={schedule.currentOrNextLesson}
                 dueTodayList={homework.dueTodayList}
                 overdueList={homework.overdueList}
@@ -165,7 +195,7 @@ export const App: React.FC = () => {
                   homework.toggleComplete(id);
                   showToast('success', 'Статус обновлен');
                 }}
-                onOpenCreateHomework={() => openCreateHomework()}
+                onOpenCreateHomework={(options) => openCreateHomework(options)}
                 onSelectHomework={() => setCurrentTab('homework')}
               />
             )}
@@ -173,7 +203,7 @@ export const App: React.FC = () => {
             {currentTab === 'schedule' && (
               <ScheduleView
                 weekSchedule={schedule.weekSchedule}
-                allLessons={schedule.allLessons}
+                allLessons={schedule.lessons}
                 info={schedule.info}
                 selectedWeekMonday={schedule.selectedWeekMonday}
                 onPrevWeek={schedule.prevWeek}
@@ -181,7 +211,7 @@ export const App: React.FC = () => {
                 onGoToToday={schedule.goToToday}
                 subgroupFilter={schedule.subgroupFilter}
                 onSubgroupChange={schedule.setSubgroupFilter}
-                onOpenCreateHomeworkForSubject={(subj) => openCreateHomework(subj)}
+                onOpenCreateHomeworkForSubject={(options) => openCreateHomework(options)}
               />
             )}
 
@@ -211,10 +241,7 @@ export const App: React.FC = () => {
                 }}
                 subjectsList={schedule.subjects}
                 isCreateModalOpen={isQuickCreateOpen}
-                onCloseCreateModal={() => {
-                  setIsQuickCreateOpen(false);
-                  setQuickCreateSubject(undefined);
-                }}
+                onCloseCreateModal={closeQuickCreate}
                 onOpenCreateModal={() => openCreateHomework()}
               />
             )}
@@ -273,17 +300,15 @@ export const App: React.FC = () => {
       {isQuickCreateOpen && currentTab !== 'homework' && (
         <HomeworkFormModal
           isOpen={isQuickCreateOpen}
-          onClose={() => {
-            setIsQuickCreateOpen(false);
-            setQuickCreateSubject(undefined);
-          }}
+          onClose={closeQuickCreate}
           onSubmit={(data) => {
             homework.addHomework(data);
             showToast('success', 'Задание создано', data.title);
-            setIsQuickCreateOpen(false);
-            setQuickCreateSubject(undefined);
+            closeQuickCreate();
           }}
           defaultSubject={quickCreateSubject}
+          defaultDueDate={quickCreateDueDate}
+          defaultDueTime={quickCreateDueTime}
           subjectsList={schedule.subjects}
         />
       )}

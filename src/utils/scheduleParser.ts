@@ -229,3 +229,70 @@ export function getLessonStatus(lesson: ParsedLesson, now = new Date()): {
     badgeText,
   };
 }
+
+/**
+ * Find the next upcoming lesson for a specific subject after the given lesson.
+ */
+export function findNextLessonForSubject(
+  currentLesson: ParsedLesson,
+  allLessons: ParsedLesson[]
+): ParsedLesson | null {
+  const targetSubject = currentLesson.subject.trim().toLowerCase();
+
+  // 1. Look for lessons of the same subject on future dates
+  const futureDaysLessons = allLessons
+    .filter(
+      (l) =>
+        l.subject.trim().toLowerCase() === targetSubject &&
+        l.dateStr > currentLesson.dateStr
+    )
+    .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+
+  if (futureDaysLessons.length > 0) {
+    return futureDaysLessons[0];
+  }
+
+  // 2. If no future days, look for later lesson on the same day
+  const futureTodayLessons = allLessons
+    .filter(
+      (l) =>
+        l.subject.trim().toLowerCase() === targetSubject &&
+        l.startDateTime.getTime() > currentLesson.endDateTime.getTime()
+    )
+    .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+
+  if (futureTodayLessons.length > 0) {
+    return futureTodayLessons[0];
+  }
+
+  return null;
+}
+
+/**
+ * Calculates due date (YYYY-MM-DD) and due time (HH:mm) for homework based on the next lesson.
+ * If next lesson exists: returns its dateStr and startTime.
+ * If no next lesson is found in the schedule: defaults to +7 days at the current lesson's startTime.
+ */
+export function getNextLessonDeadline(
+  currentLesson: ParsedLesson,
+  allLessons: ParsedLesson[]
+): { dueDate: string; dueTime: string; nextLesson: ParsedLesson | null } {
+  const nextLesson = findNextLessonForSubject(currentLesson, allLessons);
+  if (nextLesson) {
+    return {
+      dueDate: nextLesson.dateStr,
+      dueTime: nextLesson.startTime,
+      nextLesson,
+    };
+  }
+
+  // Fallback: 7 days after current lesson
+  const fallbackDate = new Date(currentLesson.startDateTime);
+  fallbackDate.setDate(fallbackDate.getDate() + 7);
+  return {
+    dueDate: formatDateToIso(fallbackDate),
+    dueTime: currentLesson.startTime,
+    nextLesson: null,
+  };
+}
+
