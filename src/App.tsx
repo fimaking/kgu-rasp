@@ -35,7 +35,7 @@ export const App: React.FC = () => {
 
   const showToast = useCallback((type: 'success' | 'error' | 'info', title: string, message?: string) => {
     const id = 'toast_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-    setToasts((prev) => [...prev, { id, type, title, message }]);
+    setToasts((prev) => [...prev.slice(-2), { id, type, title, message }]);
   }, []);
 
   const dismissToast = useCallback((id: string) => {

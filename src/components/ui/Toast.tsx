@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
@@ -7,6 +7,7 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
   title: string;
   message?: string;
+  duration?: number;
 }
 
 interface ToastProps {
@@ -20,23 +21,38 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
   return createPortal(
     <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6 inset-x-4 md:inset-x-auto md:right-6 md:w-96 md:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none items-center md:items-end">
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onDismiss={() => onDismiss(toast.id)} />
+        <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
       ))}
     </div>,
     document.body
   );
 };
 
-const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: () => void }> = ({
+const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void }> = ({
   toast,
   onDismiss,
 }) => {
+  const [isExiting, setIsExiting] = useState(false);
+  const dismissRef = useRef(onDismiss);
+  dismissRef.current = onDismiss;
+
+  const handleDismiss = () => {
+    if (isExiting) return;
+    setIsExiting(true);
+    setTimeout(() => {
+      dismissRef.current(toast.id);
+    }, 200);
+  };
+
   useEffect(() => {
+    // 3.2 seconds auto-dismiss guaranteed to trigger, never reset by parent re-renders
+    const duration = toast.duration || 3200;
     const timer = setTimeout(() => {
-      onDismiss();
-    }, 4000);
+      handleDismiss();
+    }, duration);
+
     return () => clearTimeout(timer);
-  }, [onDismiss]);
+  }, [toast.id]);
 
   const icons = {
     success: <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />,
@@ -45,7 +61,14 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: () => void }> = ({
   };
 
   return (
-    <div className="pointer-events-auto w-full max-w-md md:max-w-sm flex items-start gap-3 p-3.5 sm:p-4 bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-apple-float animate-toast-spring transition-all duration-200">
+    <div
+      onClick={handleDismiss}
+      className={`pointer-events-auto w-full max-w-md md:max-w-sm flex items-start gap-3 p-3.5 sm:p-4 bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-apple-float cursor-pointer transition-all duration-200 ease-out active:scale-95 select-none ${
+        isExiting
+          ? 'opacity-0 translate-y-3 scale-90'
+          : 'opacity-100 translate-y-0 scale-100 animate-toast-spring'
+      }`}
+    >
       {icons[toast.type]}
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-semibold text-apple-gray-900 dark:text-white leading-tight">
@@ -58,8 +81,13 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: () => void }> = ({
         )}
       </div>
       <button
-        onClick={onDismiss}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDismiss();
+        }}
         className="p-1 -mr-1 -mt-0.5 text-apple-gray-400 hover:text-apple-gray-600 dark:hover:text-white rounded-full transition-all duration-150 active:scale-90 shrink-0"
+        title="Закрыть"
       >
         <X className="w-4 h-4" />
       </button>
