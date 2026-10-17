@@ -9,6 +9,7 @@ import { HomeworkView } from './components/homework/HomeworkView';
 import { CalendarView } from './components/calendar/CalendarView';
 import { SettingsView } from './components/settings/SettingsView';
 import { HomeworkFormModal } from './components/homework/HomeworkFormModal';
+import { SplashScreen } from './components/ui/SplashScreen';
 
 import { useSchedule } from './hooks/useSchedule';
 import { useHomework } from './hooks/useHomework';
@@ -17,6 +18,7 @@ import { useTheme } from './hooks/useTheme';
 import { SyncService } from './services/syncService';
 
 export const App: React.FC = () => {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentTab, setCurrentTab] = useState<NavTab>('today');
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [quickCreateSubject, setQuickCreateSubject] = useState<string | undefined>(undefined);
@@ -110,7 +112,15 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-apple-gray-100 dark:bg-[#121214] text-apple-gray-900 dark:text-zinc-100 font-sans selection:bg-apple-blue selection:text-white">
+    <div className="flex h-screen w-screen overflow-hidden bg-apple-gray-100 dark:bg-[#121214] text-apple-gray-900 dark:text-zinc-100 font-sans selection:bg-apple-blue selection:text-white relative">
+      {/* Smooth Apple-inspired Launch Screen */}
+      {showSplash && (
+        <SplashScreen
+          onFinished={() => setShowSplash(false)}
+          groupName={schedule.info?.group?.name || '26-ИСбо-4'}
+        />
+      )}
+
       {/* Desktop Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -139,8 +149,8 @@ export const App: React.FC = () => {
           lastUpdated={schedule.lastUpdated}
         />
 
-        {/* Scrollable View Area */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-28 md:pb-8">
+        {/* Scrollable View Area with Smooth Entrance */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-28 md:pb-8 animate-app-entrance">
           <div className="max-w-7xl mx-auto">
             {currentTab === 'today' && (
               <TodayView
