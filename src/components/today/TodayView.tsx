@@ -66,13 +66,6 @@ export const TodayView: React.FC<TodayViewProps> = ({
               {todayLessons.length}
             </span>
           </h3>
-
-          <button
-            onClick={() => onNavigateToTab('schedule')}
-            className="text-xs font-semibold text-apple-blue hover:underline"
-          >
-            Смотреть неделю
-          </button>
         </div>
 
         <TodayLessonsList
