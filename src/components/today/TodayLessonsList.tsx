@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { MapPin, User, ChevronRight, CalendarCheck } from 'lucide-react';
 import { ParsedLesson } from '../../types/schedule';
 import { LessonTypeBadge } from '../ui/Badge';
@@ -12,7 +13,25 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
   lessons,
   onSelectLesson,
 }) => {
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const syncTime = () => setNow(new Date());
+
+    const currentTime = new Date();
+    const msUntilNextMinute = (60 - currentTime.getSeconds()) * 1000 - currentTime.getMilliseconds();
+
+    const timeoutId = setTimeout(() => {
+      syncTime();
+      intervalId = setInterval(syncTime, 60 * 1000);
+    }, Math.max(500, msUntilNextMinute));
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
 
   if (lessons.length === 0) {
     return (

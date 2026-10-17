@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, MapPin, User, Sparkles, Coffee } from 'lucide-react';
 import { ParsedLesson } from '../../types/schedule';
 import { LessonTypeBadge } from '../ui/Badge';
+import { getLessonStatus } from '../../utils/scheduleParser';
 
 interface NextPairBannerProps {
   currentOrNext: {
@@ -20,6 +21,26 @@ export const NextPairBanner: React.FC<NextPairBannerProps> = ({
   currentOrNext,
   todayLessonsCount,
 }) => {
+  // Real-time minute tick for automatic live countdown updates
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const syncTime = () => setTick((t) => t + 1);
+
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+    const timeoutId = setTimeout(() => {
+      syncTime();
+      intervalId = setInterval(syncTime, 60 * 1000);
+    }, Math.max(500, msUntilNextMinute));
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
   if (!currentOrNext) {
     return (
       <div className="relative overflow-hidden p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-blue-50/80 via-white/80 to-purple-50/60 dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-800/40 backdrop-blur-2xl border border-black/5 dark:border-white/10 shadow-apple-card">
@@ -43,7 +64,10 @@ export const NextPairBanner: React.FC<NextPairBannerProps> = ({
   }
 
   const { lesson, status, info } = currentOrNext;
-  const isCurrent = status === 'current';
+  // Calculate real-time status on every minute tick
+  const liveInfo = getLessonStatus(lesson);
+  const isCurrent = liveInfo.status === 'current' || status === 'current';
+  const displayBadgeText = liveInfo.status !== 'passed' ? liveInfo.badgeText : info.badgeText;
 
   return (
     <div
@@ -81,7 +105,7 @@ export const NextPairBanner: React.FC<NextPairBannerProps> = ({
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
-          <span>{info.badgeText}</span>
+          <span>{displayBadgeText}</span>
         </div>
       </div>
 

@@ -65,38 +65,58 @@ export function useSchedule() {
     StorageService.saveSettings({ ...s, subgroupPreference: sg });
   };
 
+  // Real-time minute ticker for live countdowns & schedule status
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const syncTime = () => setCurrentTime(new Date());
+
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+    const timeoutId = setTimeout(() => {
+      syncTime();
+      intervalId = setInterval(syncTime, 60 * 1000);
+    }, Math.max(500, msUntilNextMinute));
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
   // Filter lessons specifically for user (1st subgroup + German language)
   const filteredLessons = useMemo(() => {
     return lessons.filter(isUserLesson);
   }, [lessons]);
 
-  // Lessons for today
-  const todayDateStr = formatDateToIso(new Date());
+  // Lessons for today (uses currentTime for automatic midnight / day transition)
+  const todayDateStr = formatDateToIso(currentTime);
   const todayLessons = useMemo(() => {
     return filteredLessons
       .filter((l) => l.dateStr === todayDateStr)
       .sort((a, b) => a.pairNumber - b.pairNumber);
   }, [filteredLessons, todayDateStr]);
 
-  // Current or next upcoming lesson today
+  // Current or next upcoming lesson today (recomputes every minute!)
   const currentOrNextLesson = useMemo(() => {
-    const now = new Date();
     // Check if there is an active lesson right now
     for (const l of todayLessons) {
-      const stat = getLessonStatus(l, now);
+      const stat = getLessonStatus(l, currentTime);
       if (stat.status === 'current') {
         return { lesson: l, status: 'current' as const, info: stat };
       }
     }
     // Otherwise find the first upcoming lesson
     for (const l of todayLessons) {
-      const stat = getLessonStatus(l, now);
+      const stat = getLessonStatus(l, currentTime);
       if (stat.status === 'upcoming') {
         return { lesson: l, status: 'upcoming' as const, info: stat };
       }
     }
     return null;
-  }, [todayLessons]);
+  }, [todayLessons, currentTime]);
 
   // Lessons for the selected week
   const weekSchedule: WeekDaySchedule[] = useMemo(() => {
@@ -156,6 +176,7 @@ export function useSchedule() {
     todayLessons,
     weekSchedule,
     currentOrNextLesson,
+    currentTime,
     info,
     loading,
     refreshing,
