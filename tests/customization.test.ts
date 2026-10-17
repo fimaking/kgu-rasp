@@ -31,8 +31,8 @@ describe('App Customization & Theming Suite', () => {
   });
 
   it('provides comprehensive default settings for all customization parameters', () => {
-    expect(DEFAULT_SETTINGS.theme).toBe('system');
-    expect(DEFAULT_SETTINGS.visualTheme).toBe('classic');
+    expect(DEFAULT_SETTINGS.theme).toBe('dark');
+    expect(DEFAULT_SETTINGS.visualTheme).toBe('oled');
     expect(DEFAULT_SETTINGS.accentColor).toBe('#007AFF');
     expect(DEFAULT_SETTINGS.fontFamily).toBe('system');
     expect(DEFAULT_SETTINGS.fontScale).toBe('normal');
@@ -45,11 +45,11 @@ describe('App Customization & Theming Suite', () => {
 
   it('persists and restores custom visual themes and accent colors in StorageService', () => {
     const initial = StorageService.getSettings();
-    expect(initial.visualTheme).toBe('classic');
+    expect(initial.visualTheme).toBe('oled');
 
     const updated = {
       ...initial,
-      visualTheme: 'oled' as const,
+      visualTheme: 'midnight' as const,
       accentColor: '#AF52DE',
       fontFamily: 'mono' as const,
       fontScale: 'large' as const,
@@ -61,7 +61,7 @@ describe('App Customization & Theming Suite', () => {
     StorageService.saveSettings(updated);
 
     const retrieved = StorageService.getSettings();
-    expect(retrieved.visualTheme).toBe('oled');
+    expect(retrieved.visualTheme).toBe('midnight');
     expect(retrieved.accentColor).toBe('#AF52DE');
     expect(retrieved.fontFamily).toBe('mono');
     expect(retrieved.fontScale).toBe('large');

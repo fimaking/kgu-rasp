@@ -21,30 +21,8 @@ import {
   Users,
   RotateCw,
   ChevronRight,
-  Palette,
-  Sparkles,
-  Type,
-  Maximize2,
-  Layers,
-  Zap,
 } from 'lucide-react';
-import {
-  ThemeMode,
-  UserSettings,
-  VisualTheme,
-  FontFamily,
-  FontScale,
-  AppRadius,
-  CardStyle,
-  ScheduleDensity,
-  ACCENT_COLORS,
-  VISUAL_THEMES,
-  FONT_OPTIONS,
-  FONT_SCALES,
-  APP_RADII,
-  CARD_STYLES,
-  SCHEDULE_DENSITIES,
-} from '../../types/settings';
+import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
 import { SyncService } from '../../services/syncService';
 import { NotificationService } from '../../services/notificationService';
@@ -53,25 +31,6 @@ import { Button } from '../ui/Button';
 interface SettingsViewProps {
   themeMode: ThemeMode;
   onThemeChange: (mode: ThemeMode) => void;
-  visualTheme?: VisualTheme;
-  onVisualThemeChange?: (vt: VisualTheme) => void;
-  accentColor?: string;
-  onAccentColorChange?: (color: string) => void;
-  fontFamily?: FontFamily;
-  onFontFamilyChange?: (font: FontFamily) => void;
-  fontScale?: FontScale;
-  onFontScaleChange?: (scale: FontScale) => void;
-  appRadius?: AppRadius;
-  onAppRadiusChange?: (radius: AppRadius) => void;
-  cardStyle?: CardStyle;
-  onCardStyleChange?: (style: CardStyle) => void;
-  scheduleDensity?: ScheduleDensity;
-  onScheduleDensityChange?: (density: ScheduleDensity) => void;
-  reducedMotion?: boolean;
-  onReducedMotionChange?: (reduced: boolean) => void;
-  showTeacherInitials?: boolean;
-  onShowTeacherInitialsChange?: (initials: boolean) => void;
-  onResetCustomizations?: () => void;
   groupId?: number;
   groupName?: string;
   subgroupPreference?: number;
@@ -86,25 +45,6 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   themeMode,
   onThemeChange,
-  visualTheme = 'classic',
-  onVisualThemeChange = () => {},
-  accentColor = '#007AFF',
-  onAccentColorChange = () => {},
-  fontFamily = 'system',
-  onFontFamilyChange = () => {},
-  fontScale = 'normal',
-  onFontScaleChange = () => {},
-  appRadius = 'normal',
-  onAppRadiusChange = () => {},
-  cardStyle = 'glass',
-  onCardStyleChange = () => {},
-  scheduleDensity = 'cozy',
-  onScheduleDensityChange = () => {},
-  reducedMotion = false,
-  onReducedMotionChange = () => {},
-  showTeacherInitials = false,
-  onShowTeacherInitialsChange = () => {},
-  onResetCustomizations = () => {},
   groupId = 8953,
   groupName = '26-ИСбо-4',
   subgroupPreference = 1,
@@ -337,400 +277,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </p>
       </div>
 
-      {/* Section 1: Appearance & Deep Customization */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-black/5 dark:border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center shadow-apple-sm">
-              <Palette className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
-                <span>Оформление и кастомизация</span>
-              </h3>
-              <p className="text-xs text-apple-gray-500 dark:text-apple-gray-400">
-                Темы, акцентные цвета, шрифты, стили карточек и анимации
-              </p>
-            </div>
-          </div>
+      {/* Section 1: Appearance / Theme Mode */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
+        <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
+          <span>Тема оформления</span>
+        </h3>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<RotateCcw className="w-3.5 h-3.5" />}
-            onClick={() => {
-              onResetCustomizations();
-              onShowToast('info', 'Оформление сброшено', 'Восстановлены стандартные настройки темы');
-            }}
-          >
-            Сбросить оформление
-          </Button>
-        </div>
-
-        {/* 1. Theme Mode: Light / Dark / Auto */}
-        <div className="space-y-2.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300">
-            Режим интерфейса
-          </label>
-          <div className="grid grid-cols-3 gap-2.5">
-            {[
-              { id: 'light' as ThemeMode, label: 'Светлая', icon: <Sun className="w-4 h-4" /> },
-              { id: 'dark' as ThemeMode, label: 'Тёмная', icon: <Moon className="w-4 h-4" /> },
-              { id: 'system' as ThemeMode, label: 'Системная', icon: <Laptop className="w-4 h-4" /> },
-            ].map((mode) => (
-              <button
-                key={mode.id}
-                type="button"
-                onClick={() => onThemeChange(mode.id)}
-                className={`p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-center gap-2 transition-all active:scale-[0.98] ${
-                  themeMode === mode.id
-                    ? 'bg-apple-blue text-white shadow-apple-sm font-bold ring-2 ring-apple-blue/30'
-                    : 'bg-black/[0.03] dark:bg-white/[0.05] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
-                }`}
-              >
-                <div className={`p-1.5 rounded-xl ${themeMode === mode.id ? 'bg-white/20' : 'bg-black/5 dark:bg-white/10'}`}>
-                  {mode.icon}
-                </div>
-                <span className="text-xs font-medium">{mode.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 2. Visual Theme Palettes */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300">
-              Цветовая тема оформления
-            </label>
-            <span className="text-[11px] font-mono text-apple-gray-500">
-              {VISUAL_THEMES.find((t) => t.id === visualTheme)?.name}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {VISUAL_THEMES.map((vt) => {
-              const isSelected = visualTheme === vt.id;
-              return (
-                <button
-                  key={vt.id}
-                  type="button"
-                  onClick={() => {
-                    onVisualThemeChange(vt.id);
-                    if (vt.accentDefault) {
-                      onAccentColorChange(vt.accentDefault);
-                    }
-                  }}
-                  className={`p-3 rounded-2xl text-left transition-all relative overflow-hidden active:scale-[0.98] flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-apple-blue/10 dark:bg-apple-blue/15 border-2 border-apple-blue shadow-apple-sm'
-                      : 'bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="w-5 h-5 rounded-full border border-black/10 dark:border-white/20 shadow-sm"
-                        style={{ backgroundColor: vt.previewColorDark }}
-                        title="Цвет тёмного фона"
-                      />
-                      <div
-                        className="w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/20 shadow-sm -ml-2.5"
-                        style={{ backgroundColor: vt.previewColorLight }}
-                        title="Цвет светлого фона"
-                      />
-                    </div>
-                    {isSelected && (
-                      <span className="w-5 h-5 rounded-full bg-apple-blue text-white flex items-center justify-center">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-apple-blue' : 'text-apple-gray-900 dark:text-white'}`}>
-                      {vt.name}
-                    </p>
-                    <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 mt-0.5 line-clamp-2">
-                      {vt.description}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 3. Accent Color Picker */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-apple-blue" />
-              <span>Фирменный акцентный цвет</span>
-            </label>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-apple-blue/10 text-apple-blue font-mono">
-              {ACCENT_COLORS.find((c) => c.hex.toLowerCase() === accentColor.toLowerCase())?.name || accentColor}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-              {ACCENT_COLORS.map((color) => {
-                const isSelected = accentColor.toLowerCase() === color.hex.toLowerCase();
-                return (
-                  <button
-                    key={color.id}
-                    type="button"
-                    onClick={() => onAccentColorChange(color.hex)}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all relative ${
-                      isSelected
-                        ? 'ring-4 ring-offset-2 ring-apple-blue dark:ring-offset-zinc-900 scale-110 shadow-apple-sm z-10'
-                        : 'hover:scale-105 opacity-85 hover:opacity-100'
-                    }`}
-                    style={{ backgroundColor: color.hex }}
-                    title={color.name}
-                  >
-                    {isSelected && <Check className="w-4 h-4 text-white stroke-[3]" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Live interactive sample badge */}
-            <div className="pt-2 border-t border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="text-apple-gray-500 font-medium">Предпросмотр акцента:</span>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-full bg-apple-blue text-white font-semibold text-[11px] shadow-apple-sm">
-                  Кнопка
-                </span>
-                <span className="px-2.5 py-1 rounded-full bg-apple-blue/10 text-apple-blue font-semibold text-[11px] border border-apple-blue/20">
-                  Бейдж
-                </span>
-                <span className="text-apple-blue font-bold text-xs underline underline-offset-2">
-                  Ссылка
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Font Typography */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
-              <Type className="w-3.5 h-3.5 text-apple-blue" />
-              <span>Шрифт приложения</span>
-            </label>
-            <span className="text-[11px] font-mono text-apple-gray-500">
-              {FONT_OPTIONS.find((f) => f.id === fontFamily)?.name}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {FONT_OPTIONS.map((font) => {
-              const isSelected = fontFamily === font.id;
-              return (
-                <button
-                  key={font.id}
-                  type="button"
-                  onClick={() => onFontFamilyChange(font.id)}
-                  className={`p-3 rounded-2xl text-left transition-all active:scale-[0.98] flex items-center justify-between ${
-                    isSelected
-                      ? 'bg-apple-blue/10 dark:bg-apple-blue/15 border-2 border-apple-blue shadow-apple-sm'
-                      : 'bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10'
-                  }`}
-                >
-                  <div className="min-w-0 pr-2">
-                    <p className={`text-xs font-bold ${isSelected ? 'text-apple-blue' : 'text-apple-gray-900 dark:text-white'}`}>
-                      {font.name}
-                    </p>
-                    <p
-                      className="text-xs text-apple-gray-600 dark:text-apple-gray-300 truncate mt-1"
-                      style={{ fontFamily: font.fontFamilyCss }}
-                    >
-                      {font.sample}
-                    </p>
-                    <p className="text-[10px] text-apple-gray-400 mt-0.5">
-                      {font.description}
-                    </p>
-                  </div>
-                  {isSelected && (
-                    <span className="w-5 h-5 rounded-full bg-apple-blue text-white flex items-center justify-center shrink-0">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 5. Scale, Radius, Card Finish Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-          {/* Font Scale */}
-          <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-2">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-400 flex items-center gap-1.5">
-              <Maximize2 className="w-3.5 h-3.5 text-apple-blue" />
-              <span>Масштаб текста</span>
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {FONT_SCALES.map((scale) => {
-                const isSelected = fontScale === scale.id;
-                return (
-                  <button
-                    key={scale.id}
-                    type="button"
-                    onClick={() => onFontScaleChange(scale.id)}
-                    className={`py-2 px-1 rounded-xl text-center text-xs transition-all ${
-                      isSelected
-                        ? 'bg-apple-blue text-white font-bold shadow-apple-sm'
-                        : 'bg-black/5 dark:bg-white/5 text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/10 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="block font-bold">{scale.percent}</span>
-                    <span className="text-[10px] opacity-80 block truncate">{scale.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Corner Radius */}
-          <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-2">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-400">
-              Скругление углов
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {APP_RADII.map((rad) => {
-                const isSelected = appRadius === rad.id;
-                return (
-                  <button
-                    key={rad.id}
-                    type="button"
-                    onClick={() => onAppRadiusChange(rad.id)}
-                    className={`py-2 px-1 rounded-xl text-center text-xs transition-all ${
-                      isSelected
-                        ? 'bg-apple-blue text-white font-bold shadow-apple-sm'
-                        : 'bg-black/5 dark:bg-white/5 text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/10 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="block font-bold truncate">{rad.label.split(' ')[0]}</span>
-                    <span className="text-[10px] opacity-80 block truncate">{rad.label.split(' ')[1] || ''}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Card Finish */}
-          <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-2">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-400 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-apple-blue" />
-              <span>Стиль карточек</span>
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {CARD_STYLES.map((cs) => {
-                const isSelected = cardStyle === cs.id;
-                return (
-                  <button
-                    key={cs.id}
-                    type="button"
-                    onClick={() => onCardStyleChange(cs.id)}
-                    className={`py-2 px-1 rounded-xl text-center text-xs transition-all ${
-                      isSelected
-                        ? 'bg-apple-blue text-white font-bold shadow-apple-sm'
-                        : 'bg-black/5 dark:bg-white/5 text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/10 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="block font-bold truncate">{cs.label.split(' ')[0]}</span>
-                    <span className="text-[10px] opacity-80 block truncate">{cs.label.split(' ')[1] || ''}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* 6. Motion & Density & Initials Toggles */}
-        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3 text-xs">
-          {/* Schedule Density */}
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-apple-gray-800 dark:text-white font-semibold block">
-                Плотность карточек расписания
-              </span>
-              <span className="text-apple-gray-500 text-[11px]">
-                {scheduleDensity === 'compact' ? 'Компактные карточки для экономии места' : 'Стандартные просторные карточки с отступами'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1 bg-black/5 dark:bg-white/10 p-1 rounded-xl">
-              {SCHEDULE_DENSITIES.map((den) => (
-                <button
-                  key={den.id}
-                  type="button"
-                  onClick={() => onScheduleDensityChange(den.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    scheduleDensity === den.id
-                      ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-sm'
-                      : 'text-apple-gray-600 dark:text-apple-gray-400'
-                  }`}
-                >
-                  {den.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Reduced Motion Toggle */}
-          <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
-            <div>
-              <span className="text-apple-gray-800 dark:text-white font-semibold flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                <span>Энергосбережение и анимации</span>
-              </span>
-              <span className="text-apple-gray-500 text-[11px]">
-                {reducedMotion ? 'Анимации отключены для максимальной скорости и экономии батареи' : 'Включены фирменные плавные анимации Apple Spring'}
-              </span>
-            </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { id: 'light' as ThemeMode, label: 'Светлая', icon: <Sun className="w-5 h-5" /> },
+            { id: 'dark' as ThemeMode, label: 'Тёмная (OLED)', icon: <Moon className="w-5 h-5" /> },
+            { id: 'system' as ThemeMode, label: 'Системная', icon: <Laptop className="w-5 h-5" /> },
+          ].map((mode) => (
             <button
-              type="button"
-              onClick={() => onReducedMotionChange(!reducedMotion)}
-              className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out relative ${
-                reducedMotion ? 'bg-amber-500' : 'bg-black/10 dark:bg-white/20'
+              key={mode.id}
+              onClick={() => onThemeChange(mode.id)}
+              className={`p-4 rounded-2.5xl flex flex-col items-center justify-center gap-2.5 transition-all ${
+                themeMode === mode.id
+                  ? 'bg-apple-blue text-white shadow-apple-sm font-bold scale-[1.02]'
+                  : 'bg-black/[0.03] dark:bg-white/[0.05] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
               }`}
             >
-              <div
-                className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                  reducedMotion ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
+              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/10">{mode.icon}</div>
+              <span className="text-xs font-medium">{mode.label}</span>
             </button>
-          </div>
-
-          {/* Teacher Initials Format */}
-          <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
-            <div>
-              <span className="text-apple-gray-800 dark:text-white font-semibold flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-apple-blue" />
-                <span>Формат имён преподавателей</span>
-              </span>
-              <span className="text-apple-gray-500 text-[11px]">
-                {showTeacherInitials ? 'Компактные инициалы (Иванов И. И.)' : 'Полное написание ФИО преподавателей'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onShowTeacherInitialsChange(!showTeacherInitials)}
-              className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out relative ${
-                showTeacherInitials ? 'bg-apple-blue' : 'bg-black/10 dark:bg-white/20'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                  showTeacherInitials ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 

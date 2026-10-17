@@ -311,10 +311,24 @@ html[data-card-style="bordered"] .shadow-apple-sm {
   border-color: rgba(var(--color-accent-rgb), 0.25) !important;
 }
 
-/* Visual Theme Palettes */
+/* Default Dark Mode: Pure OLED Black (#000000) */
+html.dark body,
+html.dark .dark\:bg-\[\#121214\],
+html.dark .dark\:bg-black {
+  background-color: #000000 !important;
+}
+html.dark .dark\:bg-zinc-900\/70,
+html.dark .dark\:bg-zinc-900\/60,
+html.dark .dark\:bg-\[\#18181b\]\/85,
+html.dark .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(12, 12, 14, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* 1. OLED Black (Pure AMOLED 000000) */
 html.dark[data-visual-theme="oled"] body,
-html.dark[data-visual-theme="oled"] .dark\:bg-\[\#121214\] {
+html.dark[data-visual-theme="oled"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="oled"] .dark\:bg-black {
   background-color: #000000 !important;
 }
 html.dark[data-visual-theme="oled"] .dark\:bg-zinc-900\/70,

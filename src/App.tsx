@@ -149,7 +149,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-apple-gray-100 dark:bg-[#121214] text-apple-gray-900 dark:text-zinc-100 font-sans selection:bg-apple-blue selection:text-white relative">
+    <div className="flex h-screen w-screen overflow-hidden bg-apple-gray-100 dark:bg-black text-apple-gray-900 dark:text-zinc-100 font-sans selection:bg-apple-blue selection:text-white relative">
       {/* Smooth Apple-inspired Launch Screen */}
       {showSplash && (
         <SplashScreen
@@ -285,25 +285,6 @@ export const App: React.FC = () => {
               <SettingsView
                 themeMode={theme.themeMode}
                 onThemeChange={theme.setThemeMode}
-                visualTheme={theme.visualTheme}
-                onVisualThemeChange={theme.setVisualTheme}
-                accentColor={theme.accentColor}
-                onAccentColorChange={theme.setAccentColor}
-                fontFamily={theme.fontFamily}
-                onFontFamilyChange={theme.setFontFamily}
-                fontScale={theme.fontScale}
-                onFontScaleChange={theme.setFontScale}
-                appRadius={theme.appRadius}
-                onAppRadiusChange={theme.setAppRadius}
-                cardStyle={theme.cardStyle}
-                onCardStyleChange={theme.setCardStyle}
-                scheduleDensity={theme.scheduleDensity}
-                onScheduleDensityChange={theme.setScheduleDensity}
-                reducedMotion={theme.reducedMotion}
-                onReducedMotionChange={theme.setReducedMotion}
-                showTeacherInitials={theme.showTeacherInitials}
-                onShowTeacherInitialsChange={theme.setShowTeacherInitials}
-                onResetCustomizations={theme.resetCustomizations}
                 groupId={schedule.groupId}
                 groupName={schedule.groupName}
                 subgroupPreference={schedule.subgroupFilter}
