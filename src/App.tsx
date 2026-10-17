@@ -173,6 +173,7 @@ export const App: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Sticky Header */}
         <Header
+          groupName={schedule.info?.group?.name || '26-ИСбо-4'}
           subgroupFilter={schedule.subgroupFilter}
           onSubgroupChange={(sg) => {
             schedule.setSubgroupFilter(sg);

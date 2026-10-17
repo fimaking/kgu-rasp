@@ -5,6 +5,7 @@ import { formatRussianDate, formatDayOfWeek } from '../../utils/dateUtils';
 interface HeaderProps {
   title?: string;
   subtitle?: string;
+  groupName?: string;
   subgroupFilter?: number;
   onSubgroupChange?: (sg: number) => void;
   onRefresh: () => void;
@@ -16,6 +17,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   title,
   subtitle,
+  groupName,
   onRefresh,
   refreshing,
 }) => {
@@ -23,13 +25,23 @@ export const Header: React.FC<HeaderProps> = ({
   const dateFormatted = `${formatDayOfWeek(today)}, ${formatRussianDate(today, true)}`;
 
   return (
-    <header className="sticky top-0 z-20 bg-white/70 dark:bg-[#121214]/75 backdrop-blur-xl border-b border-black/5 dark:border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-3 select-none">
-      <div>
-        <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-apple-gray-900 dark:text-white">
+    <header className="sticky top-0 z-20 bg-white/75 dark:bg-[#121214]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/10 px-4 sm:px-8 py-3 sm:py-3.5 flex items-center justify-between gap-3 select-none">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 min-w-0">
+        <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-apple-gray-900 dark:text-white">
           {title || dateFormatted}
         </h2>
+        {groupName && (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold bg-apple-blue/10 dark:bg-apple-blue/15 border border-apple-blue/20 text-apple-blue shadow-apple-sm shrink-0 select-none">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-apple-blue opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-apple-blue"></span>
+            </span>
+            <span className="font-medium opacity-80">Группа</span>
+            <span className="font-bold">{groupName}</span>
+          </div>
+        )}
         {subtitle && (
-          <p className="text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400 font-medium">
+          <p className="text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400 font-medium w-full">
             {subtitle}
           </p>
         )}

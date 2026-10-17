@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { CalendarDays } from 'lucide-react';
 import { ParsedLesson, RaspInfo } from '../../types/schedule';
 import { Homework } from '../../types/homework';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
@@ -24,7 +23,7 @@ interface TodayViewProps {
   dueTodayList: Homework[];
   overdueList: Homework[];
   activeHomeworkCount: number;
-  info: RaspInfo | null;
+  info?: RaspInfo | null;
   onNavigateToTab: (tab: 'schedule' | 'homework' | 'calendar') => void;
   onToggleCompleteHomework: (id: string) => void;
   onOpenCreateHomework: (options?: {
@@ -43,7 +42,6 @@ export const TodayView: React.FC<TodayViewProps> = ({
   dueTodayList,
   overdueList,
   activeHomeworkCount,
-  info,
   onNavigateToTab,
   onToggleCompleteHomework,
   onOpenCreateHomework,
@@ -51,43 +49,8 @@ export const TodayView: React.FC<TodayViewProps> = ({
 }) => {
   const [selectedLesson, setSelectedLesson] = useState<ParsedLesson | null>(null);
 
-  const groupName = info?.group?.name || '26-ИСбо-4';
-  const pairsCountText =
-    todayLessons.length === 1
-      ? '1 пара'
-      : todayLessons.length >= 2 && todayLessons.length <= 4
-      ? `${todayLessons.length} пары`
-      : `${todayLessons.length} пар`;
-
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-200">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Clean Apple-style Group & Pairs pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card select-none">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-apple-blue opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-apple-blue"></span>
-          </span>
-          <span className="text-base sm:text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white">
-            Группа {groupName}
-          </span>
-          <span className="text-apple-gray-300 dark:text-apple-gray-600 font-bold">•</span>
-          <span className="text-sm sm:text-base font-semibold text-apple-blue">
-            {pairsCountText} сегодня
-          </span>
-        </div>
-
-        {/* Action shortcut to full schedule */}
-        <button
-          onClick={() => onNavigateToTab('schedule')}
-          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 border border-black/5 dark:border-white/10 text-xs font-semibold text-apple-gray-700 dark:text-apple-gray-200 transition-all shadow-apple-sm backdrop-blur-xl"
-        >
-          <CalendarDays className="w-4 h-4 text-apple-blue" />
-          <span>Всё расписание на неделю</span>
-        </button>
-      </div>
-
       {/* 1. Hero: Current or Next Pair (вверху) */}
       <NextPairBanner
         currentOrNext={currentOrNextLesson}
