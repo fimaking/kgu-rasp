@@ -232,15 +232,51 @@ export function getLessonStatus(lesson: ParsedLesson, now = new Date()): {
 
 /**
  * Find the next upcoming lesson for a specific subject after the given lesson.
+ * Respects lesson type:
+ * - Lab matches the next Lab
+ * - Practice matches the next Practice
+ * - Lecture matches the next Lecture
  */
 export function findNextLessonForSubject(
   currentLesson: ParsedLesson,
   allLessons: ParsedLesson[]
 ): ParsedLesson | null {
   const targetSubject = currentLesson.subject.trim().toLowerCase();
+  const currentType = currentLesson.type;
 
-  // 1. Look for lessons of the same subject on future dates
-  const futureDaysLessons = allLessons
+  // 1. Strict match: same subject AND same lesson type on a future day
+  const futureSameTypeLessons = allLessons
+    .filter(
+      (l) =>
+        l.subject.trim().toLowerCase() === targetSubject &&
+        l.type === currentType &&
+        l.dateStr > currentLesson.dateStr
+    )
+    .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+
+  if (futureSameTypeLessons.length > 0) {
+    return futureSameTypeLessons[0];
+  }
+
+  // 2. Compatible practical match: If lab and no more labs found, check practice (and vice-versa)
+  if (currentType === 'lab' || currentType === 'practice') {
+    const compatibleType = currentType === 'lab' ? 'practice' : 'lab';
+    const futureCompatibleLessons = allLessons
+      .filter(
+        (l) =>
+          l.subject.trim().toLowerCase() === targetSubject &&
+          l.type === compatibleType &&
+          l.dateStr > currentLesson.dateStr
+      )
+      .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+
+    if (futureCompatibleLessons.length > 0) {
+      return futureCompatibleLessons[0];
+    }
+  }
+
+  // 3. Fallback: Any future lesson of the same subject on a future day
+  const futureAnyTypeLessons = allLessons
     .filter(
       (l) =>
         l.subject.trim().toLowerCase() === targetSubject &&
@@ -248,12 +284,26 @@ export function findNextLessonForSubject(
     )
     .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
 
-  if (futureDaysLessons.length > 0) {
-    return futureDaysLessons[0];
+  if (futureAnyTypeLessons.length > 0) {
+    return futureAnyTypeLessons[0];
   }
 
-  // 2. If no future days, look for later lesson on the same day
-  const futureTodayLessons = allLessons
+  // 4. Same day later: Look for a later lesson today of same type
+  const todaySameType = allLessons
+    .filter(
+      (l) =>
+        l.subject.trim().toLowerCase() === targetSubject &&
+        l.type === currentType &&
+        l.startDateTime.getTime() > currentLesson.endDateTime.getTime()
+    )
+    .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+
+  if (todaySameType.length > 0) {
+    return todaySameType[0];
+  }
+
+  // 5. Same day later: Any later lesson today of same subject
+  const todayAnyType = allLessons
     .filter(
       (l) =>
         l.subject.trim().toLowerCase() === targetSubject &&
@@ -261,8 +311,8 @@ export function findNextLessonForSubject(
     )
     .sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
 
-  if (futureTodayLessons.length > 0) {
-    return futureTodayLessons[0];
+  if (todayAnyType.length > 0) {
+    return todayAnyType[0];
   }
 
   return null;

@@ -24,6 +24,7 @@ export const App: React.FC = () => {
   const [quickCreateSubject, setQuickCreateSubject] = useState<string | undefined>(undefined);
   const [quickCreateDueDate, setQuickCreateDueDate] = useState<string | undefined>(undefined);
   const [quickCreateDueTime, setQuickCreateDueTime] = useState<string | undefined>(undefined);
+  const [quickCreateLessonType, setQuickCreateLessonType] = useState<string | undefined>(undefined);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Hooks
@@ -105,6 +106,7 @@ export const App: React.FC = () => {
           subject?: string;
           dueDate?: string;
           dueTime?: string;
+          lessonType?: string;
         }
       | string
   ) => {
@@ -112,14 +114,17 @@ export const App: React.FC = () => {
       setQuickCreateSubject(options);
       setQuickCreateDueDate(undefined);
       setQuickCreateDueTime(undefined);
+      setQuickCreateLessonType(undefined);
     } else if (options) {
       setQuickCreateSubject(options.subject);
       setQuickCreateDueDate(options.dueDate);
       setQuickCreateDueTime(options.dueTime);
+      setQuickCreateLessonType(options.lessonType);
     } else {
       setQuickCreateSubject(undefined);
       setQuickCreateDueDate(undefined);
       setQuickCreateDueTime(undefined);
+      setQuickCreateLessonType(undefined);
     }
     setIsQuickCreateOpen(true);
   };
@@ -129,6 +134,7 @@ export const App: React.FC = () => {
     setQuickCreateSubject(undefined);
     setQuickCreateDueDate(undefined);
     setQuickCreateDueTime(undefined);
+    setQuickCreateLessonType(undefined);
   };
 
   const handleRefreshSchedule = async () => {
@@ -309,6 +315,7 @@ export const App: React.FC = () => {
           defaultSubject={quickCreateSubject}
           defaultDueDate={quickCreateDueDate}
           defaultDueTime={quickCreateDueTime}
+          defaultLessonType={quickCreateLessonType}
           subjectsList={schedule.subjects}
         />
       )}

@@ -28,7 +28,12 @@ interface TodayViewProps {
   info: RaspInfo | null;
   onNavigateToTab: (tab: 'schedule' | 'homework' | 'calendar') => void;
   onToggleCompleteHomework: (id: string) => void;
-  onOpenCreateHomework: (options?: { subject?: string; dueDate?: string; dueTime?: string }) => void;
+  onOpenCreateHomework: (options?: {
+    subject?: string;
+    dueDate?: string;
+    dueTime?: string;
+    lessonType?: string;
+  }) => void;
   onSelectHomework: (hw: Homework) => void;
 }
 
@@ -161,6 +166,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
               subject: lesson.subject,
               dueDate: deadline.dueDate,
               dueTime: deadline.dueTime,
+              lessonType: deadline.nextLesson?.typeLabel || lesson.typeLabel,
             });
           }}
         />

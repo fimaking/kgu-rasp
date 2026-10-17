@@ -162,7 +162,11 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/5 dark:border-white/5 text-xs text-apple-gray-600 dark:text-apple-gray-300">
             <Clock className="w-3.5 h-3.5 text-apple-blue shrink-0" />
             <span>
-              След. пара по предмету:{' '}
+              След.{' '}
+              <span className="font-semibold text-apple-blue">
+                {nextDeadline.nextLesson ? nextDeadline.nextLesson.typeLabel.toLowerCase() : 'пара'}
+              </span>
+              :{' '}
               <strong className="font-semibold text-apple-gray-900 dark:text-white">
                 {nextDeadline.nextLesson
                   ? `${formatRussianDate(nextDeadline.nextLesson.startDateTime)}, ${nextDeadline.dueTime}`

@@ -13,6 +13,7 @@ interface HomeworkFormModalProps {
   defaultSubject?: string;
   defaultDueDate?: string;
   defaultDueTime?: string;
+  defaultLessonType?: string;
   subjectsList: string[];
 }
 
@@ -24,6 +25,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
   defaultSubject,
   defaultDueDate,
   defaultDueTime,
+  defaultLessonType,
   subjectsList,
 }) => {
   const [title, setTitle] = useState('');
@@ -170,7 +172,11 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
           <div className="p-3.5 rounded-2xl bg-apple-blue/10 dark:bg-apple-blue/20 border border-apple-blue/20 flex items-center gap-3 text-xs text-apple-blue dark:text-blue-300 font-medium animate-in fade-in">
             <Clock className="w-4 h-4 shrink-0 text-apple-blue" />
             <span>
-              Срок сдачи автоматически установлен к началу следующей пары:{' '}
+              Срок сдачи автоматически установлен к следующей{' '}
+              <span className="font-bold underline underline-offset-2">
+                {defaultLessonType ? defaultLessonType.toLowerCase() : 'паре'}
+              </span>
+              :{' '}
               <strong className="font-semibold text-apple-gray-900 dark:text-white">
                 {defaultDueDate}
               </strong>{' '}

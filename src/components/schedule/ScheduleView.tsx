@@ -22,7 +22,12 @@ interface ScheduleViewProps {
   onGoToToday: () => void;
   subgroupFilter: number;
   onSubgroupChange: (sg: number) => void;
-  onOpenCreateHomeworkForSubject: (options: { subject: string; dueDate?: string; dueTime?: string }) => void;
+  onOpenCreateHomeworkForSubject: (options: {
+    subject: string;
+    dueDate?: string;
+    dueTime?: string;
+    lessonType?: string;
+  }) => void;
 }
 
 export const ScheduleView: React.FC<ScheduleViewProps> = ({
@@ -231,6 +236,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
               subject: lesson.subject,
               dueDate: deadline.dueDate,
               dueTime: deadline.dueTime,
+              lessonType: deadline.nextLesson?.typeLabel || lesson.typeLabel,
             });
           }}
         />
