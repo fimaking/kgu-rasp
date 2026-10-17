@@ -70,7 +70,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       setSubtasks(initialData.subtasks || []);
     } else {
       // New form reset
-      setTitle('');
+      setTitle(defaultLessonType || '');
       if (defaultSubject) {
         const matched = subjectsList.find((s) => s.toLowerCase() === defaultSubject.toLowerCase());
         if (matched) {

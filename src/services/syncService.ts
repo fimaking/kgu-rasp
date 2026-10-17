@@ -8,10 +8,8 @@ const SYNC_LAST_PULL_STORAGE = 'ksu_student_sync_last_pull';
 const GIST_TOKEN_STORAGE = 'ksu_student_gist_token';
 const GIST_ID_STORAGE = 'ksu_student_gist_id';
 const CLOUD_ROOM_ID_STORAGE = 'ksu_student_cloud_room_id';
-const REST_API_BASE = 'https://api.restful-api.dev/objects';
 
 export const DEFAULT_GIST_ID = 'e2d779451fca13d7005a7453b0df880b';
-export const DEFAULT_CLOUD_ROOM = 'ff808181a09d98f701a1469c91677688';
 
 export interface CloudPayload {
   version: string;
@@ -52,12 +50,13 @@ export class SyncService {
   static getCloudRoomId(): string | null {
     const stored = localStorage.getItem(CLOUD_ROOM_ID_STORAGE);
     if (stored && stored.trim()) return stored.trim();
-    return DEFAULT_CLOUD_ROOM;
+    return DEFAULT_GIST_ID;
   }
 
   static setCloudRoomId(roomId: string): void {
     if (roomId && roomId.trim()) {
       localStorage.setItem(CLOUD_ROOM_ID_STORAGE, roomId.trim());
+      RealtimeSyncService.setRoomCode(roomId.trim());
     }
   }
 
@@ -155,8 +154,14 @@ export class SyncService {
       let jsonStr = '';
 
       if (hash.includes('#transfer=')) {
-        const base64 = hash.split('#transfer=')[1].trim();
-        const binStr = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+        let base64 = hash.split('#transfer=')[1].trim();
+        if (base64.includes('&')) base64 = base64.split('&')[0];
+        if (base64.includes('#')) base64 = base64.split('#')[0];
+        let b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4 !== 0) {
+          b64 += '=';
+        }
+        const binStr = atob(b64);
         const decBytes = new Uint8Array(binStr.length);
         for (let i = 0; i < binStr.length; i++) {
           decBytes[i] = binStr.charCodeAt(i);
@@ -169,8 +174,14 @@ export class SyncService {
           return { success: false, error: 'Браузер не поддерживает распаковку данных' };
         }
       } else if (hash.includes('#rawtransfer=')) {
-        const base64 = hash.split('#rawtransfer=')[1].trim();
-        jsonStr = decodeURIComponent(atob(base64.replace(/-/g, '+').replace(/_/g, '/')));
+        let base64 = hash.split('#rawtransfer=')[1].trim();
+        if (base64.includes('&')) base64 = base64.split('&')[0];
+        if (base64.includes('#')) base64 = base64.split('#')[0];
+        let b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4 !== 0) {
+          b64 += '=';
+        }
+        jsonStr = decodeURIComponent(atob(b64));
       } else {
         return { success: false, error: 'Неверная ссылка передачи' };
       }
@@ -194,6 +205,9 @@ export class SyncService {
       const updateTimestamp = payload.updatedAt || new Date().toISOString();
       StorageService.recordLastModified(updateTimestamp);
       localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
+
+      // 3. Broadcast to all other devices so everyone stays synced
+      RealtimeSyncService.broadcast();
 
       return {
         success: true,
@@ -272,8 +286,6 @@ export class SyncService {
   }
 
   /**
-   * Connect to an existing private Gist on another device
-  /**
    * Connect to an existing private Gist on another device (token is optional for reading)
    */
   static async connectGistSync(
@@ -315,12 +327,6 @@ export class SyncService {
 
       const cloudData: CloudPayload = JSON.parse(fileObj.content);
 
-      if (cloudData.cloudRoomId) {
-        this.setCloudRoomId(cloudData.cloudRoomId);
-      } else {
-        this.setCloudRoomId('ff808181a09d98f701a1469c91677688');
-      }
-
       // Record tombstones first
       if (Array.isArray(cloudData.deletedHwIds)) {
         StorageService.recordDeletedHomeworkIds(cloudData.deletedHwIds);
@@ -337,6 +343,9 @@ export class SyncService {
 
       this.setGistCredentials(cleanToken, cleanGistId);
       localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
+
+      // Realtime live sync channel
+      RealtimeSyncService.broadcast();
 
       return {
         success: true,
@@ -370,11 +379,6 @@ export class SyncService {
   static async pushToCloud(): Promise<boolean> {
     const token = this.getGistToken();
     const gistId = this.getGistId();
-    const roomId = this.getCloudRoomId();
-
-    if (!token && !roomId) {
-      return false;
-    }
 
     try {
       const updatedAt = new Date().toISOString();
@@ -386,32 +390,15 @@ export class SyncService {
         homework: StorageService.getHomework(),
         events: StorageService.getEvents(),
         deletedHwIds: StorageService.getDeletedHomeworkIds(),
-        cloudRoomId: roomId || undefined,
       };
 
-      let ok = false;
+      // 1. Instant zero-auth realtime broadcast over HTTPS port 443
+      RealtimeSyncService.broadcast();
 
-      // 1. Push to Cloud Room (Requires NO token, works from any device instantly)
-      if (roomId) {
-        try {
-          const res = await fetch(`${REST_API_BASE}/${roomId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: 'kgu_rasp_room',
-              data: { payload: JSON.stringify(payload) },
-            }),
-          });
-          if (res.ok) ok = true;
-        } catch (e) {
-          console.warn('Failed to push to cloud room', e);
-        }
-      }
-
-      // 2. Push to GitHub Gist if token is available
+      // 2. Push to GitHub Gist if personal access token is configured
       if (token && gistId) {
         try {
-          const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+          await fetch(`https://api.github.com/gists/${gistId}`, {
             method: 'PATCH',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -426,17 +413,13 @@ export class SyncService {
               },
             }),
           });
-          if (res.ok) ok = true;
         } catch (e) {
           console.error('Failed to push to GitHub Gist', e);
         }
       }
 
-      if (ok) {
-        localStorage.setItem(SYNC_LAST_PULL_STORAGE, updatedAt);
-      }
-
-      return ok;
+      localStorage.setItem(SYNC_LAST_PULL_STORAGE, updatedAt);
+      return true;
     } catch (e) {
       console.error('pushToCloud error', e);
       return false;
@@ -449,14 +432,11 @@ export class SyncService {
   static async pullFromCloud(): Promise<{ updated: boolean; countHw?: number }> {
     const token = this.getGistToken();
     const gistId = this.getGistId();
-    let roomId = this.getCloudRoomId();
-
-    if (!gistId && !roomId) return { updated: false };
 
     let gistPayload: CloudPayload | null = null;
     let roomPayload: CloudPayload | null = null;
 
-    // 1. Pull from Gist if gistId is configured
+    // 1. Pull from Gist if gistId is configured (works without token for reading)
     if (gistId) {
       try {
         const headers: Record<string, string> = {
@@ -472,10 +452,6 @@ export class SyncService {
           const fileObj = resJson.files?.['ksu_planner_sync.json'];
           if (fileObj && fileObj.content) {
             gistPayload = JSON.parse(fileObj.content);
-            if (gistPayload?.cloudRoomId && !roomId) {
-              roomId = gistPayload.cloudRoomId;
-              this.setCloudRoomId(roomId);
-            }
           }
         }
       } catch (e) {
@@ -483,19 +459,20 @@ export class SyncService {
       }
     }
 
-    // 2. Pull from Cloud Room if roomId is configured
-    if (roomId) {
-      try {
-        const res = await fetch(`${REST_API_BASE}/${roomId}`);
-        if (res.ok) {
-          const resJson = await res.json();
-          if (resJson?.data?.payload) {
-            roomPayload = JSON.parse(resJson.data.payload);
-          }
-        }
-      } catch (e) {
-        console.warn('Cloud room pull failed', e);
+    // 2. Pull from unmetered realtime cloud channel
+    try {
+      const liveData = await RealtimeSyncService.pullLatestPayload();
+      if (liveData) {
+        roomPayload = {
+          version: liveData.version || '1.0',
+          updatedAt: liveData.updatedAt,
+          homework: liveData.homework || [],
+          events: liveData.events || [],
+          deletedHwIds: liveData.deletedHwIds || [],
+        };
       }
+    } catch (e) {
+      console.warn('Realtime channel pull failed', e);
     }
 
     if (!gistPayload && !roomPayload) {
@@ -582,7 +559,7 @@ export class SyncService {
       StorageService.saveEvents(Array.from(eventMap.values()));
     }
 
-    // 5. If local had newer changes or merged data, push back so all remote stores stay in sync!
+    // 5. If local had newer changes or merged data, push back so all devices stay in sync!
     if (localHadUniqueOrNewer) {
       this.pushToCloud();
     }
