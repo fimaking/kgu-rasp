@@ -43,15 +43,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   }, []);
 
   useEffect(() => {
-    // Stage 1: Graceful 3.4s display of greeting and progress
+    // Stage 1: Graceful ~2.0s display of greeting and progress
     const closeTimer = setTimeout(() => {
       setIsClosing(true);
-    }, 3400);
+    }, 2000);
 
-    // Stage 2: 4000ms total (fade-out completes in 600ms)
+    // Stage 2: 2450ms total (smooth dissolve completes in 450ms)
     const finishTimer = setTimeout(() => {
       onFinished();
-    }, 4000);
+    }, 2450);
 
     return () => {
       clearTimeout(closeTimer);
@@ -62,15 +62,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   // Fast dismiss if user taps screen
   const handleFastDismiss = () => {
     setIsClosing(true);
-    setTimeout(onFinished, 250);
+    setTimeout(onFinished, 200);
   };
 
   return (
     <div
       onClick={handleFastDismiss}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-between py-10 sm:py-14 select-none bg-apple-gray-100 dark:bg-[#121214] transition-all duration-600 ease-out cursor-pointer ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-between py-10 sm:py-14 select-none bg-apple-gray-100 dark:bg-[#121214] transition-all duration-500 ease-out cursor-pointer ${
         isClosing
-          ? 'opacity-0 scale-[1.04] pointer-events-none'
+          ? 'opacity-0 scale-[1.03] pointer-events-none'
           : 'opacity-100 scale-100'
       }`}
       style={{
@@ -128,18 +128,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           </p>
         </div>
 
-        {/* Group & Subgroup Badge */}
-        <div className="mt-4 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-700 dark:text-apple-gray-200 backdrop-blur-md">
-          <span>{groupName}</span>
+        {/* Group Badge (Only group name) */}
+        <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-700 dark:text-apple-gray-200 backdrop-blur-md">
           <span className="w-1.5 h-1.5 rounded-full bg-apple-blue" />
-          <span>1-я подгруппа</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>Немецкий язык</span>
+          <span>{groupName}</span>
         </div>
 
-        {/* Apple-style Smooth 4s Progress Bar */}
+        {/* Apple-style Smooth Progress Bar */}
         <div className="mt-8 w-44 sm:w-52 h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden shadow-inner p-0.5">
-          <div className="h-full bg-gradient-to-r from-apple-blue via-indigo-500 to-purple-500 rounded-full animate-splash-progress-4s" />
+          <div className="h-full bg-gradient-to-r from-apple-blue via-indigo-500 to-purple-500 rounded-full animate-splash-progress-smooth" />
         </div>
       </div>
 
