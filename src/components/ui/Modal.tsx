@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -43,22 +44,22 @@ export const Modal: React.FC<ModalProps> = ({
     xl: 'max-w-2xl',
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Backdrop */}
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      {/* Fullscreen Backdrop with Apple Frosted Glass Blur */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md animate-backdrop-fade"
+        className="fixed inset-0 bg-black/25 dark:bg-black/40 backdrop-blur-xl animate-backdrop-fade"
         onClick={onClose}
       />
 
       {/* Dialog Card with Apple Spring Entrance */}
       <div
-        className={`relative w-full ${widthClasses[maxWidth]} bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-apple-float overflow-hidden z-10 animate-modal-spring`}
+        className={`relative w-full ${widthClasses[maxWidth]} bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-apple-float overflow-hidden z-10 animate-modal-spring my-auto flex flex-col max-h-[92vh] sm:max-h-[88vh]`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header (pinned to top) */}
         {(title || subtitle) && (
-          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-black/5 dark:border-white/5">
+          <div className="shrink-0 flex items-start justify-between px-6 pt-5 pb-4 border-b border-black/5 dark:border-white/5">
             <div>
               {title && (
                 <h3 className="text-xl font-semibold tracking-tight text-apple-gray-900 dark:text-white">
@@ -80,9 +81,10 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         )}
 
-        {/* Content */}
-        <div className="p-6 max-h-[80vh] overflow-y-auto">{children}</div>
+        {/* Scrollable Content */}
+        <div className="p-5 sm:p-6 flex-1 overflow-y-auto min-h-0">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
