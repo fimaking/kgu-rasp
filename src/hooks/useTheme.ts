@@ -32,8 +32,11 @@ export function useTheme() {
   const [settings, setSettings] = useState(() => StorageService.getSettings());
 
   const themeMode = settings.theme || DEFAULT_SETTINGS.theme;
-  const visualTheme = settings.visualTheme || DEFAULT_SETTINGS.visualTheme;
-  const accentColor = settings.accentColor || DEFAULT_SETTINGS.accentColor;
+  const visualTheme =
+    settings.visualTheme && !['cyber-violet', 'cyber', 'electric-mint', 'acid-lime'].includes(settings.visualTheme)
+      ? settings.visualTheme
+      : 'oled';
+  const accentColor = settings.accentColor === '#B5179E' ? '#007AFF' : settings.accentColor || '#007AFF';
   const fontFamily = settings.fontFamily || DEFAULT_SETTINGS.fontFamily;
   const fontScale = settings.fontScale || DEFAULT_SETTINGS.fontScale;
   const appRadius = settings.appRadius || DEFAULT_SETTINGS.appRadius;
@@ -88,25 +91,7 @@ export function useTheme() {
       // Dynamic Mobile Header theme-color tag
       const metaTheme = document.querySelector('meta[name="theme-color"]:not([media])');
       if (metaTheme) {
-        if (activeIsDark) {
-          if (visualTheme === 'oled') metaTheme.setAttribute('content', '#000000');
-          else if (visualTheme === 'midnight') metaTheme.setAttribute('content', '#090E1A');
-          else if (visualTheme === 'emerald') metaTheme.setAttribute('content', '#05140E');
-          else if (visualTheme === 'sunset') metaTheme.setAttribute('content', '#171114');
-          else if (visualTheme === 'cyber') metaTheme.setAttribute('content', '#0A0A10');
-          else if (visualTheme === 'cyber-violet') metaTheme.setAttribute('content', '#0B0516');
-          else if (visualTheme === 'electric-mint') metaTheme.setAttribute('content', '#081016');
-          else if (visualTheme === 'acid-lime') metaTheme.setAttribute('content', '#0F120E');
-          else if (visualTheme === 'monochrome') metaTheme.setAttribute('content', '#0E0E11');
-          else metaTheme.setAttribute('content', '#121214');
-        } else {
-          if (visualTheme === 'sunset') metaTheme.setAttribute('content', '#F7F3EE');
-          else if (visualTheme === 'cyber-violet') metaTheme.setAttribute('content', '#F7F3FB');
-          else if (visualTheme === 'electric-mint') metaTheme.setAttribute('content', '#F0FDF8');
-          else if (visualTheme === 'acid-lime') metaTheme.setAttribute('content', '#F8FAF0');
-          else if (visualTheme === 'monochrome') metaTheme.setAttribute('content', '#F4F4F5');
-          else metaTheme.setAttribute('content', '#F2F2F7');
-        }
+        metaTheme.setAttribute('content', activeIsDark ? '#000000' : '#F2F2F7');
       }
     };
 

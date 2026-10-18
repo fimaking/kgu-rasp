@@ -10,7 +10,7 @@ const STORAGE_KEY_DELETED_EVENTS = 'ksu_student_deleted_events_v2';
 const STORAGE_KEY_SETTINGS = 'ksu_student_settings_v2';
 const STORAGE_KEY_LAST_MODIFIED = 'ksu_student_last_modified';
 
-// Auto-purge any stale test/seed tasks from localStorage immediately
+// Auto-purge any stale test/seed tasks and reset legacy showcase themes from localStorage immediately
 try {
   const currentHw = localStorage.getItem(STORAGE_KEY_HOMEWORK);
   if (currentHw && (currentHw.includes('hw_seed_') || currentHw.includes('hw_test_'))) {
@@ -20,6 +20,17 @@ try {
         (h: any) => h && !String(h.id).startsWith('hw_seed_') && !String(h.id).startsWith('hw_test_')
       );
       localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleaned));
+    }
+  }
+
+  // Purge legacy showcase themes (e.g. cyber-violet, electric-mint) and lock to standard theme
+  const currentSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+  if (currentSettings) {
+    const parsed = JSON.parse(currentSettings);
+    if (parsed.visualTheme !== 'oled' || parsed.accentColor !== '#007AFF') {
+      parsed.visualTheme = 'oled';
+      parsed.accentColor = '#007AFF';
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
     }
   }
 } catch {
@@ -347,7 +358,22 @@ export class StorageService {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
       if (!raw) return DEFAULT_SETTINGS;
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      // If user had the legacy cyber-violet / purple theme from previous tests, reset to standard OLED & Apple Blue
+      if (
+        parsed.visualTheme === 'cyber-violet' ||
+        parsed.visualTheme === 'cyber' ||
+        parsed.visualTheme === 'electric-mint' ||
+        parsed.visualTheme === 'acid-lime' ||
+        parsed.accentColor === '#B5179E'
+      ) {
+        parsed.visualTheme = 'oled';
+        parsed.accentColor = '#007AFF';
+        try {
+          localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
+        } catch {}
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
       return DEFAULT_SETTINGS;
     }

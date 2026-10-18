@@ -47,6 +47,21 @@
         }
       }, 2000);
     </script>
+    <script>
+      // Immediate cleanup of legacy custom showcase themes (e.g. cyber-violet)
+      try {
+        var rawSettings = localStorage.getItem('ksu_student_settings_v2');
+        if (rawSettings) {
+          var parsedSettings = JSON.parse(rawSettings);
+          if (parsedSettings.visualTheme !== 'oled' || parsedSettings.accentColor !== '#007AFF') {
+            parsedSettings.visualTheme = 'oled';
+            parsedSettings.accentColor = '#007AFF';
+            parsedSettings.fontFamily = 'system';
+            localStorage.setItem('ksu_student_settings_v2', JSON.stringify(parsedSettings));
+          }
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body class="h-full bg-apple-gray-100 dark:bg-[#121214] text-apple-gray-900 dark:text-zinc-100 antialiased selection:bg-apple-blue selection:text-white">
     <div id="root" class="h-full"></div>
