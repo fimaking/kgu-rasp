@@ -60,18 +60,20 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onClick }) => {
       </div>
 
       {/* Location and Teacher */}
-      <div className="mt-3 pt-2.5 border-t border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs text-apple-gray-500 dark:text-apple-gray-400">
-        <div className="flex items-center gap-1.5 font-medium">
+      <div className="mt-3 pt-2.5 border-t border-black/5 dark:border-white/5 flex flex-col gap-1.5 text-xs">
+        <div className="flex items-center gap-1.5 font-medium text-apple-gray-700 dark:text-apple-gray-300">
           <MapPin className="w-3.5 h-3.5 text-apple-blue shrink-0" />
-          <span className="truncate max-w-[170px] sm:max-w-none">
+          <span className="truncate">
             {lesson.building}, {lesson.auditorium}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <User className="w-3.5 h-3.5 text-apple-gray-400 shrink-0" />
-          <span className="truncate max-w-[140px] sm:max-w-none">{teacherName}</span>
-          <ChevronRight className="w-3.5 h-3.5 text-apple-gray-400 group-hover:text-apple-blue group-hover:translate-x-0.5 transition-transform" />
+        <div className="flex items-center justify-between gap-1 text-apple-gray-500 dark:text-apple-gray-400">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <User className="w-3.5 h-3.5 text-apple-gray-400 shrink-0" />
+            <span className="truncate">{teacherName}</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-apple-gray-400 group-hover:text-apple-blue group-hover:translate-x-0.5 transition-transform shrink-0" />
         </div>
       </div>
 
