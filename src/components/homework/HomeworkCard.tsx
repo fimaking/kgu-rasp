@@ -70,9 +70,9 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Top meta tags */}
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue font-mono truncate max-w-[200px]">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue font-mono break-words leading-tight">
                 {homework.subject}
               </span>
               <PriorityBadge priority={homework.priority} />
@@ -80,7 +80,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             </div>
 
             {/* Actions: Edit & Delete buttons */}
-            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
               <button
                 onClick={() => onEdit(homework)}
                 className="p-1 rounded-lg text-apple-gray-400 hover:text-apple-blue hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -100,7 +100,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
           {/* Title */}
           <h4
-            className={`text-base font-bold tracking-tight text-apple-gray-900 dark:text-white ${
+            className={`text-base font-bold tracking-tight text-apple-gray-900 dark:text-white break-words ${
               isCompleted ? 'line-through text-apple-gray-400 dark:text-apple-gray-500' : ''
             }`}
           >
@@ -109,7 +109,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
           {/* Description */}
           {homework.description && (
-            <p className="mt-1 text-xs sm:text-sm text-apple-gray-600 dark:text-apple-gray-400 leading-relaxed whitespace-pre-line">
+            <p className="mt-1 text-xs sm:text-sm text-apple-gray-600 dark:text-apple-gray-400 leading-relaxed whitespace-pre-line break-words">
               {homework.description}
             </p>
           )}
@@ -151,7 +151,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
                     >
                       {sub.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                     </div>
-                    <span className={sub.completed ? 'line-through opacity-60' : ''}>
+                    <span className={`break-words ${sub.completed ? 'line-through opacity-60' : ''}`}>
                       {sub.title}
                     </span>
                   </div>
