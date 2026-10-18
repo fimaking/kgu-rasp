@@ -29,11 +29,12 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
   onDelete,
 }) => {
   const isCompleted = homework.status === 'completed';
-  const deadlineInfo = formatRelativeDeadline(homework.dueDate, homework.dueTime);
+  const deadlineInfo = formatRelativeDeadline(homework.dueDate, homework.dueTime || '23:59');
   const safeMaterialLink = sanitizeUrl(homework.materialLink);
 
-  const completedSubtasks = homework.subtasks.filter((s) => s.completed).length;
-  const totalSubtasks = homework.subtasks.length;
+  const subtasksList = Array.isArray(homework.subtasks) ? homework.subtasks : [];
+  const completedSubtasks = subtasksList.filter((s) => s.completed).length;
+  const totalSubtasks = subtasksList.length;
   const subtasksPercent =
     totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
 
@@ -136,7 +137,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
               {/* Subtask list */}
               <div className="space-y-1.5 pt-1">
-                {homework.subtasks.map((sub) => (
+                {subtasksList.map((sub) => (
                   <div
                     key={sub.id}
                     onClick={() => onToggleSubtask(homework.id, sub.id)}

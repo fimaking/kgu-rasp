@@ -9,6 +9,7 @@ import { CalendarView } from './components/calendar/CalendarView';
 import { SettingsView } from './components/settings/SettingsView';
 import { HomeworkFormModal } from './components/homework/HomeworkFormModal';
 import { SplashScreen } from './components/ui/SplashScreen';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 import { useSchedule } from './hooks/useSchedule';
 import { useHomework } from './hooks/useHomework';
@@ -186,7 +187,8 @@ export const App: React.FC = () => {
         {/* Scrollable View Area with Smooth Transitions */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6 pb-28 md:pb-8">
           <div className="max-w-7xl mx-auto">
-            <div key={currentTab} className="animate-tab-transition">
+            <ErrorBoundary key={currentTab}>
+              <div key={currentTab} className="animate-tab-transition">
               {currentTab === 'today' && (
               <TodayView
                 todayLessons={schedule.todayLessons}
@@ -293,7 +295,8 @@ export const App: React.FC = () => {
                 lastUpdated={schedule.lastUpdated}
               />
             )}
-            </div>
+              </div>
+            </ErrorBoundary>
           </div>
         </main>
       </div>

@@ -106,7 +106,8 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
         ) : (
           <div className="space-y-2.5">
             {dueTodayList.map((item) => {
-              const completedSubtasks = item.subtasks.filter((s) => s.completed).length;
+              const subtasks = Array.isArray(item.subtasks) ? item.subtasks : [];
+              const completedSubtasks = subtasks.filter((s) => s.completed).length;
 
               return (
                 <div
@@ -120,7 +121,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
                       className="w-5 h-5 rounded-full border-2 border-apple-blue hover:bg-apple-blue flex items-center justify-center transition-all duration-200 ease-out active:scale-75 group shrink-0"
                       title="Отметить выполненным"
                     >
-                      <Check className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Check className="w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
 
                     <div
@@ -132,13 +133,17 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
                       </h5>
                       <div className="flex items-center gap-2 mt-0.5 text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
                         <span className="truncate">{item.subject}</span>
-                        <span>•</span>
-                        <span className="font-mono text-apple-orange">до {item.dueTime}</span>
-                        {item.subtasks.length > 0 && (
+                        {item.dueTime && (
+                          <>
+                            <span>•</span>
+                            <span className="font-mono text-apple-orange">до {item.dueTime}</span>
+                          </>
+                        )}
+                        {subtasks.length > 0 && (
                           <>
                             <span>•</span>
                             <span>
-                              {completedSubtasks}/{item.subtasks.length} подзадач
+                              {completedSubtasks}/{subtasks.length} подзадач
                             </span>
                           </>
                         )}

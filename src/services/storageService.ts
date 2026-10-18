@@ -185,13 +185,16 @@ export class StorageService {
         return [];
       }
 
-      const parsed: Homework[] = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
 
-      // Filter out any tasks that have been deleted or are test/seed tasks
-      return parsed.filter(
-        (h) => !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
-      );
+      // Filter out any tasks that have been deleted or are test/seed tasks, and sanitize every item
+      return parsed
+        .map(sanitizeHomework)
+        .filter(
+          (h): h is Homework =>
+            h !== null && !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
+        );
     } catch {
       return [];
     }
@@ -203,9 +206,12 @@ export class StorageService {
   static saveHomework(items: Homework[]): void {
     try {
       const deletedIds = new Set(this.getDeletedHomeworkIds());
-      const cleanItems = items.filter(
-        (h) => !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
-      );
+      const cleanItems = items
+        .map(sanitizeHomework)
+        .filter(
+          (h): h is Homework =>
+            h !== null && !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
+        );
       localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleanItems));
       this.recordLastModified();
     } catch (e) {
@@ -274,7 +280,7 @@ export class StorageService {
     item.updatedAt = new Date().toISOString();
 
     // Toggle subtasks as well if completing
-    if (isNowCompleted && item.subtasks.length > 0) {
+    if (isNowCompleted && Array.isArray(item.subtasks) && item.subtasks.length > 0) {
       item.subtasks.forEach((s) => (s.completed = true));
     }
 

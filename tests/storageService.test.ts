@@ -136,5 +136,28 @@ describe('storageService', () => {
       // Malicious link should have been purged during sanitization
       expect(list[0].materialLink).toBeUndefined();
     });
+
+    it('safely handles items missing subtasks or dueTime from cloud/mobile sync', () => {
+      // Simulate raw cloud sync without subtasks array
+      const rawIncomplete = [
+        {
+          id: 'hw_phone_raw',
+          title: 'Задание с телефона без подзадач',
+          subject: 'Физика',
+          dueDate: '2026-10-25',
+          priority: 'high',
+          status: 'todo',
+        },
+      ];
+      localStorage.setItem('ksu_student_homework_v2', JSON.stringify(rawIncomplete));
+
+      const items = StorageService.getHomework();
+      expect(items.length).toBe(1);
+      expect(Array.isArray(items[0].subtasks)).toBe(true);
+      expect(items[0].subtasks.length).toBe(0);
+      expect(items[0].dueTime).toBe('23:59');
+      expect(items[0].assignedDate).toBeDefined();
+    });
   });
 });
+

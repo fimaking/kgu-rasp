@@ -66,11 +66,12 @@ export function useHomework() {
     const hw = current.find((h) => h.id === homeworkId);
     if (!hw) return;
 
-    const sub = hw.subtasks.find((s) => s.id === subtaskId);
+    const subtasks = Array.isArray(hw.subtasks) ? hw.subtasks : [];
+    const sub = subtasks.find((s) => s.id === subtaskId);
     if (sub) {
       sub.completed = !sub.completed;
       // If all subtasks completed, suggest or auto complete
-      const allDone = hw.subtasks.every((s) => s.completed);
+      const allDone = subtasks.every((s) => s.completed);
       if (allDone && hw.status !== 'completed') {
         hw.status = 'completed';
         hw.completedAt = new Date().toISOString();
@@ -79,6 +80,7 @@ export function useHomework() {
         hw.status = 'in_progress';
         hw.completedAt = null;
       }
+      hw.subtasks = subtasks;
       StorageService.updateHomework(hw);
       setItems(StorageService.getHomework());
       SyncService.pushToCloud();
@@ -266,21 +268,21 @@ export function useHomework() {
     // Sorting
     result.sort((a, b) => {
       if (filters.sortBy === 'dueDateAsc') {
-        const dateA = a.dueDate + ' ' + (a.dueTime || '23:59');
-        const dateB = b.dueDate + ' ' + (b.dueTime || '23:59');
+        const dateA = (a.dueDate || '') + ' ' + (a.dueTime || '23:59');
+        const dateB = (b.dueDate || '') + ' ' + (b.dueTime || '23:59');
         return dateA.localeCompare(dateB);
       }
       if (filters.sortBy === 'dueDateDesc') {
-        const dateA = a.dueDate + ' ' + (a.dueTime || '23:59');
-        const dateB = b.dueDate + ' ' + (b.dueTime || '23:59');
+        const dateA = (a.dueDate || '') + ' ' + (a.dueTime || '23:59');
+        const dateB = (b.dueDate || '') + ' ' + (b.dueTime || '23:59');
         return dateB.localeCompare(dateA);
       }
       if (filters.sortBy === 'priorityDesc') {
         const weight: Record<Priority, number> = { high: 3, normal: 2, low: 1 };
-        return weight[b.priority] - weight[a.priority];
+        return (weight[b.priority] || 2) - (weight[a.priority] || 2);
       }
       // createdAtDesc
-      return b.createdAt.localeCompare(a.createdAt);
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
     });
 
     return result;
