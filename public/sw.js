@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v57';
+const CACHE_NAME = 'ksu-student-cache-v58';
 
 const STATIC_ASSETS = [
   './',
@@ -65,8 +65,9 @@ self.addEventListener('fetch', (event) => {
 
   // 2. Real-time sync requests: Pure Network (Never cache stale payloads in SW)
   if (
-    url.hostname.includes('restful-api.dev') ||
     url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('firebasedatabase.app') ||
+    url.hostname.includes('restful-api.dev') ||
     url.hostname.includes('workers.dev') ||
     url.hostname.includes('api.github.com')
   ) {

@@ -69,28 +69,20 @@ export const App: React.FC = () => {
           showToast('error', 'Ошибка импорта', res.error);
         }
         window.history.replaceState(null, '', window.location.pathname);
-      } else if (hash && hash.includes('#gist=')) {
+      } else if (hash && (hash.includes('#firebase=') || hash.includes('#cloud='))) {
         const query = hash.replace(/^#/, '');
         const params = new URLSearchParams(query);
-        const gId = params.get('gist') || '';
-        const gToken = params.get('token') || '';
-        if (gId) {
-          showToast('info', 'Подключение GitHub Gist...', `ID: ${gId.slice(0, 8)}...`);
-          const res = await SyncService.connectGistSync(gId, gToken);
-          if (res.success) {
-            homework.reload();
-            calendar.reload();
-            if (gToken) {
-              showToast(
-                'success',
-                'Двусторонняя связка подключена!',
-                `Синхронизировано заданий: ${res.countHw}. Добавление и удаление активны с обоих устройств!`
-              );
-            } else {
-              showToast('success', 'GitHub Gist подключен (чтение)', `Загружено заданий: ${res.countHw}`);
-            }
+        const fUrl = params.get('firebase') || params.get('cloud') || '';
+        if (fUrl) {
+          SyncService.setFirebaseUrl(fUrl);
+          showToast('info', 'Подключение к Google Firebase...', 'Загрузка ваших заданий из облака');
+          const res = await SyncService.pullFromCloud();
+          homework.reload();
+          calendar.reload();
+          if (res.error) {
+            showToast('error', 'Ошибка подключения', res.error);
           } else {
-            showToast('error', 'Ошибка подключения Gist', res.error);
+            showToast('success', 'Облако подключено!', `Синхронизировано заданий: ${res.countHw ?? 0}`);
           }
           window.history.replaceState(null, '', window.location.pathname);
         }

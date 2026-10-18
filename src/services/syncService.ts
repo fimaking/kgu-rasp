@@ -1,18 +1,11 @@
 import { Homework } from '../types/homework';
 import { CalendarCustomEvent } from '../types/calendar';
 import { StorageService } from './storageService';
-import { RealtimeSyncService } from './realtimeSync';
 
-const SYNC_KEY_STORAGE = 'ksu_student_sync_key';
+const FIREBASE_URL_STORAGE = 'ksu_student_firebase_url';
 const SYNC_LAST_PULL_STORAGE = 'ksu_student_sync_last_pull';
-const GIST_TOKEN_STORAGE = 'ksu_student_gist_token';
-const GIST_ID_STORAGE = 'ksu_student_gist_id';
-const CLOUD_ROOM_ID_STORAGE = 'ksu_student_cloud_room_id';
-const REST_ROOM_ID_STORAGE = 'ksu_student_rest_room_id';
-const CUSTOM_SYNC_URL_STORAGE = 'ksu_student_custom_sync_url';
-
-export const DEFAULT_REST_ROOM_ID = 'ff808181a09d98f701a14eff567f0bfb';
-export const DEFAULT_GIST_ID = 'e2d779451fca13d7005a7453b0df880b';
+const LEGACY_CUSTOM_URL_STORAGE = 'ksu_student_custom_sync_url';
+const LEGACY_REST_ROOM_ID_STORAGE = 'ksu_student_rest_room_id';
 
 export interface CloudPayload {
   version: string;
@@ -21,166 +14,248 @@ export interface CloudPayload {
   events: CalendarCustomEvent[];
   deletedHwIds?: string[];
   deletedEventIds?: string[];
-  cloudRoomId?: string;
+}
+
+export function normalizeFirebaseUrl(url: string): string {
+  let clean = url.trim();
+  if (!clean) return '';
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    clean = `https://${clean}`;
+  }
+  clean = clean.replace(/\/+$/, '');
+  if (!clean.endsWith('.json')) {
+    clean = `${clean}/sync.json`;
+  }
+  return clean;
 }
 
 export class SyncService {
   /* =====================================================================
-   * 1. Storage Helpers
+   * 1. Google Firebase Realtime Database Configuration
    * ===================================================================== */
-  static getSyncKey(): string | null {
-    return localStorage.getItem(SYNC_KEY_STORAGE);
-  }
 
-  static setSyncKey(key: string): void {
-    localStorage.setItem(SYNC_KEY_STORAGE, key.trim().toUpperCase());
-  }
-
-  static clearSyncKey(): void {
-    localStorage.removeItem(SYNC_KEY_STORAGE);
-    localStorage.removeItem(SYNC_LAST_PULL_STORAGE);
-  }
-
-  static getRestRoomId(): string {
-    const stored = localStorage.getItem(REST_ROOM_ID_STORAGE);
-    if (stored && stored.trim()) return stored.trim();
-    return DEFAULT_REST_ROOM_ID;
-  }
-
-  static setRestRoomId(id: string): void {
-    if (id && id.trim()) {
-      const clean = id.trim();
-      localStorage.setItem(REST_ROOM_ID_STORAGE, clean);
-      RealtimeSyncService.setRoomCode(clean);
-    } else {
-      localStorage.removeItem(REST_ROOM_ID_STORAGE);
-    }
-  }
-
-  static getCustomSyncUrl(): string | null {
-    const stored = localStorage.getItem(CUSTOM_SYNC_URL_STORAGE);
+  static getFirebaseUrl(): string | null {
+    const stored =
+      localStorage.getItem(FIREBASE_URL_STORAGE) ||
+      localStorage.getItem(LEGACY_CUSTOM_URL_STORAGE);
     if (stored && stored.trim()) return stored.trim();
     return null;
   }
 
-  static setCustomSyncUrl(url: string | null): void {
+  static setFirebaseUrl(url: string | null): void {
     if (url && url.trim()) {
-      localStorage.setItem(CUSTOM_SYNC_URL_STORAGE, url.trim());
+      const clean = normalizeFirebaseUrl(url);
+      localStorage.setItem(FIREBASE_URL_STORAGE, clean);
+      localStorage.setItem(LEGACY_CUSTOM_URL_STORAGE, clean);
     } else {
-      localStorage.removeItem(CUSTOM_SYNC_URL_STORAGE);
+      localStorage.removeItem(FIREBASE_URL_STORAGE);
+      localStorage.removeItem(LEGACY_CUSTOM_URL_STORAGE);
     }
   }
 
-  /**
-   * Create a new unique private cloud room on HTTPS 443 in 1 click
-   */
-  static async createNewRestRoom(): Promise<{ success: boolean; roomId?: string; error?: string }> {
-    try {
-      const payload: CloudPayload = {
-        version: '2.0',
-        updatedAt: StorageService.getLastModified(),
-        homework: StorageService.getHomework(),
-        events: StorageService.getEvents(),
-        deletedHwIds: StorageService.getDeletedHomeworkIds(),
-        deletedEventIds: StorageService.getDeletedEventIds(),
-      };
-
-      const res = await fetch('https://api.restful-api.dev/objects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'ksu_student_sync_room',
-          data: payload,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`Ошибка сервиса (${res.status})`);
-      const resJson = await res.json();
-      const newRoomId = resJson.id;
-      if (!newRoomId) throw new Error('Сервис не вернул ID комнаты');
-
-      this.setRestRoomId(newRoomId);
-      RealtimeSyncService.setRoomCode(newRoomId);
-      return { success: true, roomId: newRoomId };
-    } catch (e: any) {
-      return { success: false, error: e?.message || 'Не удалось создать комнату' };
-    }
+  static clearFirebaseUrl(): void {
+    localStorage.removeItem(FIREBASE_URL_STORAGE);
+    localStorage.removeItem(LEGACY_CUSTOM_URL_STORAGE);
+    localStorage.removeItem(SYNC_LAST_PULL_STORAGE);
   }
 
-  static getRoomPairingUrl(roomId?: string): string {
-    if (typeof window === 'undefined') return '';
-    const origin = window.location.origin;
-    const pathname = window.location.pathname;
-    const rId = roomId || this.getRestRoomId();
-    return `${origin}${pathname}#room=${encodeURIComponent(rId)}`;
-  }
-
-  static getGistToken(): string | null {
-    return localStorage.getItem(GIST_TOKEN_STORAGE);
-  }
-
-  static getGistId(): string | null {
-    const stored = localStorage.getItem(GIST_ID_STORAGE);
-    if (stored && stored.trim()) return stored.trim();
-    return DEFAULT_GIST_ID;
-  }
-
-  static getCloudRoomId(): string | null {
-    const stored = localStorage.getItem(CLOUD_ROOM_ID_STORAGE);
-    if (stored && stored.trim()) return stored.trim();
-    return DEFAULT_GIST_ID;
-  }
-
-  static setCloudRoomId(roomId: string): void {
-    if (roomId && roomId.trim()) {
-      localStorage.setItem(CLOUD_ROOM_ID_STORAGE, roomId.trim());
-      RealtimeSyncService.setRoomCode(roomId.trim());
-    }
-  }
-
-  static setGistCredentials(token: string | undefined | null, gistId: string): void {
-    if (token && token.trim()) {
-      localStorage.setItem(GIST_TOKEN_STORAGE, token.trim());
-    } else {
-      localStorage.removeItem(GIST_TOKEN_STORAGE);
-    }
-    const cleanId = (gistId || DEFAULT_GIST_ID).trim();
-    localStorage.setItem(GIST_ID_STORAGE, cleanId);
-    this.setSyncKey(`GIST-${cleanId.substring(0, 8).toUpperCase()}`);
-    RealtimeSyncService.setRoomCode(cleanId);
-  }
-
-  static setGistToken(token: string): void {
-    if (token && token.trim()) {
-      localStorage.setItem(GIST_TOKEN_STORAGE, token.trim());
-    } else {
-      localStorage.removeItem(GIST_TOKEN_STORAGE);
-    }
-  }
-
-  static hasWritePermission(): boolean {
-    const t = this.getGistToken();
-    return Boolean(t && t.trim());
-  }
-
-  static isSyncConfigured(): boolean {
-    return true; // Permanently linked for the user
-  }
-
-  static clearGistCredentials(): void {
-    localStorage.removeItem(GIST_TOKEN_STORAGE);
-    localStorage.removeItem(GIST_ID_STORAGE);
-    localStorage.removeItem(CLOUD_ROOM_ID_STORAGE);
-    this.clearSyncKey();
-    RealtimeSyncService.disconnect();
+  static isFirebaseConfigured(): boolean {
+    return Boolean(this.getFirebaseUrl());
   }
 
   static getLastSyncTime(): string | null {
     return localStorage.getItem(SYNC_LAST_PULL_STORAGE);
   }
 
+  /**
+   * Generates a link that, when opened on another device (e.g. mobile),
+   * instantly configures the same Firebase database without typing.
+   */
+  static getFirebasePairingUrl(url?: string): string {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const fUrl = url || this.getFirebaseUrl() || '';
+    return `${origin}${pathname}#firebase=${encodeURIComponent(fUrl)}`;
+  }
+
+  /**
+   * Generates a QR Code image URL for any target URL
+   */
+  static getQrCodeForUrl(targetUrl: string): string {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(targetUrl)}`;
+  }
+
   /* =====================================================================
-   * 2. Direct Offline QR Transfer (0 Server Dependency, 100% Reliable)
+   * 2. Core Cloud Push & Pull (Google Firebase HTTPS Port 443)
+   * ===================================================================== */
+
+  /**
+   * Push local tasks and events to Google Firebase Realtime Database
+   */
+  static async pushToCloud(): Promise<boolean> {
+    const firebaseUrl = this.getFirebaseUrl();
+    if (!firebaseUrl) {
+      return false;
+    }
+
+    try {
+      const updatedAt = new Date().toISOString();
+      StorageService.recordLastModified(updatedAt);
+
+      const payload: CloudPayload = {
+        version: '2.0',
+        updatedAt,
+        homework: StorageService.getHomework(),
+        events: StorageService.getEvents(),
+        deletedHwIds: StorageService.getDeletedHomeworkIds(),
+        deletedEventIds: StorageService.getDeletedEventIds(),
+      };
+
+      const res = await fetch(firebaseUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.warn('[SyncService] Firebase push failed with status:', res.status);
+        return false;
+      }
+
+      localStorage.setItem(SYNC_LAST_PULL_STORAGE, updatedAt);
+      return true;
+    } catch (e) {
+      console.error('[SyncService] pushToCloud error', e);
+      return false;
+    }
+  }
+
+  /**
+   * Pull and smart-merge tasks from Google Firebase Realtime Database (bi-directional sync)
+   */
+  static async pullFromCloud(): Promise<{ updated: boolean; countHw?: number; error?: string }> {
+    const firebaseUrl = this.getFirebaseUrl();
+    if (!firebaseUrl) {
+      return { updated: false };
+    }
+
+    try {
+      const res = await fetch(firebaseUrl, {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 401) {
+          return {
+            updated: false,
+            error: `База данных вернула статус ${res.status}. Проверьте правила доступа в Firebase.`,
+          };
+        }
+        return { updated: false, error: `Ошибка связи с облаком (${res.status})` };
+      }
+
+      const remoteData = await res.json();
+      if (!remoteData || typeof remoteData !== 'object') {
+        return { updated: false };
+      }
+
+      const prevHomework = StorageService.getHomework();
+      const prevEvents = StorageService.getEvents();
+
+      // 1. Merge tombstones
+      if (Array.isArray(remoteData.deletedHwIds) && remoteData.deletedHwIds.length > 0) {
+        StorageService.recordDeletedHomeworkIds(remoteData.deletedHwIds);
+      }
+      if (Array.isArray(remoteData.deletedEventIds) && remoteData.deletedEventIds.length > 0) {
+        StorageService.recordDeletedEventIds(remoteData.deletedEventIds);
+      }
+      const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+      const allDeletedEvtIds = new Set(StorageService.getDeletedEventIds());
+
+      // 2. Collect remote tasks
+      const remoteHwMap = new Map<string, Homework>();
+      if (Array.isArray(remoteData.homework)) {
+        for (const h of remoteData.homework) {
+          if (!h || !h.id || allDeletedIds.has(h.id)) continue;
+          remoteHwMap.set(h.id, h);
+        }
+      }
+
+      // 3. Merge with local tasks (Last-Write-Wins)
+      let localHadNewer = false;
+      const localHw = prevHomework.filter((h) => !allDeletedIds.has(h.id));
+      const mergedMap = new Map<string, Homework>(remoteHwMap);
+
+      for (const h of localHw) {
+        const remoteItem = mergedMap.get(h.id);
+        if (!remoteItem) {
+          mergedMap.set(h.id, h);
+          localHadNewer = true;
+        } else {
+          const localTime = new Date(h.updatedAt || h.createdAt || 0).getTime();
+          const remoteTime = new Date(remoteItem.updatedAt || remoteItem.createdAt || 0).getTime();
+          if (localTime > remoteTime) {
+            mergedMap.set(h.id, h);
+            localHadNewer = true;
+          }
+        }
+      }
+
+      const finalHw = Array.from(mergedMap.values());
+      const prevHwJson = JSON.stringify(prevHomework);
+      const finalHwJson = JSON.stringify(finalHw);
+      const hwChanged = prevHwJson !== finalHwJson;
+
+      if (hwChanged) {
+        StorageService.saveHomework(finalHw);
+      }
+
+      // 4. Merge custom calendar events
+      let eventsChanged = false;
+      const remoteEvents = (Array.isArray(remoteData.events) ? remoteData.events : []).filter(
+        (e: any) => e && e.id && !allDeletedEvtIds.has(e.id)
+      );
+      const localEvts = prevEvents.filter((e) => !allDeletedEvtIds.has(e.id));
+      if (remoteEvents.length > 0 || localEvts.length !== prevEvents.length) {
+        const eventMap = new Map<string, CalendarCustomEvent>();
+        for (const e of remoteEvents) {
+          eventMap.set(e.id, e);
+        }
+        for (const e of localEvts) {
+          if (!eventMap.has(e.id)) {
+            eventMap.set(e.id, e);
+            localHadNewer = true;
+          }
+        }
+        const finalEvents = Array.from(eventMap.values());
+        if (JSON.stringify(prevEvents) !== JSON.stringify(finalEvents)) {
+          eventsChanged = true;
+          StorageService.saveEvents(finalEvents);
+        }
+      }
+
+      const updateTimestamp = remoteData.updatedAt || new Date().toISOString();
+      localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
+
+      // If local device had items newer than cloud, push the merged superset back to cloud
+      if (localHadNewer) {
+        this.pushToCloud();
+      }
+
+      return {
+        updated: hwChanged || eventsChanged,
+        countHw: finalHw.length,
+      };
+    } catch (e: any) {
+      console.warn('[SyncService] pullFromCloud error', e);
+      return { updated: false, error: e?.message || 'Не удалось связаться с облаком' };
+    }
+  }
+
+  /* =====================================================================
+   * 3. Direct Offline QR Transfer (0 Server Dependency, 100% Reliable)
    * ===================================================================== */
 
   /**
@@ -202,7 +277,9 @@ export class SyncService {
 
     try {
       if ('CompressionStream' in window) {
-        const stream = new Blob([jsonStr]).stream().pipeThrough(new (window as any).CompressionStream('gzip'));
+        const stream = new Blob([jsonStr])
+          .stream()
+          .pipeThrough(new (window as any).CompressionStream('gzip'));
         const buffer = await new Response(stream).arrayBuffer();
         const bytes = new Uint8Array(buffer);
         let binary = '';
@@ -218,8 +295,10 @@ export class SyncService {
       console.warn('CompressionStream failed, using raw base64', e);
     }
 
-    // Fallback: standard base64 URL safe
-    const base64 = btoa(encodeURIComponent(jsonStr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const base64 = btoa(encodeURIComponent(jsonStr))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
     const origin = window.location.origin;
     const pathname = window.location.pathname;
     return `${origin}${pathname}#rawtransfer=${base64}`;
@@ -228,7 +307,12 @@ export class SyncService {
   /**
    * Decode transfer data from URL hash
    */
-  static async decodeTransferData(hash: string): Promise<{ success: boolean; countHw?: number; countEvents?: number; error?: string }> {
+  static async decodeTransferData(hash: string): Promise<{
+    success: boolean;
+    countHw?: number;
+    countEvents?: number;
+    error?: string;
+  }> {
     try {
       let jsonStr = '';
 
@@ -247,7 +331,9 @@ export class SyncService {
         }
 
         if ('DecompressionStream' in window) {
-          const decStream = new Blob([decBytes]).stream().pipeThrough(new (window as any).DecompressionStream('gzip'));
+          const decStream = new Blob([decBytes])
+            .stream()
+            .pipeThrough(new (window as any).DecompressionStream('gzip'));
           jsonStr = await new Response(decStream).text();
         } else {
           return { success: false, error: 'Браузер не поддерживает распаковку данных' };
@@ -270,7 +356,6 @@ export class SyncService {
         return { success: false, error: 'Некорректный формат переданных заданий' };
       }
 
-      // 1. Record tombstones first
       if (Array.isArray(payload.deletedHwIds)) {
         StorageService.recordDeletedHomeworkIds(payload.deletedHwIds);
       }
@@ -278,7 +363,6 @@ export class SyncService {
         StorageService.recordDeletedEventIds(payload.deletedEventIds);
       }
 
-      // 2. Save active tasks and events
       StorageService.saveHomework(payload.homework);
       if (Array.isArray(payload.events)) {
         StorageService.saveEvents(payload.events);
@@ -287,9 +371,6 @@ export class SyncService {
       const updateTimestamp = payload.updatedAt || new Date().toISOString();
       StorageService.recordLastModified(updateTimestamp);
       localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
-
-      // 3. Broadcast to all other devices so everyone stays synced
-      RealtimeSyncService.broadcast();
 
       return {
         success: true,
@@ -302,465 +383,31 @@ export class SyncService {
     }
   }
 
-  /**
-   * Generate QR Code image URL for any target URL
-   */
-  static getQrCodeForUrl(targetUrl: string): string {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(targetUrl)}`;
-  }
-
   /* =====================================================================
-   * 3. GitHub Gist Cloud Sync (Permanent, Private, Unlimited Size)
+   * 4. Backward Compatibility Stubs
    * ===================================================================== */
-
-  /**
-   * Create a new private Gist for student planner tasks
-   */
-  static async createGistSync(token: string): Promise<{ success: boolean; gistId?: string; error?: string }> {
-    const cleanToken = token.trim();
-    if (!cleanToken) return { success: false, error: 'Укажите токен GitHub' };
-
-    try {
-      const payload: CloudPayload = {
-        version: '1.0',
-        updatedAt: StorageService.getLastModified(),
-        homework: StorageService.getHomework(),
-        events: StorageService.getEvents(),
-        deletedHwIds: StorageService.getDeletedHomeworkIds(),
-        deletedEventIds: StorageService.getDeletedEventIds(),
-      };
-
-      const res = await fetch('https://api.github.com/gists', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${cleanToken}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: 'КГУ Расписание и Домашние задания (Синхронизация студента)',
-          public: false,
-          files: {
-            'ksu_planner_sync.json': {
-              content: JSON.stringify(payload, null, 2),
-            },
-          },
-        }),
-      });
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          return { success: false, error: 'Неверный токен GitHub. Проверьте права (scope: gist).' };
-        }
-        throw new Error(`Ошибка GitHub API (${res.status})`);
-      }
-
-      const resJson = await res.json();
-      const gistId = resJson.id;
-
-      this.setGistCredentials(cleanToken, gistId);
-      localStorage.setItem(SYNC_LAST_PULL_STORAGE, payload.updatedAt);
-
-      return { success: true, gistId };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Не удалось связаться с GitHub';
-      return { success: false, error: msg };
-    }
+  static getGistToken(): string | null {
+    return null;
   }
-
-  /**
-   * Connect to an existing private Gist on another device (token is optional for reading)
-   */
-  static async connectGistSync(
-    gistId: string,
-    token?: string
-  ): Promise<{ success: boolean; countHw?: number; countEvents?: number; error?: string }> {
-    const cleanGistId = gistId ? gistId.trim() : '';
-    const cleanToken = token ? token.trim() : '';
-
-    if (!cleanGistId) {
-      return { success: false, error: 'Введите ID связки Gist' };
-    }
-
-    try {
-      const headers: Record<string, string> = {
-        Accept: 'application/vnd.github+json',
-      };
-      if (cleanToken) {
-        headers.Authorization = `Bearer ${cleanToken}`;
-      }
-
-      const res = await fetch(`https://api.github.com/gists/${cleanGistId}`, { headers });
-
-      if (!res.ok) {
-        if (res.status === 404) {
-          return { success: false, error: 'Gist с таким ID не найден на GitHub.' };
-        }
-        if (res.status === 401) {
-          return { success: false, error: 'Ошибка доступа к Gist. Проверьте ID или токен.' };
-        }
-        throw new Error(`Ошибка GitHub API (${res.status})`);
-      }
-
-      const resJson = await res.json();
-      const fileObj = resJson.files?.['ksu_planner_sync.json'];
-      if (!fileObj || !fileObj.content) {
-        return { success: false, error: 'В выбранном Gist нет файла ksu_planner_sync.json' };
-      }
-
-      const cloudData: CloudPayload = JSON.parse(fileObj.content);
-
-      // Record tombstones first
-      if (Array.isArray(cloudData.deletedHwIds)) {
-        StorageService.recordDeletedHomeworkIds(cloudData.deletedHwIds);
-      }
-      if (Array.isArray(cloudData.deletedEventIds)) {
-        StorageService.recordDeletedEventIds(cloudData.deletedEventIds);
-      }
-
-      // Save homework and events
-      StorageService.saveHomework(cloudData.homework);
-      if (Array.isArray(cloudData.events)) {
-        StorageService.saveEvents(cloudData.events);
-      }
-
-      const updateTimestamp = cloudData.updatedAt || new Date().toISOString();
-      StorageService.recordLastModified(updateTimestamp);
-
-      this.setGistCredentials(cleanToken, cleanGistId);
-      localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
-
-      // Realtime live sync channel
-      RealtimeSyncService.broadcast();
-
-      return {
-        success: true,
-        countHw: cloudData.homework.length,
-        countEvents: cloudData.events ? cloudData.events.length : 0,
-      };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Ошибка подключения к GitHub Gist';
-      return { success: false, error: msg };
-    }
+  static getGistId(): string | null {
+    return null;
   }
-
-  /**
-   * Get direct URL to pair this Gist on another device
-   */
-  static getGistPairingUrl(gistId: string, token?: string): string {
-    if (typeof window === 'undefined') return '';
-    const origin = window.location.origin;
-    const pathname = window.location.pathname;
-    const tParam = token ? `&token=${encodeURIComponent(token)}` : '';
-    return `${origin}${pathname}#gist=${encodeURIComponent(gistId)}${tParam}`;
+  static getRestRoomId(): string {
+    return localStorage.getItem(LEGACY_REST_ROOM_ID_STORAGE) || 'legacy';
   }
-
-  /* =====================================================================
-   * 4. Central Push and Pull Coordinator
-   * ===================================================================== */
-
-  /**
-   * Push local tasks and events to active cloud store
-   */
-  static async pushToCloud(): Promise<boolean> {
-    const token = this.getGistToken();
-    const gistId = this.getGistId();
-    const restRoomId = this.getRestRoomId();
-    const customUrl = this.getCustomSyncUrl();
-
-    try {
-      const updatedAt = new Date().toISOString();
-      StorageService.recordLastModified(updatedAt);
-
-      const payload: CloudPayload = {
-        version: '2.0',
-        updatedAt,
-        homework: StorageService.getHomework(),
-        events: StorageService.getEvents(),
-        deletedHwIds: StorageService.getDeletedHomeworkIds(),
-        deletedEventIds: StorageService.getDeletedEventIds(),
-      };
-
-      // 1. Primary zero-auth HTTPS Port 443 REST Cloud (Universal, works everywhere without VPN)
-      if (customUrl) {
-        try {
-          await fetch(customUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          console.log('[SyncService] Pushed to custom cloud backend successfully!');
-        } catch (e) {
-          console.warn('[SyncService] Custom URL push failed', e);
-        }
-      } else if (restRoomId) {
-        try {
-          await fetch(`https://api.restful-api.dev/objects/${restRoomId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: 'ksu_student_sync_room',
-              data: payload,
-            }),
-          });
-          console.log('[SyncService] Pushed state to HTTPS 443 REST cloud successfully!');
-        } catch (e) {
-          console.warn('[SyncService] REST cloud push failed', e);
-        }
-      }
-
-      // 2. Realtime WebSocket MQTT broadcast
-      RealtimeSyncService.broadcast();
-
-      // 3. Push to GitHub Gist if personal access token is configured
-      if (token && gistId) {
-        try {
-          await fetch(`https://api.github.com/gists/${gistId}`, {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: 'application/vnd.github+json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              files: {
-                'ksu_planner_sync.json': {
-                  content: JSON.stringify(payload, null, 2),
-                },
-              },
-            }),
-          });
-        } catch (e) {
-          console.error('Failed to push to GitHub Gist', e);
-        }
-      }
-
-      localStorage.setItem(SYNC_LAST_PULL_STORAGE, updatedAt);
-      return true;
-    } catch (e) {
-      console.error('pushToCloud error', e);
-      return false;
-    }
+  static setRestRoomId(id: string): void {
+    if (id) localStorage.setItem(LEGACY_REST_ROOM_ID_STORAGE, id.trim());
   }
-
-  /**
-   * Pull and smart-merge tasks from cloud store (bi-directional synchronization)
-   */
-  static async pullFromCloud(): Promise<{ updated: boolean; countHw?: number }> {
-    const token = this.getGistToken();
-    const gistId = this.getGistId();
-    const restRoomId = this.getRestRoomId();
-    const customUrl = this.getCustomSyncUrl();
-
-    let gistPayload: CloudPayload | null = null;
-    let restPayload: CloudPayload | null = null;
-    let roomPayload: CloudPayload | null = null;
-
-    // 1. Pull from custom backend or standard HTTPS 443 REST Cloud
-    if (customUrl) {
-      try {
-        const res = await fetch(customUrl, { cache: 'no-store' });
-        if (res.ok) {
-          const raw = await res.json();
-          restPayload = raw.data || raw;
-        }
-      } catch (e) {
-        console.warn('Custom backend pull failed', e);
-      }
-    } else if (restRoomId) {
-      try {
-        const res = await fetch(`https://api.restful-api.dev/objects/${restRoomId}`, {
-          cache: 'no-store',
-        });
-        if (res.ok) {
-          const resJson = await res.json();
-          if (resJson && resJson.data) {
-            restPayload = resJson.data;
-          }
-        }
-      } catch (e) {
-        console.warn('REST cloud pull failed', e);
-      }
-    }
-
-    // 2. Pull from Gist if gistId is configured (works without token for reading)
-    if (gistId) {
-      try {
-        const headers: Record<string, string> = {
-          Accept: 'application/vnd.github+json',
-        };
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-          headers,
-          cache: 'no-store',
-        });
-        if (res.ok) {
-          const resJson = await res.json();
-          const fileObj = resJson.files?.['ksu_planner_sync.json'];
-          if (fileObj && fileObj.content) {
-            gistPayload = JSON.parse(fileObj.content);
-          }
-        }
-      } catch (e) {
-        console.warn('Gist pull failed', e);
-      }
-    }
-
-    // 2. Pull from unmetered realtime cloud channel
-    try {
-      const liveData = await RealtimeSyncService.pullLatestPayload();
-      if (liveData) {
-        roomPayload = {
-          version: liveData.version || '1.0',
-          updatedAt: liveData.updatedAt,
-          homework: liveData.homework || [],
-          events: liveData.events || [],
-          deletedHwIds: liveData.deletedHwIds || [],
-          deletedEventIds: liveData.deletedEventIds || [],
-        };
-      }
-    } catch (e) {
-      console.warn('Realtime channel pull failed', e);
-    }
-
-    if (!gistPayload && !restPayload && !roomPayload) {
-      return { updated: false };
-    }
-
-    // 1. Snapshot local state BEFORE applying remote data
-    const prevHomework = StorageService.getHomework();
-    const prevEvents = StorageService.getEvents();
-    const prevDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
-    const prevDeletedEvtIds = new Set(StorageService.getDeletedEventIds());
-
-    // 2. Merge tombstones (any task or event deleted on either device stays deleted permanently)
-    let hasNewTombstones = false;
-    const allRemoteTombstones: string[] = [];
-    const allRemoteEvtTombstones: string[] = [];
-
-    if (Array.isArray(gistPayload?.deletedHwIds)) allRemoteTombstones.push(...gistPayload.deletedHwIds);
-    if (Array.isArray(restPayload?.deletedHwIds)) allRemoteTombstones.push(...restPayload.deletedHwIds);
-    if (Array.isArray(roomPayload?.deletedHwIds)) allRemoteTombstones.push(...roomPayload.deletedHwIds);
-
-    if (Array.isArray(gistPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...gistPayload.deletedEventIds);
-    if (Array.isArray(restPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...restPayload.deletedEventIds);
-    if (Array.isArray(roomPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...roomPayload.deletedEventIds);
-
-    if (allRemoteTombstones.length > 0) {
-      for (const id of allRemoteTombstones) {
-        if (!prevDeletedIds.has(id)) {
-          hasNewTombstones = true;
-        }
-      }
-      StorageService.recordDeletedHomeworkIds(allRemoteTombstones);
-    }
-
-    if (allRemoteEvtTombstones.length > 0) {
-      for (const id of allRemoteEvtTombstones) {
-        if (!prevDeletedEvtIds.has(id)) {
-          hasNewTombstones = true;
-        }
-      }
-      StorageService.recordDeletedEventIds(allRemoteEvtTombstones);
-    }
-    const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
-    const allDeletedEvtIds = new Set(StorageService.getDeletedEventIds());
-
-    // 3. Collect remote homework items from both sources (prefer newer item)
-    const remoteHwMap = new Map<string, Homework>();
-    const feedHw = (list?: Homework[]) => {
-      if (!Array.isArray(list)) return;
-      for (const h of list) {
-        if (allDeletedIds.has(h.id)) continue;
-        const existing = remoteHwMap.get(h.id);
-        if (!existing) {
-          remoteHwMap.set(h.id, h);
-        } else {
-          const eTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
-          const hTime = new Date(h.updatedAt || h.createdAt || 0).getTime();
-          if (hTime > eTime) {
-            remoteHwMap.set(h.id, h);
-          }
-        }
-      }
-    };
-
-    feedHw(gistPayload?.homework);
-    feedHw(restPayload?.homework);
-    feedHw(roomPayload?.homework);
-
-    // 4. Smart Merge with local tasks
-    const localHw = prevHomework.filter((h) => !allDeletedIds.has(h.id));
-    const mergedMap = new Map<string, Homework>(remoteHwMap);
-
-    let localHadUniqueOrNewer = false;
-    for (const h of localHw) {
-      const remoteItem = mergedMap.get(h.id);
-      if (!remoteItem) {
-        // Task exists locally but is not in remote yet!
-        mergedMap.set(h.id, h);
-        localHadUniqueOrNewer = true;
-      } else {
-        const localTime = new Date(h.updatedAt || h.createdAt || 0).getTime();
-        const remoteTime = new Date(remoteItem.updatedAt || remoteItem.createdAt || 0).getTime();
-        if (localTime > remoteTime) {
-          mergedMap.set(h.id, h);
-          localHadUniqueOrNewer = true;
-        }
-      }
-    }
-
-    const finalHw = Array.from(mergedMap.values());
-    StorageService.saveHomework(finalHw);
-
-    // 5. Merge custom calendar events
-    let eventsChanged = false;
-    const remoteEvents = [
-      ...(gistPayload?.events || []),
-      ...(restPayload?.events || []),
-      ...(roomPayload?.events || []),
-    ].filter((e) => !allDeletedEvtIds.has(e.id));
-    const localEvts = prevEvents.filter((e) => !allDeletedEvtIds.has(e.id));
-    if (remoteEvents.length > 0 || localEvts.length !== prevEvents.length) {
-      const eventMap = new Map<string, CalendarCustomEvent>();
-      for (const e of remoteEvents) {
-        eventMap.set(e.id, e);
-      }
-      for (const e of localEvts) {
-        if (!eventMap.has(e.id)) {
-          eventMap.set(e.id, e);
-          localHadUniqueOrNewer = true;
-        }
-      }
-      const finalEvents = Array.from(eventMap.values());
-      if (JSON.stringify(prevEvents) !== JSON.stringify(finalEvents)) {
-        eventsChanged = true;
-        StorageService.saveEvents(finalEvents);
-      }
-    }
-
-    // Check if local tasks or tombstones changed compared to before pull
-    const hasLocalChanges =
-      hasNewTombstones ||
-      prevHomework.length !== finalHw.length ||
-      JSON.stringify(prevHomework) !== JSON.stringify(finalHw) ||
-      eventsChanged;
-
-    if (hasLocalChanges) {
-      RealtimeSyncService.notifySubscribers();
-    }
-
-    // 6. If local had newer changes or merged data, push back so all devices stay in sync!
-    if (localHadUniqueOrNewer) {
-      this.pushToCloud();
-    }
-
-    const latestTs = new Date().toISOString();
-    localStorage.setItem(SYNC_LAST_PULL_STORAGE, latestTs);
-
-    return { updated: hasLocalChanges, countHw: finalHw.length };
+  static getCustomSyncUrl(): string | null {
+    return this.getFirebaseUrl();
+  }
+  static setCustomSyncUrl(url: string | null): void {
+    this.setFirebaseUrl(url);
+  }
+  static isSyncConfigured(): boolean {
+    return this.isFirebaseConfigured();
+  }
+  static clearGistCredentials(): void {
+    this.clearFirebaseUrl();
   }
 }

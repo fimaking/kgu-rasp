@@ -113,6 +113,7 @@ export function useHomework() {
     let isMounted = true;
 
     const performSync = async () => {
+      if (!SyncService.isFirebaseConfigured()) return;
       if (typeof navigator !== 'undefined' && !navigator.onLine) return;
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
 
@@ -126,7 +127,6 @@ export function useHomework() {
 
     const handleVisibility = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        RealtimeSyncService.connect();
         performSync();
       }
     };
@@ -135,8 +135,12 @@ export function useHomework() {
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('online', handleVisibility);
 
-    // Fast 4-second cloud sync check while tab is visible and online
-    const timer = setInterval(performSync, 4000);
+    // Fast 5-second cloud sync check while tab is visible and online
+    const timer = setInterval(() => {
+      if (SyncService.isFirebaseConfigured()) {
+        performSync();
+      }
+    }, 5000);
 
     // Initial sync
     performSync();

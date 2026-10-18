@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
-import { SyncService } from '../../services/syncService';
+import { SyncService, normalizeFirebaseUrl } from '../../services/syncService';
 import { NotificationService } from '../../services/notificationService';
 import { APP_VERSION } from '../../utils/version';
 import { Button } from '../ui/Button';
@@ -137,56 +137,72 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     e.target.value = '';
   };
 
-  // Direct Transfer QR state
+  // Google Firebase Cloud Sync state
+  const [firebaseUrl, setFirebaseUrlState] = useState<string>(() => SyncService.getFirebaseUrl() || '');
+  const [isFirebaseConfigured, setIsFirebaseConfigured] = useState<boolean>(() => SyncService.isFirebaseConfigured());
+  const [showFirebaseHelp, setShowFirebaseHelp] = useState(false);
+  const [isFirebaseCopied, setIsFirebaseCopied] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(() => SyncService.getLastSyncTime());
+
+  // Direct Transfer QR state (offline fallback)
   const [transferQrUrl, setTransferQrUrl] = useState<string | null>(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
-  const [gistToken, setGistToken] = useState<string>(() => SyncService.getGistToken() || '');
-  const [gistId, setGistId] = useState<string>(() => SyncService.getGistId() || '');
-  const [inputGistId, setInputGistId] = useState('');
-  const [showGistConfig, setShowGistConfig] = useState(false);
-  const [isGistCopied, setIsGistCopied] = useState(false);
-  const [showGistQr, setShowGistQr] = useState(false);
+  const [showOfflineTransfer, setShowOfflineTransfer] = useState(false);
 
-  // HTTPS 443 Room & Custom Cloud state
-  const [restRoomId, setRestRoomIdState] = useState<string>(() => SyncService.getRestRoomId());
-  const [customSyncUrl, setCustomSyncUrlState] = useState<string>(() => SyncService.getCustomSyncUrl() || '');
-  const [showFirebaseHelp, setShowFirebaseHelp] = useState(false);
-  const [showRoomQr, setShowRoomQr] = useState(false);
-  const [isRoomCopied, setIsRoomCopied] = useState(false);
-
-  const handleCopyRoomUrl = () => {
-    const url = SyncService.getRoomPairingUrl(restRoomId);
-    navigator.clipboard.writeText(url);
-    setIsRoomCopied(true);
-    setTimeout(() => setIsRoomCopied(false), 2000);
-    onShowToast('info', 'Ссылка комнаты скопирована!', 'Откройте её на телефоне для мгновенного подключения.');
-  };
-
-  const handleCreateNewRoom = async () => {
+  const handleConnectFirebase = async () => {
+    const clean = firebaseUrl.trim();
+    if (!clean) {
+      onShowToast('error', 'Укажите адрес базы данных', 'Вставьте ссылку на вашу Realtime Database.');
+      return;
+    }
+    const normalized = normalizeFirebaseUrl(clean);
+    SyncService.setFirebaseUrl(normalized);
+    setFirebaseUrlState(normalized);
     setIsSyncing(true);
-    const res = await SyncService.createNewRestRoom();
+
+    await SyncService.pushToCloud();
+    const res = await SyncService.pullFromCloud();
     setIsSyncing(false);
-    if (res.success && res.roomId) {
-      setRestRoomIdState(res.roomId);
-      onShowToast('success', 'Новая комната создана!', 'Отсканируйте QR-код на телефоне для подключения.');
+
+    if (res.error) {
+      onShowToast('error', 'Ошибка подключения', res.error);
     } else {
-      onShowToast('error', 'Не удалось создать комнату', res.error);
+      setIsFirebaseConfigured(true);
+      setLastSyncTime(SyncService.getLastSyncTime());
+      onDataImported();
+      onShowToast('success', 'Google Firebase подключен!', 'Синхронизация между ПК и телефоном активна.');
     }
   };
 
-  const handleSaveCustomSyncUrl = async () => {
-    const clean = customSyncUrl.trim();
-    SyncService.setCustomSyncUrl(clean || null);
+  const handleDisconnectFirebase = () => {
+    SyncService.clearFirebaseUrl();
+    setIsFirebaseConfigured(false);
+    setFirebaseUrlState('');
+    onShowToast('info', 'Облако отвязано', 'Синхронизация отключена на этом устройстве.');
+  };
+
+  const handleManualSyncNow = async () => {
     setIsSyncing(true);
     await SyncService.pushToCloud();
     const res = await SyncService.pullFromCloud();
     setIsSyncing(false);
+    setLastSyncTime(SyncService.getLastSyncTime());
     if (res.updated) {
       onDataImported();
-      onShowToast('success', 'Свое облако сохранено и синхронизировано!');
+      onShowToast('success', 'Данные обновлены из облака!');
+    } else if (res.error) {
+      onShowToast('error', 'Ошибка синхронизации', res.error);
     } else {
-      onShowToast('success', 'Адрес облака сохранен!');
+      onShowToast('info', 'Всё синхронизировано', 'У вас самая актуальная версия заданий.');
     }
+  };
+
+  const handleCopyFirebasePairingUrl = () => {
+    const url = SyncService.getFirebasePairingUrl(firebaseUrl);
+    navigator.clipboard.writeText(url);
+    setIsFirebaseCopied(true);
+    setTimeout(() => setIsFirebaseCopied(false), 2000);
+    onShowToast('info', 'Ссылка для телефона скопирована!', 'Откройте её на телефоне для мгновенного подключения.');
   };
 
   const handleGenerateTransferQr = async () => {
@@ -206,70 +222,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
-  const handleCopyGistUrl = () => {
-    if (gistId) {
-      const url = SyncService.getGistPairingUrl(gistId, gistToken || undefined);
-      navigator.clipboard.writeText(url);
-      setIsGistCopied(true);
-      setTimeout(() => setIsGistCopied(false), 2000);
-      onShowToast('info', 'Ссылка связки скопирована', 'Откройте её на втором устройстве для моментального подключения.');
-    }
-  };
-
-
-  const handleCreateGistSync = async () => {
-    if (!gistToken.trim()) {
-      onShowToast('error', 'Укажите токен GitHub', 'Создайте токен с разрешением gist.');
-      return;
-    }
-    setIsSyncing(true);
-    const res = await SyncService.createGistSync(gistToken);
-    setIsSyncing(false);
-    if (res.success && res.gistId) {
-      setGistId(res.gistId);
-      onShowToast('success', 'Облако GitHub Gist подключено!', 'Задания будут автоматически обновляться.');
-    } else {
-      onShowToast('error', 'Ошибка GitHub Gist', res.error);
-    }
-  };
-
-  const handleConnectGistSync = async () => {
-    const cleanId = inputGistId.trim();
-    if (!cleanId) {
-      onShowToast('error', 'Заполните поле', 'Введите ID существующего Gist (например: e2d77945...).');
-      return;
-    }
-    setIsSyncing(true);
-    const res = await SyncService.connectGistSync(cleanId, gistToken.trim() || undefined);
-    setIsSyncing(false);
-    if (res.success) {
-      setGistId(cleanId);
-      onDataImported();
-      onShowToast('success', 'Связка подключена!', `Восстановлено заданий: ${res.countHw}`);
-    } else {
-      onShowToast('error', 'Ошибка подключения', res.error);
-    }
-  };
-
-  const handleManualSyncNow = async () => {
-    setIsSyncing(true);
-    await SyncService.pushToCloud();
-    const res = await SyncService.pullFromCloud();
-    setIsSyncing(false);
-    if (res.updated) {
-      onDataImported();
-      onShowToast('success', 'Данные обновлены из облака!');
-    } else {
-      onShowToast('info', 'Всё синхронизировано', 'У вас самая актуальная версия заданий.');
-    }
-  };
-
-  const handleDisconnect = () => {
-    SyncService.clearGistCredentials();
-    setGistId('');
-    onShowToast('info', 'Синхронизация отключена');
-  };
-
   const formatLastSync = (iso: string | null) => {
     if (!iso) return 'Не синхронизировано';
     try {
@@ -277,7 +229,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       const hours = String(d.getHours()).padStart(2, '0');
       const mins = String(d.getMinutes()).padStart(2, '0');
       const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-      return `КГУ EIOS: ${d.getDate()} ${months[d.getMonth()]}, ${hours}:${mins}`;
+      return `Синхронизировано: ${d.getDate()} ${months[d.getMonth()]}, ${hours}:${mins}`;
     } catch {
       return 'Синхронизировано';
     }
@@ -448,389 +400,243 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Section: Cloud Sync and Device Pairing */}
+      {/* Section 3: Google Firebase Cloud Sync */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-5">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-apple-blue to-apple-indigo text-white flex items-center justify-center shadow-apple-sm">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-apple-sm">
               <Cloud className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
-                <span>Синхронизация между устройствами</span>
-                {gistId && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                    GitHub Облако активно
+                <span>Синхронизация (Google Firebase)</span>
+                {isFirebaseConfigured ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Активно ⚡
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-black/5 dark:bg-white/10 text-apple-gray-500">
+                    Не подключено
                   </span>
                 )}
               </h3>
               <p className="text-xs text-apple-gray-500 dark:text-apple-gray-400">
-                Мгновенная передача заданий по QR-коду и постоянное облако GitHub
+                Бесплатно навсегда. Мгновенная передача заданий между телефоном и ПК без ограничений.
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Method 1: Instant Live Room (Universal HTTPS 443, Zero Config) */}
-        <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3.5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-apple-blue">
-                <Cloud className="w-3.5 h-3.5" />
-                <span>Способ 1: Живая связка (Телефон ⇄ ПК) — Без авторизации</span>
-              </div>
-              <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 mt-0.5">
-                Работает через HTTPS 443 на любых операторах РФ. Мгновенно передает задания между телефоном и ПК.
-              </p>
-            </div>
-
-            <Button
-              variant="primary"
-              size="sm"
-              loading={isSyncing}
-              icon={<RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />}
-              onClick={handleManualSyncNow}
-            >
-              Синхронизировать сейчас
-            </Button>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400">
-                  ID комнаты связки:
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  HTTPS 443 Активен
-                </span>
-              </div>
-              <span className="font-mono text-xs font-bold text-apple-blue select-all break-all">
-                {restRoomId}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<QrCode className="w-3.5 h-3.5" />}
-                onClick={() => setShowRoomQr(!showRoomQr)}
-              >
-                {showRoomQr ? 'Скрыть QR' : 'Показать QR-код'}
-              </Button>
+          {isFirebaseConfigured && (
+            <div className="flex items-center gap-2">
               <Button
                 variant="secondary"
                 size="sm"
-                icon={isRoomCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
-                onClick={handleCopyRoomUrl}
+                loading={isSyncing}
+                icon={<RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />}
+                onClick={handleManualSyncNow}
               >
-                {isRoomCopied ? 'Скопировано!' : 'Скопировать ссылку для телефона'}
+                Синхронизировать сейчас
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCreateNewRoom}
-                className="text-xs text-apple-gray-500"
+              <button
+                onClick={handleDisconnectFirebase}
+                className="text-xs text-apple-gray-400 hover:text-apple-red transition-colors px-2 py-1"
               >
-                Новая комната
-              </Button>
-            </div>
-          </div>
-
-          {showRoomQr && (
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
-              <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
-                <img
-                  src={SyncService.getQrCodeForUrl(SyncService.getRoomPairingUrl(restRoomId))}
-                  alt="QR-код связки"
-                  className="w-32 h-32 rounded-lg"
-                />
-              </div>
-              <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1.5 text-center sm:text-left">
-                <p className="font-bold text-apple-gray-900 dark:text-white">
-                  Наведите камеру смартфона на этот QR-код:
-                </p>
-                <p>
-                  Телефон сразу откроет приложение и подключится к этой же комнате. Все задания моментально перенесутся!
-                </p>
-              </div>
+                Отвязать
+              </button>
             </div>
           )}
         </div>
 
-        {/* Method 2: Custom Cloud / Google Firebase */}
-        <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span>Способ 2: Свое облако (Google Firebase / Свой сервер)</span>
-              </h4>
-              <p className="text-xs text-apple-gray-500 mt-0.5">
-                Бесплатная постоянная альтернатива GitHub. Создается за 2 минуты в Google Firebase Realtime Database.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="https://[проект]-default-rtdb.firebaseio.com/sync.json"
-              value={customSyncUrl}
-              onChange={(e) => setCustomSyncUrlState(e.target.value)}
-              className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={isSyncing}
-              onClick={handleSaveCustomSyncUrl}
-            >
-              Сохранить
-            </Button>
-          </div>
-
-          <div>
-            <button
-              onClick={() => setShowFirebaseHelp(!showFirebaseHelp)}
-              className="text-xs text-apple-blue font-semibold hover:underline flex items-center gap-1"
-            >
-              <span>{showFirebaseHelp ? 'Скрыть инструкцию по Firebase' : 'Инструкция: как создать базу в Google Firebase за 2 минуты (бесплатно)'}</span>
-            </button>
-            {showFirebaseHelp && (
-              <div className="mt-2.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-apple-gray-700 dark:text-apple-gray-200 space-y-2 leading-relaxed animate-in fade-in duration-200">
-                <p className="font-bold">Как подключить личный Google Firebase за 2 минуты:</p>
-                <ol className="list-decimal list-inside space-y-1 text-apple-gray-600 dark:text-apple-gray-300">
-                  <li>Зайдите на <b>console.firebase.google.com</b> под своим Google-аккаунтом и нажмите «Добавить проект».</li>
-                  <li>В боковом меню выберите <b>Сборка (Build) → Realtime Database</b> и нажмите «Создать базу данных».</li>
-                  <li>Во вкладке <b>Правила (Rules)</b> замените текст на:<br />
-                    <code className="font-mono bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-[11px] block mt-1">
-                      {`{"rules": {".read": true, ".write": true}}`}
-                    </code>
-                  </li>
-                  <li>Скопируйте URL вашей базы из шапки (например <code className="font-mono text-[11px]">https://my-sync-default-rtdb.firebaseio.com/</code>), припишите в конец <code className="font-mono text-[11px]">sync.json</code> и вставьте в поле выше!</li>
-                </ol>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Method 3: Direct QR Code Transfer (Offline, 0 Server Dependency) */}
-        <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-apple-blue">
-                <QrCode className="w-3.5 h-3.5" />
-                <span>Способ 3: Прямой разовый перенос по QR-коду (Без серверов)</span>
-              </div>
-              <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 mt-0.5">
-                Зашифровывает все задания прямо в картинку QR-кода. Работает даже без интернета.
-              </p>
-            </div>
-
-            <Button
-              variant={transferQrUrl ? 'secondary' : 'primary'}
-              size="sm"
-              loading={isGeneratingQr}
-              icon={<QrCode className="w-4 h-4" />}
-              onClick={handleGenerateTransferQr}
-            >
-              {transferQrUrl ? 'Обновить QR-код' : 'Показать QR-код для телефона'}
-            </Button>
-          </div>
-
-          {transferQrUrl && (
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-300">
-              <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
-                <img
-                  src={SyncService.getQrCodeForUrl(transferQrUrl)}
-                  alt="QR-код для переноса заданий"
-                  className="w-32 h-32 rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[11px] font-bold">
-                  <Check className="w-3.5 h-3.5" />
-                  <span>QR-код готов к сканированию</span>
-                </div>
-                <p className="text-xs text-apple-gray-700 dark:text-apple-gray-200 leading-relaxed">
-                  1. Наведите камеру телефона на этот QR-код.<br />
-                  2. Нажмите на всплывающее уведомление со ссылкой.<br />
-                  3. Все ваши задания моментально откроются на телефоне!
-                </p>
-                <div className="pt-1 flex items-center justify-center sm:justify-start gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    onClick={handleCopyTransferUrl}
-                  >
-                    {isCopied ? 'Ссылка скопирована' : 'Скопировать ссылку для отправки'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Method 4: Permanent GitHub Gist Cloud Sync */}
-        <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-xs font-bold text-apple-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Cloud className="w-3.5 h-3.5 text-apple-indigo" />
-                <span>Способ 4: Постоянное облако через GitHub Gist (Опционально)</span>
-              </h4>
-              <p className="text-xs text-apple-gray-500 mt-0.5">
-                Синхронизация через ваш личный аккаунт GitHub.
-              </p>
-            </div>
-
-            {!gistId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowGistConfig(!showGistConfig)}
-              >
-                {showGistConfig ? 'Скрыть настройку' : 'Настроить'}
-              </Button>
-            )}
-          </div>
-
-          {gistId ? (
-            <div className="space-y-3 pt-2 border-t border-black/5 dark:border-white/5">
-              <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {isFirebaseConfigured ? (
+          <div className="space-y-4 pt-1 animate-in fade-in duration-200">
+            {/* Active Cloud Status */}
+            <div className="p-4 rounded-2.5xl bg-emerald-500/[0.06] border border-emerald-500/20 space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400">
-                      ID связки:
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                      Подключено к GitHub Gist
-                    </span>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-0.5">
+                    Ваше персональное облако Firebase:
                   </div>
-                  <span className="font-mono text-xs font-bold text-apple-blue select-all">
-                    {gistId}
-                  </span>
+                  <div className="font-mono text-xs font-bold text-apple-gray-800 dark:text-zinc-200 break-all select-all">
+                    {firebaseUrl}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    loading={isSyncing}
-                    icon={<RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />}
-                    onClick={handleManualSyncNow}
-                  >
-                    Синхронизировать
-                  </Button>
-                  <button
-                    onClick={handleDisconnect}
-                    className="text-xs text-apple-gray-400 hover:text-apple-red transition-colors px-2 py-1"
-                  >
-                    Отвязать
-                  </button>
+                <div className="text-xs text-apple-gray-500 dark:text-apple-gray-400 whitespace-nowrap">
+                  {formatLastSync(lastSyncTime)}
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<QrCode className="w-3.5 h-3.5" />}
-                  onClick={() => setShowGistQr(!showGistQr)}
-                >
-                  {showGistQr ? 'Скрыть QR' : 'Показать QR-код'}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={isGistCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
-                  onClick={handleCopyGistUrl}
-                >
-                  {isGistCopied ? 'Ссылка скопирована!' : 'Скопировать ссылку для второго устройства'}
-                </Button>
-              </div>
-
-              {showGistQr && (
-                <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
-                  <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
-                    <img
-                      src={SyncService.getQrCodeForUrl(SyncService.getGistPairingUrl(gistId, gistToken || undefined))}
-                      alt="QR-код связки"
-                      className="w-32 h-32 rounded-lg"
-                    />
-                  </div>
-                  <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1 text-center sm:text-left">
-                    <p className="font-bold text-apple-gray-900 dark:text-white">
-                      QR-код для подключения второго устройства:
-                    </p>
-                    <p>
-                      Отсканируйте камерой второго устройства — оно автоматически подключится к этой же связке заданий.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
-          ) : showGistConfig ? (
-            <div className="space-y-3 pt-2 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
-              <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300">
-                1. Откройте{' '}
-                <a
-                  href="https://github.com/settings/tokens/new?scopes=gist&description=KSU+Planner+Sync"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-apple-blue font-bold hover:underline inline-flex items-center gap-0.5"
-                >
-                  <span>создание токена на GitHub (1 клик)</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>{' '}
-                и нажмите «Generate token» внизу страницы.<br />
-                2. Вставьте полученный токен <code className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-[11px]">ghp_...</code> сюда:
-              </p>
 
-              <div className="flex gap-2">
+            {/* Smartphone Pairing Box (QR-code & Link) */}
+            <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
+              <div className="flex flex-col sm:flex-row items-center gap-5">
+                <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
+                  <img
+                    src={SyncService.getQrCodeForUrl(SyncService.getFirebasePairingUrl(firebaseUrl))}
+                    alt="QR-код связки с телефоном"
+                    className="w-36 h-36 rounded-lg"
+                  />
+                </div>
+                <div className="space-y-2 text-center sm:text-left flex-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-apple-blue/10 text-apple-blue text-[11px] font-bold">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Связка со смартфоном в 1 скан</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-apple-gray-900 dark:text-white">
+                    Наведите камеру смартфона на этот QR-код
+                  </h4>
+                  <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 leading-relaxed">
+                    Телефон сразу откроет приложение и <b>автоматически подключится к вашей базе данных</b>. Все задания моментально перенесутся — ничего вводить на телефоне не нужно!
+                  </p>
+                  <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={isFirebaseCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
+                      onClick={handleCopyFirebasePairingUrl}
+                    >
+                      {isFirebaseCopied ? 'Ссылка скопирована!' : 'Скопировать ссылку для отправки в Telegram/VK'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 pt-1 animate-in fade-in duration-200">
+            {/* Input form */}
+            <div className="p-4 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
+              <label className="block text-xs font-bold text-apple-gray-800 dark:text-zinc-200">
+                Вставьте адрес вашей базы Google Firebase:
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
-                  type="password"
-                  placeholder="Вставьте токен GitHub (ghp_...)"
-                  value={gistToken}
-                  onChange={(e) => setGistToken(e.target.value)}
-                  className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
+                  type="text"
+                  placeholder="https://[проект]-default-rtdb.firebaseio.com/sync.json"
+                  value={firebaseUrl}
+                  onChange={(e) => setFirebaseUrlState(e.target.value)}
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono text-apple-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-apple-blue/40 shadow-apple-sm"
                 />
                 <Button
                   variant="primary"
                   size="sm"
                   loading={isSyncing}
-                  onClick={handleCreateGistSync}
+                  onClick={handleConnectFirebase}
                 >
-                  Создать связку
+                  Подключить облако
                 </Button>
               </div>
 
-              <div className="pt-2 border-t border-black/5 dark:border-white/5">
-                <span className="text-[11px] text-apple-gray-500 block mb-1.5">
-                  Или подключитесь к уже созданному Gist (вставьте ID связки с другого устройства; токен не обязателен):
-                </span>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Вставьте ID связки (например: e2d77945...)"
-                    value={inputGistId}
-                    onChange={(e) => setInputGistId(e.target.value)}
-                    className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    loading={isSyncing}
-                    onClick={handleConnectGistSync}
-                  >
-                    Подключить
-                  </Button>
-                </div>
+              {/* Instructions Accordion */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFirebaseHelp(!showFirebaseHelp)}
+                  className="text-xs text-apple-blue font-semibold hover:underline inline-flex items-center gap-1"
+                >
+                  <span>{showFirebaseHelp ? 'Скрыть инструкцию' : 'Инструкция: как создать базу в Google Firebase за 2 минуты (бесплатно)'}</span>
+                </button>
+
+                {showFirebaseHelp && (
+                  <div className="mt-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-apple-gray-800 dark:text-apple-gray-200 space-y-2.5 leading-relaxed animate-in fade-in duration-200">
+                    <p className="font-bold text-amber-900 dark:text-amber-300">
+                      Пошаговая настройка за 2 минуты (100% бесплатно навсегда, без ввода карт):
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1.5 text-apple-gray-700 dark:text-apple-gray-300">
+                      <li>
+                        Перейдите на{' '}
+                        <a
+                          href="https://console.firebase.google.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-apple-blue hover:underline inline-flex items-center gap-0.5"
+                        >
+                          <span>console.firebase.google.com</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>{' '}
+                        под своим Google-аккаунтом и нажмите <b>«Создать проект»</b> (Google Analytics можно выключить).
+                      </li>
+                      <li>
+                        В боковом меню выберите <b>Сборка (Build) → Realtime Database</b> и нажмите <b>«Создать базу данных»</b>. Выберите локацию (например, Belgium или US) и нажмите «Далее».
+                      </li>
+                      <li>
+                        Выберите <b>«Тестовый режим» (Test mode)</b> и нажмите <b>Включить (Enable)</b>.
+                      </li>
+                      <li>
+                        Вверху во вкладке <b>Правила (Rules)</b> проверьте, чтобы стояло:
+                        <pre className="font-mono bg-black/10 dark:bg-white/10 p-2 rounded-xl text-[11px] mt-1 text-apple-gray-900 dark:text-white">
+{`{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}`}
+                        </pre>
+                        и нажмите <b>Опубликовать (Publish)</b>.
+                      </li>
+                      <li>
+                        Вернитесь во вкладку <b>Данные (Data)</b>, скопируйте ссылку на базу вверху (например, <code className="bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-[11px]">https://my-sync-default-rtdb.firebaseio.com/</code>), вставьте её в поле выше и нажмите <b>«Подключить облако»</b>!
+                      </li>
+                    </ol>
+                  </div>
+                )}
               </div>
             </div>
-          ) : null}
+          </div>
+        )}
+
+        {/* Offline Transfer Accordion */}
+        <div className="pt-2 border-t border-black/5 dark:border-white/5">
+          <button
+            type="button"
+            onClick={() => setShowOfflineTransfer(!showOfflineTransfer)}
+            className="text-xs text-apple-gray-500 hover:text-apple-gray-800 dark:hover:text-zinc-200 font-medium inline-flex items-center gap-1.5 transition-colors"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>{showOfflineTransfer ? 'Скрыть офлайн-перенос' : 'Экстренный офлайн-перенос по QR-коду (без интернета)'}</span>
+          </button>
+
+          {showOfflineTransfer && (
+            <div className="mt-3 p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 space-y-3 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <p className="text-xs text-apple-gray-500">
+                  Зашифровывает все задания прямо в картинку QR-кода. Работает даже если полностью нет интернета.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={isGeneratingQr}
+                  onClick={handleGenerateTransferQr}
+                >
+                  {transferQrUrl ? 'Обновить QR' : 'Сгенерировать QR'}
+                </Button>
+              </div>
+
+              {transferQrUrl && (
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+                  <div className="bg-white p-2.5 rounded-xl shadow-apple-sm flex-shrink-0 border border-black/5">
+                    <img
+                      src={SyncService.getQrCodeForUrl(transferQrUrl)}
+                      alt="Офлайн QR"
+                      className="w-28 h-28 rounded-lg"
+                    />
+                  </div>
+                  <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1">
+                    <p className="font-bold">Наведите камеру смартфона:</p>
+                    <p>Телефон откроет ссылку и мгновенно перенесет все задания без серверов.</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      onClick={handleCopyTransferUrl}
+                    >
+                      {isCopied ? 'Скопировано' : 'Скопировать ссылку'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
