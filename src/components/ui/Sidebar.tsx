@@ -24,7 +24,6 @@ interface SidebarProps {
   themeMode: ThemeMode;
   isDark: boolean;
   onToggleTheme: () => void;
-  onOpenGroupSelect?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -33,10 +32,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenCreateHomework,
   dueTodayCount,
   overdueCount,
-  groupName,
+  groupName = '26-ИСбо-4',
   isDark,
   onToggleTheme,
-  onOpenGroupSelect,
 }) => {
   const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: number; badgeVariant?: 'red' | 'blue' }[] = [
     {
@@ -71,26 +69,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-full bg-[#f6f6f8]/85 dark:bg-[#18181b]/85 backdrop-blur-2xl border-r border-black/5 dark:border-white/10 p-4 shrink-0 select-none">
+    <aside className="hidden md:flex flex-col w-64 h-full bg-[#f6f6f8]/85 dark:bg-[#121214]/85 backdrop-blur-2xl border-r border-black/5 dark:border-white/10 p-4 shrink-0 select-none">
       {/* Brand Header */}
-      <button
-        type="button"
-        onClick={onOpenGroupSelect}
-        className="flex items-center gap-3 px-3 py-3 mb-4 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-left group cursor-pointer"
-        title="Сменить группу или подгруппу"
-      >
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-apple-blue to-apple-indigo flex items-center justify-center text-white shadow-apple-sm group-hover:scale-105 transition-transform">
+      <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-2xl select-none">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-apple-blue to-apple-indigo flex items-center justify-center text-white shadow-apple-sm">
           <GraduationCap className="w-5 h-5" />
         </div>
         <div className="min-w-0">
           <h1 className="text-sm font-semibold tracking-tight text-apple-gray-900 dark:text-white truncate">
             КГУ Студент
           </h1>
-          <p className="text-xs text-apple-blue dark:text-apple-blue font-mono font-semibold truncate group-hover:underline">
-            {groupName} ▾
+          <p className="text-xs text-apple-blue dark:text-apple-blue font-mono font-semibold truncate">
+            {groupName} • Немецкий
           </p>
         </div>
-      </button>
+      </div>
 
       {/* Quick Add Homework Button */}
       <button

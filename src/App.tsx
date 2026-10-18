@@ -9,7 +9,6 @@ import { HomeworkView } from './components/homework/HomeworkView';
 import { CalendarView } from './components/calendar/CalendarView';
 import { SettingsView } from './components/settings/SettingsView';
 import { HomeworkFormModal } from './components/homework/HomeworkFormModal';
-import { GroupSelectModal } from './components/schedule/GroupSelectModal';
 import { SplashScreen } from './components/ui/SplashScreen';
 
 import { useSchedule } from './hooks/useSchedule';
@@ -22,7 +21,6 @@ export const App: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [currentTab, setCurrentTab] = useState<NavTab>('today');
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
-  const [isGroupSelectOpen, setIsGroupSelectOpen] = useState(false);
   const [quickCreateSubject, setQuickCreateSubject] = useState<string | undefined>(undefined);
   const [quickCreateDueDate, setQuickCreateDueDate] = useState<string | undefined>(undefined);
   const [quickCreateDueTime, setQuickCreateDueTime] = useState<string | undefined>(undefined);
@@ -169,7 +167,6 @@ export const App: React.FC = () => {
         themeMode={theme.themeMode}
         isDark={theme.isDark}
         onToggleTheme={() => theme.setThemeMode(theme.isDark ? 'light' : 'dark')}
-        onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
       />
 
       {/* Main Container */}
@@ -178,11 +175,6 @@ export const App: React.FC = () => {
         <Header
           groupName={schedule.groupName || schedule.info?.group?.name || '26-ИСбо-4'}
           subgroupFilter={schedule.subgroupFilter}
-          onSubgroupChange={(sg) => {
-            schedule.setSubgroupFilter(sg);
-            showToast('info', 'Фильтр подгруппы обновлен', sg === 0 ? 'Показываются все подгруппы' : `Выбрана ${sg}-я подгруппа`);
-          }}
-          onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
           onRefresh={handleRefreshSchedule}
           refreshing={schedule.refreshing}
           isOffline={schedule.isOffline}
@@ -288,8 +280,6 @@ export const App: React.FC = () => {
                 groupId={schedule.groupId}
                 groupName={schedule.groupName}
                 subgroupPreference={schedule.subgroupFilter}
-                onSubgroupChange={schedule.setSubgroupFilter}
-                onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
                 onShowToast={showToast}
                 onDataImported={() => {
                   homework.reload();
@@ -330,23 +320,6 @@ export const App: React.FC = () => {
           subjectsList={schedule.subjects}
         />
       )}
-
-      {/* Global Group & Subgroup Selection Modal */}
-      <GroupSelectModal
-        isOpen={isGroupSelectOpen}
-        onClose={() => setIsGroupSelectOpen(false)}
-        currentGroupId={schedule.groupId}
-        currentGroupName={schedule.groupName}
-        currentSubgroup={schedule.subgroupFilter}
-        onSelectGroup={async (gId, gName, sg) => {
-          await schedule.changeGroup(gId, gName, sg);
-          showToast(
-            'success',
-            `Группа ${gName} выбрана!`,
-            sg === 0 ? 'Показываются все подгруппы' : `Выбрана ${sg}-я подгруппа`
-          );
-        }}
-      />
 
       {/* Toast Notification Container */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
