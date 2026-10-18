@@ -47,13 +47,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 }) => {
   const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => new Date());
 
-  // Default to grid on desktop so the full week's schedule is immediately visible
-  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>(() => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      return 'grid';
-    }
-    return 'single';
-  });
+  // Default to grid layout on both PC and mobile so the entire week schedule is immediately visible
+  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
 
@@ -69,7 +64,16 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   const handleGoToToday = () => {
     onGoToToday();
-    setSelectedDayDate(new Date());
+    const now = new Date();
+    setSelectedDayDate(now);
+    if (viewLayout === 'grid') {
+      setTimeout(() => {
+        const todayEl = document.getElementById('day-card-today');
+        if (todayEl) {
+          todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    }
   };
 
   const handlePrevWeek = () => {
@@ -93,12 +97,13 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   // Scroll to today's card when opening grid layout
   useEffect(() => {
     if (viewLayout === 'grid') {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const el = document.getElementById('day-card-today');
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-      }, 50);
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [viewLayout]);
 
@@ -226,7 +231,16 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         selectedDayDate={selectedDayDate}
         onSelectDay={(d) => {
           setSelectedDayDate(d);
-          setViewLayout('single');
+          if (viewLayout === 'grid') {
+            const dateStr = formatDateToIso(d);
+            const isCurrentDay = isSameDay(d, new Date());
+            const el = isCurrentDay
+              ? document.getElementById('day-card-today')
+              : document.getElementById(`day-card-${dateStr}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
         }}
         days={daysSummary}
         info={info}

@@ -10,22 +10,29 @@ interface DayCardProps {
 }
 
 export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson }) => {
-  const { dayName, date, isToday, lessons } = daySchedule;
+  const { dayName, date, dateStr, isToday, lessons } = daySchedule;
 
   return (
     <div
-      id={isToday ? 'day-card-today' : undefined}
-      className={`p-5 rounded-3xl backdrop-blur-xl border transition-all ${
+      id={isToday ? 'day-card-today' : `day-card-${dateStr}`}
+      data-date={dateStr}
+      className={`p-5 rounded-3xl backdrop-blur-xl border transition-all duration-200 ${
         isToday
-          ? 'bg-blue-500/[0.03] dark:bg-blue-500/[0.05] border-apple-blue/30 shadow-apple-card ring-1 ring-apple-blue/20'
-          : 'bg-white/60 dark:bg-zinc-900/60 border-black/5 dark:border-white/10 shadow-apple-sm'
+          ? 'bg-blue-500/[0.08] dark:bg-blue-500/[0.14] border-apple-blue/50 dark:border-apple-blue/50 shadow-apple-card ring-2 ring-apple-blue/30 dark:ring-apple-blue/40'
+          : 'bg-white/60 dark:bg-zinc-900/60 border-black/5 dark:border-white/10 shadow-apple-sm hover:shadow-apple-card'
       }`}
     >
       {/* Day Header */}
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-black/5 dark:border-white/5 select-none">
         <div>
           <div className="flex items-center gap-2">
-            <h4 className="text-base font-bold text-apple-gray-900 dark:text-white">
+            <h4
+              className={`text-base font-bold ${
+                isToday
+                  ? 'text-apple-blue dark:text-blue-400'
+                  : 'text-apple-gray-900 dark:text-white'
+              }`}
+            >
               {dayName}
             </h4>
             {isToday && (
@@ -39,7 +46,13 @@ export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson })
           </p>
         </div>
 
-        <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-400">
+        <span
+          className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full ${
+            isToday
+              ? 'bg-apple-blue/15 text-apple-blue dark:text-blue-300 font-semibold'
+              : 'bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-400'
+          }`}
+        >
           {lessons.length}{' '}
           {lessons.length === 1
             ? 'пара'
@@ -52,7 +65,11 @@ export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson })
       {/* Lessons List */}
       {lessons.length === 0 ? (
         <div className="py-8 text-center">
-          <Coffee className="w-7 h-7 mx-auto text-apple-gray-300 dark:text-apple-gray-600 mb-2" />
+          <Coffee
+            className={`w-7 h-7 mx-auto mb-2 ${
+              isToday ? 'text-apple-blue/60 dark:text-blue-400/60' : 'text-apple-gray-300 dark:text-apple-gray-600'
+            }`}
+          />
           <p className="text-xs font-medium text-apple-gray-500 dark:text-apple-gray-400">
             Нет занятий
           </p>
