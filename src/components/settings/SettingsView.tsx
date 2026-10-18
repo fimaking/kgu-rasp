@@ -259,18 +259,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200 select-none pb-12">
-      {/* Title */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-apple-blue font-mono">
-          <Settings className="w-3.5 h-3.5" />
-          <span>Параметры приложения</span>
+      {/* Top Banner: Settings Badge */}
+      <div className="flex items-center justify-between select-none">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm">
+          <Settings className="w-3.5 h-3.5 text-apple-blue shrink-0" />
+          <span className="text-xs sm:text-sm font-semibold tracking-tight text-apple-gray-800 dark:text-zinc-200">
+            Настройки
+          </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-apple-gray-900 dark:text-white mt-0.5">
-          Настройки
-        </h2>
-        <p className="text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400">
-          Тема, уведомления, выбор подгруппы и резервное копирование
-        </p>
       </div>
 
       {/* Section 1: Appearance / Theme Mode */}
@@ -338,7 +334,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="text-xs text-apple-gray-500 font-medium">Выбранная подгруппа:</span>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue border border-apple-blue/20 text-xs font-semibold">
               <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>{subgroupPreference} подгруппа (а) • Немецкий язык</span>
+              <span>{subgroupPreference} подгруппа (а)</span>
             </div>
           </div>
 
@@ -357,31 +353,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <RotateCw className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Subgroup & Language profile */}
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-2">
-            Профиль расписания
-          </label>
-          <div className="p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center font-bold text-xs">
-                {subgroupPreference}
-              </div>
-              <div>
-                <p className="text-xs font-bold text-apple-gray-900 dark:text-white">
-                  {subgroupPreference}-я подгруппа (а) • Немецкий язык
-                </p>
-                <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
-                  Автоматически отфильтрованы 2-я подгруппа, английский и французский языки
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-              Активен
-            </span>
           </div>
         </div>
       </div>
