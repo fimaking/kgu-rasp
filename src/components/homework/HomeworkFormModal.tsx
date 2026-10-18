@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Calendar, Clock, BookOpen, Link as LinkIcon, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Calendar, Clock, BookOpen, Link as LinkIcon, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Homework, Priority, HomeworkStatus, Subtask } from '../../types/homework';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -42,6 +42,18 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
     next.setDate(next.getDate() + 3);
     return formatDateToIso(next);
   });
+
+  const isPastDue = useMemo(() => {
+    if (!dueDate) return false;
+    const todayStr = formatDateToIso(new Date());
+    return dueDate < todayStr;
+  }, [dueDate]);
+
+  const setQuickDeadline = (daysAhead: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    setDueDate(formatDateToIso(d));
+  };
   const [dueTime, setDueTime] = useState('23:59');
   const [priority, setPriority] = useState<Priority>('normal');
   const [status, setStatus] = useState<HomeworkStatus>('todo');
@@ -358,6 +370,36 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               onChange={(e) => setDueDate(e.target.value)}
               className="w-full px-3 py-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-xs sm:text-sm text-apple-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-apple-blue/40 font-semibold"
             />
+            {/* Quick deadline shortcuts */}
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setQuickDeadline(1)}
+                className="text-[10px] px-2 py-0.5 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] hover:bg-apple-blue/15 hover:text-apple-blue dark:hover:text-blue-300 transition-colors font-medium text-apple-gray-600 dark:text-zinc-400 active:scale-95"
+              >
+                Завтра
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickDeadline(3)}
+                className="text-[10px] px-2 py-0.5 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] hover:bg-apple-blue/15 hover:text-apple-blue dark:hover:text-blue-300 transition-colors font-medium text-apple-gray-600 dark:text-zinc-400 active:scale-95"
+              >
+                +3 дня
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickDeadline(7)}
+                className="text-[10px] px-2 py-0.5 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] hover:bg-apple-blue/15 hover:text-apple-blue dark:hover:text-blue-300 transition-colors font-medium text-apple-gray-600 dark:text-zinc-400 active:scale-95"
+              >
+                +1 нед
+              </button>
+            </div>
+            {isPastDue && (
+              <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 animate-in fade-in">
+                <AlertTriangle className="w-3 h-3 shrink-0" />
+                <span>Дата в прошлом — задание станет просроченным</span>
+              </p>
+            )}
           </div>
 
           <div>
@@ -376,8 +418,11 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
 
         {/* Description */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-1.5">
-            Подробное описание задания
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-1.5 flex items-center justify-between">
+            <span>Подробное описание задания</span>
+            <span className="text-[10px] text-apple-gray-400 font-mono">
+              {description.length} / 3000
+            </span>
           </label>
           <textarea
             rows={3}

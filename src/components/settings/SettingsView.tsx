@@ -21,6 +21,7 @@ import {
   RotateCw,
   Palette,
   Type,
+  Database,
 } from 'lucide-react';
 import {
   ThemeMode,
@@ -864,6 +865,47 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Local Storage Health & Statistics */}
+        {(() => {
+          const stats = StorageService.getStorageStats();
+          return (
+            <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Database className="w-4 h-4 text-apple-blue shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 flex items-center gap-2 flex-wrap">
+                    <span>Локальное хранилище данных:</span>
+                    <span className="font-mono font-bold text-apple-blue">{stats.formattedSize}</span>
+                    <span className="text-[10px] text-apple-gray-500">
+                      ({stats.totalHomework} заданий, {stats.eventsCount} событий)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
+                    Все данные хранятся изолированно и безопасно в памяти браузера
+                  </p>
+                </div>
+              </div>
+              {stats.completedHomework > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const purged = StorageService.purgeOldCompletedHomework(60);
+                    if (purged > 0) {
+                      onShowToast('info', 'Очистка завершена', `Удалено ${purged} старых выполненных заданий (> 60 дней)`);
+                    } else {
+                      onShowToast('info', 'Хранилище в порядке', 'Старых выполненных заданий (> 60 дней) не обнаружено.');
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-xl bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[11px] font-medium text-apple-gray-600 dark:text-zinc-300 transition-colors shrink-0"
+                  title="Удалить выполненные задания старше 2 месяцев"
+                >
+                  Очистить старые ДЗ
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         <div className="flex flex-wrap gap-3 pt-2">
           <Button

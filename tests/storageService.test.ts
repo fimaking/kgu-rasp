@@ -158,6 +158,41 @@ describe('storageService', () => {
       expect(items[0].dueTime).toBe('23:59');
       expect(items[0].assignedDate).toBeDefined();
     });
+
+    it('calculates storage statistics and handles safeSetItem properly', () => {
+      StorageService.safeSetItem('ksu_test_key', 'test_value');
+      const stats = StorageService.getStorageStats();
+      expect(stats.formattedSize).toBeDefined();
+      expect(typeof stats.bytesUsed).toBe('number');
+      expect(typeof stats.totalHomework).toBe('number');
+    });
+
+    it('purges completed homework older than specified threshold', () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 90);
+
+      const oldCompleted: Homework = {
+        id: 'hw_old_done',
+        title: 'Старое задание 3 месяца назад',
+        subject: 'История',
+        assignedDate: '2026-07-01',
+        dueDate: '2026-07-05',
+        dueTime: '23:59',
+        priority: 'normal',
+        status: 'completed',
+        completedAt: oldDate.toISOString(),
+        updatedAt: oldDate.toISOString(),
+        subtasks: [],
+        createdAt: oldDate.toISOString(),
+      };
+
+      StorageService.saveHomework([oldCompleted]);
+      expect(StorageService.getHomework().length).toBe(1);
+
+      const purged = StorageService.purgeOldCompletedHomework(60);
+      expect(purged).toBe(1);
+      expect(StorageService.getHomework().length).toBe(0);
+    });
   });
 });
 

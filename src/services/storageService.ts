@@ -117,13 +117,117 @@ function sanitizeEvent(item: any): CalendarCustomEvent | null {
 
 export class StorageService {
   /**
+   * Safe localStorage wrapper that gracefully handles browser QuotaExceededError
+   */
+  static safeSetItem(key: string, value: string): boolean {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e: any) {
+      if (
+        e &&
+        (e.name === 'QuotaExceededError' ||
+          e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          e.code === 22 ||
+          e.code === 1014)
+      ) {
+        console.warn(`[StorageService] Storage quota exceeded when writing "${key}". Running auto-purge of old tasks...`);
+        try {
+          this.purgeOldCompletedHomework(60);
+          localStorage.setItem(key, value);
+          return true;
+        } catch (retryErr) {
+          console.error('[StorageService] Quota still exceeded after purge', retryErr);
+          return false;
+        }
+      }
+      console.error(`[StorageService] Failed to write key "${key}"`, e);
+      return false;
+    }
+  }
+
+  /**
+   * Auto-purge completed homework older than specified days to free up storage
+   */
+  static purgeOldCompletedHomework(olderThanDays = 60): number {
+    try {
+      const items = this.getHomework();
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - olderThanDays);
+      const cutoffIso = cutoff.toISOString();
+
+      let purgedCount = 0;
+      const retained = items.filter((h) => {
+        if (h.status === 'completed') {
+          const compDate = h.completedAt || h.updatedAt;
+          if (compDate && compDate < cutoffIso) {
+            purgedCount++;
+            return false;
+          }
+        }
+        return true;
+      });
+
+      if (purgedCount > 0) {
+        localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(retained));
+        this.recordLastModified();
+        console.info(`[StorageService] Purged ${purgedCount} completed tasks older than ${olderThanDays} days`);
+      }
+      return purgedCount;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate storage space used by application in localStorage
+   */
+  static getStorageStats(): {
+    bytesUsed: number;
+    formattedSize: string;
+    totalHomework: number;
+    completedHomework: number;
+    eventsCount: number;
+  } {
+    let bytesUsed = 0;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ksu_')) {
+          const v = localStorage.getItem(k) || '';
+          bytesUsed += (k.length + v.length) * 2; // UTF-16 approximate bytes
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    const hw = this.getHomework();
+    const completed = hw.filter((h) => h.status === 'completed').length;
+    const events = this.getEvents();
+
+    const formattedSize =
+      bytesUsed > 1024 * 1024
+        ? `${(bytesUsed / (1024 * 1024)).toFixed(2)} МБ`
+        : `${(bytesUsed / 1024).toFixed(1)} КБ`;
+
+    return {
+      bytesUsed,
+      formattedSize,
+      totalHomework: hw.length,
+      completedHomework: completed,
+      eventsCount: events.length,
+    };
+  }
+
+  /**
    * Get timestamp of last local data modification
    */
   static getLastModified(): string {
     const stored = localStorage.getItem(STORAGE_KEY_LAST_MODIFIED);
     if (stored) return stored;
     const now = new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY_LAST_MODIFIED, now);
+    this.safeSetItem(STORAGE_KEY_LAST_MODIFIED, now);
     return now;
   }
 
@@ -132,7 +236,7 @@ export class StorageService {
    */
   static recordLastModified(timestamp?: string): void {
     const time = timestamp || new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY_LAST_MODIFIED, time);
+    this.safeSetItem(STORAGE_KEY_LAST_MODIFIED, time);
   }
 
   /**
@@ -154,7 +258,7 @@ export class StorageService {
     try {
       const ids = new Set(this.getDeletedHomeworkIds());
       ids.add(id);
-      localStorage.setItem(STORAGE_KEY_DELETED_HW, JSON.stringify([...ids]));
+      this.safeSetItem(STORAGE_KEY_DELETED_HW, JSON.stringify([...ids]));
       this.recordLastModified();
     } catch (e) {
       console.error('Failed to record deleted homework ID', e);
@@ -169,7 +273,7 @@ export class StorageService {
     try {
       const ids = new Set(this.getDeletedHomeworkIds());
       newIds.forEach((id) => ids.add(id));
-      localStorage.setItem(STORAGE_KEY_DELETED_HW, JSON.stringify([...ids]));
+      this.safeSetItem(STORAGE_KEY_DELETED_HW, JSON.stringify([...ids]));
       this.recordLastModified();
     } catch (e) {
       console.error('Failed to record deleted homework IDs', e);
@@ -215,7 +319,7 @@ export class StorageService {
           (h): h is Homework =>
             h !== null && !deletedIds.has(h.id) && !h.id.startsWith('hw_seed_') && !h.id.startsWith('hw_test_')
         );
-      localStorage.setItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleanItems));
+      this.safeSetItem(STORAGE_KEY_HOMEWORK, JSON.stringify(cleanItems));
       this.recordLastModified();
     } catch (e) {
       console.error('Failed to save homework', e);
@@ -307,7 +411,7 @@ export class StorageService {
     try {
       const ids = new Set(this.getDeletedEventIds());
       ids.add(id);
-      localStorage.setItem(STORAGE_KEY_DELETED_EVENTS, JSON.stringify([...ids]));
+      this.safeSetItem(STORAGE_KEY_DELETED_EVENTS, JSON.stringify([...ids]));
       this.recordLastModified();
     } catch (e) {
       console.error('Failed to record deleted event ID', e);
@@ -319,7 +423,7 @@ export class StorageService {
     try {
       const ids = new Set(this.getDeletedEventIds());
       newIds.forEach((id) => ids.add(id));
-      localStorage.setItem(STORAGE_KEY_DELETED_EVENTS, JSON.stringify([...ids]));
+      this.safeSetItem(STORAGE_KEY_DELETED_EVENTS, JSON.stringify([...ids]));
       this.recordLastModified();
     } catch (e) {
       console.error('Failed to record deleted event IDs', e);
@@ -346,7 +450,7 @@ export class StorageService {
     try {
       const deletedIds = new Set(this.getDeletedEventIds());
       const cleanEvents = events.filter((e) => !deletedIds.has(e.id) && !e.id.startsWith('evt_seed_'));
-      localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(cleanEvents));
+      this.safeSetItem(STORAGE_KEY_EVENTS, JSON.stringify(cleanEvents));
       this.recordLastModified();
     } catch (e) {
       console.error('Failed to save events', e);
@@ -391,7 +495,7 @@ export class StorageService {
         parsed.visualTheme = 'oled';
         parsed.accentColor = '#007AFF';
         try {
-          localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
+          this.safeSetItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
         } catch {}
       }
       return { ...DEFAULT_SETTINGS, ...parsed };
@@ -402,7 +506,7 @@ export class StorageService {
 
   static saveSettings(settings: UserSettings): void {
     try {
-      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+      this.safeSetItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
     } catch (e) {
       console.error('Failed to save settings', e);
     }

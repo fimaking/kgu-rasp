@@ -10,6 +10,7 @@ import {
   Bell,
   GraduationCap,
   Clock,
+  Download,
 } from 'lucide-react';
 import { ParsedLesson, WeekDaySchedule, RaspInfo } from '../../types/schedule';
 import { WeekNavigator } from './WeekNavigator';
@@ -18,6 +19,9 @@ import { LessonModal } from './LessonModal';
 import { Modal } from '../ui/Modal';
 import { isSameDay, formatDateToIso, formatRussianDate, getMondayOfWeek } from '../../utils/dateUtils';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
+import { downloadIcsSchedule } from '../../utils/icsExport';
+
+export type ScheduleFilterMode = 'all' | 'lecture' | 'practice' | 'lab' | 'session';
 
 interface ScheduleViewProps {
   weekSchedule: WeekDaySchedule[];
@@ -36,6 +40,7 @@ interface ScheduleViewProps {
     dueTime?: string;
     lessonType?: string;
   }) => void;
+  onShowToast?: (type: 'success' | 'error' | 'info', title: string, message?: string) => void;
 }
 
 export const KSU_BELL_TIMES = [
@@ -56,6 +61,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onGoToToday,
   onGoToDate,
   onOpenCreateHomeworkForSubject,
+  onShowToast,
 }) => {
   const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => {
     const now = new Date();
@@ -65,9 +71,11 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   // Default to grid layout on both PC and mobile so the entire week schedule is immediately visible
   const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterMode, setFilterMode] = useState<'all' | 'session'>('all');
+  const [filterMode, setFilterMode] = useState<ScheduleFilterMode>('all');
   const [showBellsModal, setShowBellsModal] = useState(false);
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   // Active pair or break countdown info (Sunday is excluded)
   const currentBreakOrPairInfo = useMemo(() => {
@@ -207,7 +215,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       }));
   }, [weekSchedule]);
 
-  // Search & session filtering (excluding Sunday)
+  // Search & type filtering (excluding Sunday)
   const filteredWeekSchedule = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
@@ -216,26 +224,32 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       .map((day) => ({
         ...day,
         lessons: day.lessons.filter((l) => {
-        // Mode filter: all pairs or exams & credits only
-        if (filterMode === 'session') {
-          const isSession =
-            l.type === 'exam' ||
-            l.type === 'credit' ||
-            l.rawDiscipline?.toLowerCase().includes('конс') ||
-            l.rawDiscipline?.toLowerCase().includes('аттест');
-          if (!isSession) return false;
-        }
+          // Mode filter:
+          if (filterMode === 'session') {
+            const isSession =
+              l.type === 'exam' ||
+              l.type === 'credit' ||
+              l.rawDiscipline?.toLowerCase().includes('конс') ||
+              l.rawDiscipline?.toLowerCase().includes('аттест');
+            if (!isSession) return false;
+          } else if (filterMode === 'lecture') {
+            if (l.type !== 'lecture') return false;
+          } else if (filterMode === 'practice') {
+            if (l.type !== 'practice') return false;
+          } else if (filterMode === 'lab') {
+            if (l.type !== 'lab') return false;
+          }
 
-        // Search query
-        if (!q) return true;
-        return (
-          l.subject.toLowerCase().includes(q) ||
-          l.teacher.toLowerCase().includes(q) ||
-          l.auditorium.toLowerCase().includes(q) ||
-          l.rawDiscipline.toLowerCase().includes(q)
-        );
-      }),
-    }));
+          // Search query
+          if (!q) return true;
+          return (
+            l.subject.toLowerCase().includes(q) ||
+            l.teacher.toLowerCase().includes(q) ||
+            l.auditorium.toLowerCase().includes(q) ||
+            l.rawDiscipline.toLowerCase().includes(q)
+          );
+        }),
+      }));
   }, [weekSchedule, searchQuery, filterMode]);
 
   // Selected single day
@@ -254,6 +268,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       }
     );
   }, [filteredWeekSchedule, selectedDayDate]);
+
   // Total lessons scheduled for this week
   const totalWeekLessons = useMemo(() => {
     return weekSchedule.reduce((acc, d) => acc + d.lessons.length, 0);
@@ -266,6 +281,64 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     const future = allLessons.filter((l) => l.dateStr >= todayStr);
     return future.length > 0 ? future[0] : allLessons[allLessons.length - 1];
   }, [allLessons]);
+
+  // Touch swipe support for switching days or weeks on mobile devices
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setTouchStartX(e.touches[0].clientX);
+      setTouchStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const touchEnd = e.changedTouches[0];
+    const deltaX = touchEnd.clientX - touchStartX;
+    const deltaY = touchEnd.clientY - touchStartY;
+    setTouchStartX(null);
+    setTouchStartY(null);
+
+    // Horizontal swipe threshold: 50px, dominating vertical scroll
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      if (deltaX < 0) {
+        // Swiped Left -> Forward (next day or next week)
+        if (viewLayout === 'single') {
+          setSelectedDayDate((prev) => {
+            const next = new Date(prev);
+            next.setDate(prev.getDate() + 1);
+            if (next.getDay() === 0) next.setDate(next.getDate() + 1); // skip Sunday
+            return next;
+          });
+        } else {
+          handleNextWeek();
+        }
+      } else {
+        // Swiped Right -> Backward (previous day or previous week)
+        if (viewLayout === 'single') {
+          setSelectedDayDate((prev) => {
+            const next = new Date(prev);
+            next.setDate(prev.getDate() - 1);
+            if (next.getDay() === 0) next.setDate(next.getDate() - 1); // skip Sunday
+            return next;
+          });
+        } else {
+          handlePrevWeek();
+        }
+      }
+    }
+  };
+
+  const handleExportIcs = () => {
+    const group = info?.group?.name || 'КГУ';
+    downloadIcsSchedule(allLessons, group);
+    if (onShowToast) {
+      onShowToast(
+        'success',
+        'Расписание .ics скачано!',
+        'Откройте файл на телефоне или ПК, чтобы добавить пары в системный календарь.'
+      );
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -289,25 +362,66 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
             <Bell className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span>Звонки КГУ</span>
           </button>
+
+          {/* Export to .ics calendar button */}
+          <button
+            type="button"
+            onClick={handleExportIcs}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95"
+            title="Экспортировать расписание семестра в Apple Calendar, Google Calendar или Outlook (.ics)"
+          >
+            <Download className="w-3.5 h-3.5 text-apple-blue shrink-0" />
+            <span>В календарь (.ics)</span>
+          </button>
         </div>
 
         {/* View Mode Toggle, Session filter & Search */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Quick Filter: All vs Exams/Session */}
-          <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5 text-xs font-medium">
+          {/* Quick Filter: All / Lectures / Practicals / Labs / Exams */}
+          <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5 text-xs font-medium overflow-x-auto scrollbar-none">
             <button
               onClick={() => setFilterMode('all')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 ${
+              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
                 filterMode === 'all'
                   ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
                   : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
               }`}
             >
-              Все пары
+              Все
+            </button>
+            <button
+              onClick={() => setFilterMode('lecture')}
+              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
+                filterMode === 'lecture'
+                  ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-apple-sm font-semibold'
+                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Лекции
+            </button>
+            <button
+              onClick={() => setFilterMode('practice')}
+              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
+                filterMode === 'practice'
+                  ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-apple-sm font-semibold'
+                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Практики
+            </button>
+            <button
+              onClick={() => setFilterMode('lab')}
+              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
+                filterMode === 'lab'
+                  ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-apple-sm font-semibold'
+                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Лабы
             </button>
             <button
               onClick={() => setFilterMode('session')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 inline-flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 inline-flex items-center gap-1 whitespace-nowrap ${
                 filterMode === 'session'
                   ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-apple-sm font-semibold'
                   : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
@@ -444,29 +558,56 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         </div>
       )}
 
-      {/* Schedule Display */}
-      {viewLayout === 'grid' ? (
-        /* Full week grid: 6 study days (Mon-Sat, Sunday excluded) */
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filteredWeekSchedule.map((day) => (
+      {/* Schedule Display with touch swipe support */}
+      <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="touch-pan-y">
+        {viewLayout === 'grid' ? (
+          /* Full week grid: 6 study days (Mon-Sat, Sunday excluded) */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filteredWeekSchedule.map((day) => (
+              <DayCard
+                key={day.dateStr}
+                daySchedule={day}
+                isSelected={isSameDay(day.date, selectedDayDate)}
+                onSelectDay={() => setSelectedDayDate(day.date)}
+                onSelectLesson={(l) => setActiveLessonModal(l)}
+              />
+            ))}
+          </div>
+        ) : (
+          /* Single focused day view */
+          <div className="max-w-2xl mx-auto space-y-4">
             <DayCard
-              key={day.dateStr}
-              daySchedule={day}
-              isSelected={isSameDay(day.date, selectedDayDate)}
-              onSelectDay={() => setSelectedDayDate(day.date)}
+              daySchedule={singleDaySchedule}
               onSelectLesson={(l) => setActiveLessonModal(l)}
             />
-          ))}
-        </div>
-      ) : (
-        /* Single focused day view */
-        <div className="max-w-2xl mx-auto">
-          <DayCard
-            daySchedule={singleDaySchedule}
-            onSelectLesson={(l) => setActiveLessonModal(l)}
-          />
-        </div>
-      )}
+            {singleDaySchedule.lessons.length === 0 && (
+              <div className="p-4 rounded-3xl bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/10 backdrop-blur-xl shadow-apple-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left animate-in fade-in">
+                <div>
+                  <p className="text-xs font-semibold text-apple-gray-900 dark:text-white">
+                    В этот день учебных занятий нет
+                  </p>
+                  <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
+                    Перейдите к началу недели или смахните влево для следующего дня
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const now = new Date();
+                    const mon = getMondayOfWeek(now);
+                    setSelectedDayDate(mon);
+                    if (onGoToDate) onGoToDate(mon);
+                  }}
+                  className="px-3.5 py-1.5 rounded-2xl bg-apple-blue text-white text-xs font-semibold hover:bg-apple-blue/90 transition-all active:scale-95 shadow-apple-sm flex items-center gap-1.5 shrink-0"
+                >
+                  <span>К началу недели</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Lesson Details Modal */}
       {activeLessonModal && (

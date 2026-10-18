@@ -260,6 +260,7 @@ export const App: React.FC = () => {
                 subgroupFilter={schedule.subgroupFilter}
                 onSubgroupChange={schedule.setSubgroupFilter}
                 onOpenCreateHomeworkForSubject={(options) => openCreateHomework(options)}
+                onShowToast={showToast}
               />
             )}
 
