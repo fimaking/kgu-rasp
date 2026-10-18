@@ -132,19 +132,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Banner: Calendar Badge & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-apple-blue font-mono">
-            <CalendarIcon className="w-3.5 h-3.5" />
-            <span>Учебный календарь</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm">
+            <CalendarIcon className="w-3.5 h-3.5 text-apple-blue shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold tracking-tight text-apple-gray-800 dark:text-zinc-200">
+              Учебный календарь
+            </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-apple-gray-900 dark:text-white mt-0.5">
-            {getMonthNameNominative(month)} {year}
-          </h2>
-          <p className="text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400">
-            Занятия, сроки сдачи ДЗ и экзамены
-          </p>
         </div>
 
         {/* View Mode & Add Event */}
