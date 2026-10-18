@@ -9,8 +9,26 @@ export type VisualTheme =
   | 'midnight'
   | 'emerald'
   | 'sunset'
-  | 'cyber';
-export type FontFamily = 'system' | 'inter' | 'roboto' | 'nunito' | 'mono' | 'serif';
+  | 'cyber'
+  | 'cyberpunk'
+  | 'matrix'
+  | 'dracula'
+  | 'tokyo-night'
+  | 'coffee'
+  | 'solar';
+export type FontFamily =
+  | 'system'
+  | 'inter'
+  | 'roboto'
+  | 'nunito'
+  | 'mono'
+  | 'serif'
+  | 'montserrat'
+  | 'comfortaa'
+  | 'fira-code'
+  | 'playfair'
+  | 'caveat'
+  | 'russo';
 export type FontScale = 'compact' | 'normal' | 'large';
 export type AppRadius = 'compact' | 'normal' | 'soft';
 export type CardStyle = 'glass' | 'solid' | 'bordered';
@@ -89,6 +107,11 @@ export const ACCENT_COLORS: AccentColorOption[] = [
   { id: 'teal', name: 'Бирюзовый', hex: '#30B0C7', rgb: '48 176 199' },
   { id: 'mint', name: 'Мятный', hex: '#00C7BE', rgb: '0 199 190' },
   { id: 'graphite', name: 'Графит', hex: '#8E8E93', rgb: '142 142 147' },
+  { id: 'cyan-neon', name: 'Неоновый циан', hex: '#00F0FF', rgb: '0 240 255' },
+  { id: 'matrix-green', name: 'Матричный зелёный', hex: '#00FF41', rgb: '0 255 65' },
+  { id: 'dracula-purple', name: 'Дракула фиолетовый', hex: '#BD93F9', rgb: '189 147 249' },
+  { id: 'caramel', name: 'Карамель', hex: '#D4A373', rgb: '212 163 115' },
+  { id: 'solar-orange', name: 'Солнечный оранжевый', hex: '#FF6B35', rgb: '255 107 53' },
 ];
 
 export interface VisualThemeOption {
@@ -175,11 +198,59 @@ export const VISUAL_THEMES: VisualThemeOption[] = [
   },
   {
     id: 'cyber',
-    name: 'Cyberpunk',
+    name: 'Cyberpunk Legacy',
     description: 'Неоновый киберстиль с яркими футуристичными акцентами',
     previewColorDark: '#0A0A10',
     previewColorLight: '#F4F4F8',
     accentDefault: '#00F0FF',
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Cyberpunk Neon',
+    description: 'Ультра-контрастный неоновый киберпанк с неоновым цианом и маджентой',
+    previewColorDark: '#080014',
+    previewColorLight: '#F7F0FC',
+    accentDefault: '#00F0FF',
+  },
+  {
+    id: 'matrix',
+    name: 'Matrix Terminal',
+    description: 'Зеленый люминофор терминала CRT и цифровая эстетика Нео',
+    previewColorDark: '#020804',
+    previewColorLight: '#F0FAF2',
+    accentDefault: '#00FF41',
+  },
+  {
+    id: 'dracula',
+    name: 'Dracula Pro',
+    description: 'Культовая палитра разработчиков: темный фиолетовый, пастельный розовый и циан',
+    previewColorDark: '#1E1F29',
+    previewColorLight: '#F5F4FB',
+    accentDefault: '#BD93F9',
+  },
+  {
+    id: 'tokyo-night',
+    name: 'Tokyo Night',
+    description: 'Атмосферный ночной Токио: глубокий индиго, ледяной синий и лаванда',
+    previewColorDark: '#13141C',
+    previewColorLight: '#F0F3FA',
+    accentDefault: '#7DCFFF',
+  },
+  {
+    id: 'coffee',
+    name: 'Espresso Loft',
+    description: 'Уютная кофейня: тёплые оттенки эспрессо, карамели, корицы и бумаги',
+    previewColorDark: '#140E0A',
+    previewColorLight: '#FAF6F0',
+    accentDefault: '#D4A373',
+  },
+  {
+    id: 'solar',
+    name: 'Solar Flare',
+    description: 'Космическая энергия вспышки: рубиново-красный и пламенный янтарь',
+    previewColorDark: '#140505',
+    previewColorLight: '#FFF5F2',
+    accentDefault: '#FF6B35',
   },
 ];
 
@@ -233,6 +304,48 @@ export const FONT_OPTIONS: FontOption[] = [
     sample: '26-ИСбо-4 • Костромской государственный университет',
     fontFamilyCss: '"PT Serif", Georgia, serif',
     description: 'Классический академический шрифт с элегантными засечками',
+  },
+  {
+    id: 'montserrat',
+    name: 'Montserrat',
+    sample: '26-ИСбо-4 • Расписание пар и дедлайнов',
+    fontFamilyCss: '"Montserrat", -apple-system, BlinkMacSystemFont, sans-serif',
+    description: 'Стильный европейский геометрический гротеск',
+  },
+  {
+    id: 'comfortaa',
+    name: 'Comfortaa',
+    sample: '26-ИСбо-4 • Учеба в радость и комфорт',
+    fontFamilyCss: '"Comfortaa", cursive, sans-serif',
+    description: 'Ультра-круглый мягкий шрифт с плавными линиями',
+  },
+  {
+    id: 'fira-code',
+    name: 'Fira Code',
+    sample: '26-ИСбо-4 • const study = () => success;',
+    fontFamilyCss: '"Fira Code", "JetBrains Mono", monospace',
+    description: 'Хакерский моноширинный шрифт программистов',
+  },
+  {
+    id: 'playfair',
+    name: 'Playfair Display',
+    sample: '26-ИСбо-4 • Академическое превосходство',
+    fontFamilyCss: '"Playfair Display", Georgia, serif',
+    description: 'Элегантная премиум-антиква с высоким контрастом',
+  },
+  {
+    id: 'caveat',
+    name: 'Caveat (Конспект)',
+    sample: '26-ИСбо-4 • Сдать лабу до пятницы!',
+    fontFamilyCss: '"Caveat", cursive, sans-serif',
+    description: 'Живой рукописный шрифт студенческих заметок',
+  },
+  {
+    id: 'russo',
+    name: 'Russo One',
+    sample: '26-ИСбо-4 • КГУ РАСПИСАНИЕ',
+    fontFamilyCss: '"Russo One", -apple-system, sans-serif',
+    description: 'Мощный акцентный плакатный шрифт',
   },
 ];
 

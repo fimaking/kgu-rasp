@@ -262,8 +262,9 @@ describe('RealtimeSyncService - Offline-First & Multi-Device Sync', () => {
         groupName: '26-ИСбо-5',
         subgroupPreference: 2,
         foreignLanguagePreference: 'en',
-        visualTheme: 'emerald',
-        accentColor: '#34C759',
+        visualTheme: 'cyberpunk',
+        accentColor: '#00F0FF',
+        fontFamily: 'fira-code',
       },
     };
 
@@ -283,8 +284,9 @@ describe('RealtimeSyncService - Offline-First & Multi-Device Sync', () => {
     expect(updatedSettings.groupName).toBe('26-ИСбо-5');
     expect(updatedSettings.subgroupPreference).toBe(2);
     expect(updatedSettings.foreignLanguagePreference).toBe('en');
-    expect(updatedSettings.visualTheme).toBe('emerald');
-    expect(updatedSettings.accentColor).toBe('#34C759');
+    expect(updatedSettings.visualTheme).toBe('cyberpunk');
+    expect(updatedSettings.accentColor).toBe('#00F0FF');
+    expect(updatedSettings.fontFamily).toBe('fira-code');
   });
 
   it('automatically notifies RealtimeSyncService subscribers when SyncService.pullFromCloud detects setting changes', async () => {

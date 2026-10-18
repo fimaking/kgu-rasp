@@ -79,10 +79,10 @@ describe('App Customization & Theming Suite', () => {
     }
   });
 
-  it('validates VISUAL_THEMES covers the 4 showcase dark themes plus classic options', () => {
-    expect(VISUAL_THEMES.length).toBe(10);
+  it('validates VISUAL_THEMES covers classic, OLED and creative dark themes', () => {
+    expect(VISUAL_THEMES.length).toBe(16);
     const themeIds = VISUAL_THEMES.map((t) => t.id);
-    expect(new Set(themeIds).size).toBe(10);
+    expect(new Set(themeIds).size).toBe(16);
     expect(themeIds).toContain('cyber-violet');
     expect(themeIds).toContain('electric-mint');
     expect(themeIds).toContain('acid-lime');
@@ -93,6 +93,12 @@ describe('App Customization & Theming Suite', () => {
     expect(themeIds).toContain('emerald');
     expect(themeIds).toContain('sunset');
     expect(themeIds).toContain('cyber');
+    expect(themeIds).toContain('cyberpunk');
+    expect(themeIds).toContain('matrix');
+    expect(themeIds).toContain('dracula');
+    expect(themeIds).toContain('tokyo-night');
+    expect(themeIds).toContain('coffee');
+    expect(themeIds).toContain('solar');
 
     for (const theme of VISUAL_THEMES) {
       expect(theme.previewColorDark).toMatch(/^#[0-9A-Fa-f]{6}$/);
@@ -101,8 +107,8 @@ describe('App Customization & Theming Suite', () => {
     }
   });
 
-  it('validates FONT_OPTIONS covers standard, modern, friendly, monospaced and academic fonts', () => {
-    expect(FONT_OPTIONS.length).toBe(6);
+  it('validates FONT_OPTIONS covers standard, modern, friendly, monospaced, academic and creative fonts', () => {
+    expect(FONT_OPTIONS.length).toBe(12);
     const fontIds = FONT_OPTIONS.map((f) => f.id);
     expect(fontIds).toContain('system');
     expect(fontIds).toContain('inter');
@@ -110,6 +116,12 @@ describe('App Customization & Theming Suite', () => {
     expect(fontIds).toContain('nunito');
     expect(fontIds).toContain('mono');
     expect(fontIds).toContain('serif');
+    expect(fontIds).toContain('montserrat');
+    expect(fontIds).toContain('comfortaa');
+    expect(fontIds).toContain('fira-code');
+    expect(fontIds).toContain('playfair');
+    expect(fontIds).toContain('caveat');
+    expect(fontIds).toContain('russo');
 
     for (const font of FONT_OPTIONS) {
       expect(font.name).toBeTruthy();

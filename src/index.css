@@ -254,6 +254,24 @@ html[data-font="mono"] {
 html[data-font="serif"] {
   --font-family-app: "PT Serif", Georgia, serif;
 }
+html[data-font="montserrat"] {
+  --font-family-app: "Montserrat", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+html[data-font="comfortaa"] {
+  --font-family-app: "Comfortaa", cursive, sans-serif;
+}
+html[data-font="fira-code"] {
+  --font-family-app: "Fira Code", "JetBrains Mono", monospace;
+}
+html[data-font="playfair"] {
+  --font-family-app: "Playfair Display", Georgia, serif;
+}
+html[data-font="caveat"] {
+  --font-family-app: "Caveat", cursive, sans-serif;
+}
+html[data-font="russo"] {
+  --font-family-app: "Russo One", -apple-system, sans-serif;
+}
 
 /* Font Scales */
 html[data-font-scale="compact"] {
@@ -397,6 +415,138 @@ html.dark[data-visual-theme="classic"] .dark\:bg-zinc-900\/70,
 html.dark[data-visual-theme="classic"] .dark\:bg-zinc-900\/60 {
   background-color: rgba(28, 28, 30, 0.9) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 7. Cyberpunk Neon */
+html.dark[data-visual-theme="cyberpunk"] body,
+html.dark[data-visual-theme="cyberpunk"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="cyberpunk"] .dark\:bg-black {
+  background-color: #080014 !important;
+}
+html.dark[data-visual-theme="cyberpunk"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="cyberpunk"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="cyberpunk"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="cyberpunk"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(22, 7, 42, 0.94) !important;
+  border-color: rgba(0, 240, 255, 0.25) !important;
+}
+html:not(.dark)[data-visual-theme="cyberpunk"] body {
+  background-color: #f7f0fc !important;
+}
+html:not(.dark)[data-visual-theme="cyberpunk"] .bg-white\/70,
+html:not(.dark)[data-visual-theme="cyberpunk"] .bg-white\/60 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(181, 23, 158, 0.18) !important;
+}
+
+/* 8. Matrix Terminal */
+html.dark[data-visual-theme="matrix"] body,
+html.dark[data-visual-theme="matrix"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="matrix"] .dark\:bg-black {
+  background-color: #020804 !important;
+}
+html.dark[data-visual-theme="matrix"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="matrix"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="matrix"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="matrix"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(4, 26, 12, 0.94) !important;
+  border-color: rgba(0, 255, 65, 0.28) !important;
+}
+html:not(.dark)[data-visual-theme="matrix"] body {
+  background-color: #f0faf2 !important;
+}
+html:not(.dark)[data-visual-theme="matrix"] .bg-white\/70,
+html:not(.dark)[data-visual-theme="matrix"] .bg-white\/60 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 200, 60, 0.18) !important;
+}
+
+/* 9. Dracula Pro */
+html.dark[data-visual-theme="dracula"] body,
+html.dark[data-visual-theme="dracula"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="dracula"] .dark\:bg-black {
+  background-color: #1e1f29 !important;
+}
+html.dark[data-visual-theme="dracula"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="dracula"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="dracula"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="dracula"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(40, 42, 54, 0.94) !important;
+  border-color: rgba(189, 147, 249, 0.25) !important;
+}
+html:not(.dark)[data-visual-theme="dracula"] body {
+  background-color: #f5f4fb !important;
+}
+html:not(.dark)[data-visual-theme="dracula"] .bg-white\/70,
+html:not(.dark)[data-visual-theme="dracula"] .bg-white\/60 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(139, 92, 246, 0.18) !important;
+}
+
+/* 10. Tokyo Night */
+html.dark[data-visual-theme="tokyo-night"] body,
+html.dark[data-visual-theme="tokyo-night"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="tokyo-night"] .dark\:bg-black {
+  background-color: #13141c !important;
+}
+html.dark[data-visual-theme="tokyo-night"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="tokyo-night"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="tokyo-night"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="tokyo-night"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(26, 27, 38, 0.94) !important;
+  border-color: rgba(125, 207, 255, 0.22) !important;
+}
+html:not(.dark)[data-visual-theme="tokyo-night"] body {
+  background-color: #f0f3fa !important;
+}
+html:not(.dark)[data-visual-theme="tokyo-night"] .bg-white\/70,
+html:not(.dark)[data-visual-theme="tokyo-night"] .bg-white\/60 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(56, 189, 248, 0.18) !important;
+}
+
+/* 11. Espresso Loft */
+html.dark[data-visual-theme="coffee"] body,
+html.dark[data-visual-theme="coffee"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="coffee"] .dark\:bg-black {
+  background-color: #140e0a !important;
+}
+html.dark[data-visual-theme="coffee"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="coffee"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="coffee"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="coffee"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(34, 23, 17, 0.94) !important;
+  border-color: rgba(212, 163, 115, 0.25) !important;
+}
+html:not(.dark)[data-visual-theme="coffee"] body {
+  background-color: #faf6f0 !important;
+}
+html:not(.dark)[data-visual-theme="coffee"] .bg-white\/70,
+html:not(.dark)[data-visual-theme="coffee"] .bg-white\/60 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(212, 163, 115, 0.22) !important;
+}
+
+/* 12. Solar Flare */
+html.dark[data-visual-theme="solar"] body,
+html.dark[data-visual-theme="solar"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="solar"] .dark\:bg-black {
+  background-color: #140505 !important;
+}
+html.dark[data-visual-theme="solar"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="solar"] .dark\:bg-zinc-900\/60,
+html.dark[data-visual-theme="solar"] .dark\:bg-\[\#18181b\]\/85,
+html.dark[data-visual-theme="solar"] .dark\:bg-\[\#1c1c1e\]\/95 {
+  background-color: rgba(35, 12, 12, 0.94) !important;
+  border-color: rgba(255, 107, 53, 0.28) !important;
+}
+html:not(.dark)[data-visual-theme="solar"] body {
+  background-color: #fff5f2 !important;
+}
+html:not(.dark)[data-visual-theme="solar"] .bg-white\/70,
+html:not(.dark)[data-visual-theme="solar"] .bg-white\/60 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(255, 107, 53, 0.22) !important;
 }
 
 

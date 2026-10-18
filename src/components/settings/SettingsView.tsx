@@ -325,8 +325,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {VISUAL_THEMES.filter((vt) =>
-              ['oled', 'midnight', 'emerald', 'sunset', 'monochrome', 'classic'].includes(vt.id)
+            {VISUAL_THEMES.filter(
+              (vt) => !['cyber-violet', 'electric-mint', 'acid-lime', 'cyber'].includes(vt.id)
             ).map((vt) => {
               const isActive = visualTheme === vt.id;
               return (
@@ -335,7 +335,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   onClick={() => onVisualThemeChange?.(vt.id)}
                   className={`p-3 rounded-2xl flex items-center gap-2.5 text-left transition-all border ${
                     isActive
-                      ? 'border-apple-blue bg-apple-blue/10 dark:bg-apple-blue/15 shadow-sm'
+                      ? 'border-apple-blue bg-apple-blue/10 dark:bg-apple-blue/15 shadow-sm ring-1 ring-apple-blue/30'
                       : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:bg-black/[0.04]'
                   }`}
                 >
@@ -397,6 +397,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <Type className="w-4 h-4 text-apple-blue" />
               <span>Шрифт интерфейса:</span>
             </span>
+            <span className="text-[11px] font-mono text-apple-gray-500">
+              {FONT_OPTIONS.find((f) => f.id === fontFamily)?.name || fontFamily}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -412,8 +415,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/[0.04]'
                   }`}
                 >
-                  <div className="text-xs truncate">{font.name}</div>
-                  <div className="text-[10px] opacity-60 truncate font-mono mt-0.5">Пример текста</div>
+                  <div className="text-xs truncate font-medium" style={{ fontFamily: font.fontFamilyCss }}>{font.name}</div>
+                  <div className="text-[10px] opacity-70 truncate mt-0.5" style={{ fontFamily: font.fontFamilyCss }}>Пример: Аа Бб 123</div>
                 </button>
               );
             })}
