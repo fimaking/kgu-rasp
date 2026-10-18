@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { formatRussianDate, isSameDay } from '../../utils/dateUtils';
 import { RaspInfo } from '../../types/schedule';
 
@@ -11,7 +11,7 @@ interface WeekNavigatorProps {
   selectedDayDate: Date;
   onSelectDay: (date: Date) => void;
   days: { date: Date; shortDayName: string; isToday: boolean; count: number }[];
-  info: RaspInfo | null;
+  info?: RaspInfo | null;
 }
 
 export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
@@ -22,19 +22,11 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   selectedDayDate,
   onSelectDay,
   days,
-  info,
 }) => {
   const sunday = new Date(selectedWeekMonday);
   sunday.setDate(selectedWeekMonday.getDate() + 6);
 
   const rangeStr = `${formatRussianDate(selectedWeekMonday)} — ${formatRussianDate(sunday, true)}`;
-
-  const weekTypeLabel =
-    info?.curNumNed === 1
-      ? 'Числитель (над чертой)'
-      : info?.curNumNed === 2
-      ? 'Знаменатель (под чертой)'
-      : 'Учебная неделя';
 
   return (
     <div className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4 select-none">
@@ -67,14 +59,10 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
           </button>
         </div>
 
-        {/* Date Range & Week Type Badge */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Date Range */}
+        <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-apple-gray-900 dark:text-white">
             {rangeStr}
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-apple-indigo/10 dark:bg-apple-indigo/20 text-apple-indigo dark:text-indigo-300 font-semibold border border-apple-indigo/20">
-            <Sparkles className="w-3 h-3" />
-            <span>{weekTypeLabel}</span>
           </span>
         </div>
       </div>
