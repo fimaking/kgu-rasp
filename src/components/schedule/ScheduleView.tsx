@@ -294,6 +294,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
               <DayCard
                 key={day.dateStr}
                 daySchedule={day}
+                isSelected={isSameDay(day.date, selectedDayDate)}
+                onSelectDay={() => setSelectedDayDate(day.date)}
                 onSelectLesson={(l) => setActiveLessonModal(l)}
               />
             ))}

@@ -6,18 +6,27 @@ import { formatRussianDate } from '../../utils/dateUtils';
 
 interface DayCardProps {
   daySchedule: WeekDaySchedule;
+  isSelected?: boolean;
+  onSelectDay?: () => void;
   onSelectLesson: (lesson: ParsedLesson) => void;
 }
 
-export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson }) => {
+export const DayCard: React.FC<DayCardProps> = ({
+  daySchedule,
+  isSelected = false,
+  onSelectDay,
+  onSelectLesson,
+}) => {
   const { dayName, date, dateStr, isToday, lessons } = daySchedule;
+  const isHighlighted = isToday || isSelected;
 
   return (
     <div
       id={isToday ? 'day-card-today' : `day-card-${dateStr}`}
       data-date={dateStr}
+      onClick={onSelectDay}
       className={`p-5 rounded-3xl backdrop-blur-xl border transition-all duration-200 ${
-        isToday
+        isHighlighted
           ? 'bg-blue-500/[0.08] dark:bg-blue-500/[0.14] border-apple-blue/50 dark:border-apple-blue/50 shadow-apple-card ring-2 ring-apple-blue/30 dark:ring-apple-blue/40'
           : 'bg-white/60 dark:bg-zinc-900/60 border-black/5 dark:border-white/10 shadow-apple-sm hover:shadow-apple-card'
       }`}
@@ -27,8 +36,8 @@ export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson })
         <div>
           <div className="flex items-center gap-2">
             <h4
-              className={`text-base font-bold ${
-                isToday
+              className={`text-base font-bold transition-colors ${
+                isHighlighted
                   ? 'text-apple-blue dark:text-blue-400'
                   : 'text-apple-gray-900 dark:text-white'
               }`}
@@ -47,8 +56,8 @@ export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson })
         </div>
 
         <span
-          className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full ${
-            isToday
+          className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full transition-colors ${
+            isHighlighted
               ? 'bg-apple-blue/15 text-apple-blue dark:text-blue-300 font-semibold'
               : 'bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-400'
           }`}
@@ -67,7 +76,7 @@ export const DayCard: React.FC<DayCardProps> = ({ daySchedule, onSelectLesson })
         <div className="py-8 text-center">
           <Coffee
             className={`w-7 h-7 mx-auto mb-2 ${
-              isToday ? 'text-apple-blue/60 dark:text-blue-400/60' : 'text-apple-gray-300 dark:text-apple-gray-600'
+              isHighlighted ? 'text-apple-blue/60 dark:text-blue-400/60' : 'text-apple-gray-300 dark:text-apple-gray-600'
             }`}
           />
           <p className="text-xs font-medium text-apple-gray-500 dark:text-apple-gray-400">
