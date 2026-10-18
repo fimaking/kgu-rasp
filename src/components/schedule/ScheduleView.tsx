@@ -165,19 +165,15 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Banner: University Group & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Banner: Semester Badge & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-apple-blue font-mono">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Костромской государственный университет</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm">
+            <BookOpen className="w-3.5 h-3.5 text-apple-blue shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold tracking-tight text-apple-gray-800 dark:text-zinc-200">
+              {info?.year || '2026-2027'} учебный год • {info?.curSem ? `${info.curSem} семестр` : '1 семестр'}
+            </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-apple-gray-900 dark:text-white mt-0.5">
-            Расписание группы {info?.group?.name || '26-ИСбо-4'}
-          </h2>
-          <p className="text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400">
-            {info?.year || '2026-2027'} учебный год • 1 семестр
-          </p>
         </div>
 
         {/* View Mode Toggle & Search */}
