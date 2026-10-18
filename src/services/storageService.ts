@@ -412,14 +412,15 @@ export class StorageService {
    * Export all user data as formatted JSON file
    */
   static exportData(): void {
+    const settings = this.getSettings();
     const data = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      group: '26-ИСбо-4 (8953)',
+      group: `${settings.groupName || 'Группа'} (${settings.groupId || 8953})`,
       homework: this.getHomework(),
       deletedHwIds: this.getDeletedHomeworkIds(),
       events: this.getEvents(),
-      settings: this.getSettings(),
+      settings,
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

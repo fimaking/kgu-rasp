@@ -138,7 +138,7 @@ export class RealtimeSyncService {
         ) {
           SyncService.pullFromCloud();
         }
-      }, 3000);
+      }, 25000);
     }
   }
 

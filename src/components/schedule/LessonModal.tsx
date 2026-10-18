@@ -13,7 +13,7 @@ import { Modal } from '../ui/Modal';
 import { LessonTypeBadge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { formatRussianDate, formatDayOfWeek, parseIsoDate } from '../../utils/dateUtils';
-import { getLessonStatus, getNextLessonDeadline } from '../../utils/scheduleParser';
+import { getLessonStatus, getNextLessonDeadline, sanitizeUrl } from '../../utils/scheduleParser';
 
 interface LessonModalProps {
   lesson: ParsedLesson | null;
@@ -145,9 +145,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({
         </div>
 
         {/* Link / Webinar if available */}
-        {lesson.link && (
+        {sanitizeUrl(lesson.link) && (
           <a
-            href={lesson.link}
+            href={sanitizeUrl(lesson.link)!}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs text-apple-blue font-semibold hover:underline"

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   Bell,
@@ -123,8 +123,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
-  const handleTestNotification = () => {
-    const success = NotificationService.sendTestNotification();
+  const handleTestNotification = async () => {
+    const success = await NotificationService.sendTestNotification();
     if (success) {
       onShowToast('success', 'Уведомление отправлено', 'Проверьте шторку уведомлений вашей системы.');
     } else {
@@ -173,8 +173,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Direct Transfer QR state (offline fallback)
   const [transferQrUrl, setTransferQrUrl] = useState<string | null>(null);
+  const [transferQrDataUrl, setTransferQrDataUrl] = useState<string | null>(null);
+  const [firebaseQrDataUrl, setFirebaseQrDataUrl] = useState<string>('');
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [showOfflineTransfer, setShowOfflineTransfer] = useState(false);
+
+  // Generate offline, client-side QR data URL for Firebase pairing without third-party APIs
+  useEffect(() => {
+    let active = true;
+    if (isFirebaseConfigured && firebaseUrl) {
+      const pairingUrl = SyncService.getFirebasePairingUrl(firebaseUrl);
+      SyncService.getQrCodeDataUrl(pairingUrl, 280).then((dataUrl) => {
+        if (active) setFirebaseQrDataUrl(dataUrl);
+      });
+    } else {
+      setFirebaseQrDataUrl('');
+    }
+    return () => {
+      active = false;
+    };
+  }, [isFirebaseConfigured, firebaseUrl]);
 
   const handleConnectFirebase = async () => {
     const clean = firebaseUrl.trim();
@@ -238,6 +256,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setIsGeneratingQr(true);
     const url = await SyncService.createDirectTransferUrl();
     setTransferQrUrl(url);
+    const qrData = await SyncService.getQrCodeDataUrl(url, 260);
+    setTransferQrDataUrl(qrData);
     setIsGeneratingQr(false);
     onShowToast('info', 'QR-код готов', 'Наведите камеру смартфона для мгновенного переноса заданий');
   };
@@ -622,12 +642,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {/* Smartphone Pairing Box (QR-code & Link) */}
             <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
               <div className="flex flex-col sm:flex-row items-center gap-5">
-                <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
-                  <img
-                    src={SyncService.getQrCodeForUrl(SyncService.getFirebasePairingUrl(firebaseUrl))}
-                    alt="QR-код связки с телефоном"
-                    className="w-36 h-36 rounded-lg"
-                  />
+                <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5 flex items-center justify-center min-w-[152px] min-h-[152px]">
+                  {firebaseQrDataUrl ? (
+                    <img
+                      src={firebaseQrDataUrl}
+                      alt="QR-код связки с телефоном"
+                      className="w-36 h-36 rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-36 h-36 flex flex-col items-center justify-center text-apple-gray-400 gap-2">
+                      <QrCode className="w-8 h-8 animate-pulse text-apple-blue" />
+                      <span className="text-[11px] font-medium text-apple-gray-500">Генерация QR...</span>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2 text-center sm:text-left flex-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-apple-blue/10 text-apple-blue text-[11px] font-bold">
@@ -766,12 +793,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               {transferQrUrl && (
                 <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                  <div className="bg-white p-2.5 rounded-xl shadow-apple-sm flex-shrink-0 border border-black/5">
-                    <img
-                      src={SyncService.getQrCodeForUrl(transferQrUrl)}
-                      alt="Офлайн QR"
-                      className="w-28 h-28 rounded-lg"
-                    />
+                  <div className="bg-white p-2.5 rounded-xl shadow-apple-sm flex-shrink-0 border border-black/5 flex items-center justify-center min-w-[124px] min-h-[124px]">
+                    {transferQrDataUrl ? (
+                      <img
+                        src={transferQrDataUrl}
+                        alt="Офлайн QR"
+                        className="w-28 h-28 rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-28 h-28 flex flex-col items-center justify-center text-apple-gray-400 gap-1.5">
+                        <QrCode className="w-6 h-6 animate-pulse text-apple-blue" />
+                        <span className="text-[10px] font-medium text-apple-gray-500">Генерация...</span>
+                      </div>
+                    )}
                   </div>
                   <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1">
                     <p className="font-bold">Наведите камеру смартфона:</p>

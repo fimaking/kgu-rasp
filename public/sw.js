@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v60';
+const CACHE_NAME = 'ksu-student-cache-v65';
 
 const STATIC_ASSETS = [
   './',
@@ -111,6 +111,23 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       });
+    })
+  );
+});
+
+// Focus or open app window when clicking system push notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow('./');
+      }
     })
   );
 });

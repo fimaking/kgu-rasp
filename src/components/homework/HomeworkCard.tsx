@@ -51,8 +51,10 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
       <div className="flex items-start gap-3 sm:gap-4">
         {/* Apple Reminders circular checkmark */}
         <button
+          type="button"
           onClick={() => onToggleComplete(homework.id)}
-          className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ease-out shrink-0 active:scale-75 ${
+          aria-label={isCompleted ? 'Отметить как невыполненное' : 'Отметить как выполненное'}
+          className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ease-out shrink-0 active:scale-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/50 ${
             isCompleted
               ? 'bg-apple-blue border-apple-blue text-white shadow-apple-sm scale-100'
               : deadlineInfo.isOverdue
@@ -83,15 +85,19 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             {/* Actions: Edit & Delete buttons */}
             <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
               <button
+                type="button"
                 onClick={() => onEdit(homework)}
-                className="p-1 rounded-lg text-apple-gray-400 hover:text-apple-blue hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                aria-label="Редактировать задание"
+                className="p-1 rounded-lg text-apple-gray-400 hover:text-apple-blue hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/50"
                 title="Редактировать"
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
               <button
+                type="button"
                 onClick={() => onDelete(homework.id)}
-                className="p-1 rounded-lg text-apple-gray-400 hover:text-apple-red hover:bg-rose-500/10 transition-colors"
+                aria-label="Удалить задание"
+                className="p-1 rounded-lg text-apple-gray-400 hover:text-apple-red hover:bg-rose-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
                 title="Удалить"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -138,10 +144,19 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
               {/* Subtask list */}
               <div className="space-y-1.5 pt-1">
                 {subtasksList.map((sub) => (
-                  <div
+                  <button
+                    type="button"
                     key={sub.id}
+                    role="checkbox"
+                    aria-checked={sub.completed}
                     onClick={() => onToggleSubtask(homework.id, sub.id)}
-                    className="flex items-center gap-2 text-xs text-apple-gray-700 dark:text-apple-gray-300 cursor-pointer hover:text-apple-gray-900 transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onToggleSubtask(homework.id, sub.id);
+                      }
+                    }}
+                    className="w-full text-left flex items-center gap-2 text-xs text-apple-gray-700 dark:text-apple-gray-300 cursor-pointer hover:text-apple-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/50 rounded-md p-0.5"
                   >
                     <div
                       className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
@@ -155,7 +170,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
                     <span className={`break-words ${sub.completed ? 'line-through opacity-60' : ''}`}>
                       {sub.title}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

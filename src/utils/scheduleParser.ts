@@ -81,13 +81,13 @@ export function filterLessonsBySubgroup(
     номерПодгруппы?: number;
   },
   subgroupPreference: number = 0,
-  groupId: number = 8953,
+  _groupId: number = 8953,
   foreignLangPreference: 'all' | 'de' | 'en' | 'fr' = 'de'
 ): boolean {
   const rawDiscipline = (lesson.rawDiscipline || lesson.дисциплина || '').toLowerCase();
 
-  // If group 8953 (26-ИСбо-4), filter by user's chosen foreign language
-  if (groupId === 8953 && foreignLangPreference !== 'all') {
+  // Filter by user's chosen foreign language across all groups
+  if (foreignLangPreference !== 'all') {
     const isForeignLang =
       rawDiscipline.includes('иностранный язык') ||
       rawDiscipline.includes('англ') ||
@@ -122,7 +122,23 @@ export function isUserLesson(lesson: {
   subgroup?: number;
   номерПодгруппы?: number;
 }): boolean {
-  return filterLessonsBySubgroup(lesson, 1, 8953);
+  return filterLessonsBySubgroup(lesson, 1, 8953, 'de');
+}
+
+/**
+ * Sanitize external URLs to prevent javascript: or data: XSS execution
+ */
+export function sanitizeUrl(url?: string | null): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (/^(?:https?|mailto):/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^[a-zA-Z0-9][-a-zA-Z0-9+&@#/%?=~_|!:,.;]*\.[a-zA-Z]{2,}/i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  return null;
 }
 
 export function parseBuildingAndAuditorium(rawAud: string): { building: string; auditorium: string } {
@@ -130,21 +146,26 @@ export function parseBuildingAndAuditorium(rawAud: string): { building: string; 
     return { building: 'КГУ', auditorium: 'Не указана' };
   }
   const aud = rawAud.trim();
-  if (aud.toUpperCase() === 'СДО') {
+  const audUpper = aud.toUpperCase();
+
+  if (audUpper === 'СДО' || audUpper.startsWith('СДО ')) {
     return { building: 'Дистанционно', auditorium: 'СДО КГУ' };
   }
-  if (aud.startsWith('Б-')) {
-    return { building: 'Корпус «Б»', auditorium: `ауд. ${aud.slice(2)}` };
+  if (audUpper.startsWith('ГЛ-')) {
+    return { building: 'Главный корпус', auditorium: `ауд. ${aud.slice(3).trim()}` };
   }
-  if (aud.startsWith('Гл-')) {
-    return { building: 'Главный корпус', auditorium: `ауд. ${aud.slice(3)}` };
+  if (audUpper.startsWith('СК-') || audUpper === 'СК' || audUpper.startsWith('СК ')) {
+    const rest = aud.replace(/^ск-?\s*/i, '').trim();
+    return { building: 'Спорткомплекс КГУ', auditorium: rest ? `зал ${rest}` : 'Спортзал' };
   }
-  if (aud.startsWith('Е-')) {
-    return { building: 'Корпус «Е»', auditorium: `ауд. ${aud.slice(2)}` };
+
+  // Dynamic detection of single-letter buildings: А-, Б-, В-, Г-, Д-, Е-, Ж-, З- etc.
+  const singleLetterMatch = aud.match(/^([А-ЯЁA-Z])-(\d+.*)$/i);
+  if (singleLetterMatch) {
+    const letter = singleLetterMatch[1].toUpperCase();
+    return { building: `Корпус «${letter}»`, auditorium: `ауд. ${singleLetterMatch[2].trim()}` };
   }
-  if (aud.startsWith('В-')) {
-    return { building: 'Корпус «В»', auditorium: `ауд. ${aud.slice(2)}` };
-  }
+
   return { building: 'Корпус КГУ', auditorium: aud };
 }
 
@@ -227,7 +248,7 @@ export function parseRawRaspItem(item: RawRaspItem): ParsedLesson {
     building,
     subgroup,
     isReplacement: Boolean(item.замена),
-    link: item.ссылка || null,
+    link: sanitizeUrl(item.ссылка),
     customNote: item.custom1 || undefined,
   };
 }

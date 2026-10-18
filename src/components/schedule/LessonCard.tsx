@@ -17,8 +17,17 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onClick }) => {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Пара ${lesson.pairNumber}: ${lesson.subject}, ${lesson.building}, ${lesson.auditorium}`}
       onClick={onClick}
-      className={`group p-4 rounded-2.5xl backdrop-blur-xl border transition-all duration-200 ease-out cursor-pointer relative overflow-hidden select-none active:scale-[0.985] hover:-translate-y-0.5 ${
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`group p-4 rounded-2.5xl backdrop-blur-xl border transition-all duration-200 ease-out cursor-pointer relative overflow-hidden select-none active:scale-[0.985] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/50 ${
         isCurrent
           ? 'bg-blue-500/10 dark:bg-blue-500/15 border-apple-blue/50 shadow-apple-card ring-2 ring-apple-blue/20'
           : isPassed

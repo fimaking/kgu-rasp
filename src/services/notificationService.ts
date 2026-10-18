@@ -72,20 +72,34 @@ export class NotificationService {
   }
 
   /**
-   * Show a system notification
+   * Show a system notification (supports Desktop Notification API and Mobile PWA ServiceWorkerRegistration)
    */
-  static showNotification(title: string, options?: NotificationOptions): boolean {
+  static async showNotification(title: string, options?: NotificationOptions): Promise<boolean> {
     if (!this.isSupported() || Notification.permission !== 'granted') {
       return false;
     }
 
     try {
       this.playChime();
-      new Notification(title, {
+      const notificationOptions: NotificationOptions = {
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23007AFF"/><path d="M30 35h40M30 50h40M30 65h25" stroke="white" stroke-width="8" stroke-linecap="round"/></svg>',
         badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23007AFF"/></svg>',
         ...options,
-      });
+      };
+
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration && 'showNotification' in registration) {
+            await registration.showNotification(title, notificationOptions);
+            return true;
+          }
+        } catch {
+          // Fallback to standard window Notification constructor
+        }
+      }
+
+      new Notification(title, notificationOptions);
       return true;
     } catch (e) {
       console.warn('Failed to display notification', e);
@@ -96,7 +110,7 @@ export class NotificationService {
   /**
    * Trigger a test notification
    */
-  static sendTestNotification(): boolean {
+  static async sendTestNotification(): Promise<boolean> {
     return this.showNotification('КГУ Расписание & Задачи', {
       body: 'Уведомления успешно настроены! Вы будете получать напоминания о парах и дедлайнах.',
       tag: 'test-notification',

@@ -2,6 +2,7 @@ import { Homework } from '../types/homework';
 import { CalendarCustomEvent } from '../types/calendar';
 import { UserSettings } from '../types/settings';
 import { StorageService } from './storageService';
+import QRCode from 'qrcode';
 
 const FIREBASE_URL_STORAGE = 'ksu_student_firebase_url';
 const SYNC_LAST_PULL_STORAGE = 'ksu_student_sync_last_pull';
@@ -101,7 +102,27 @@ export class SyncService {
   }
 
   /**
-   * Generates a QR Code image URL for any target URL
+   * Generates a 100% client-side QR Code Data URL in memory (zero network requests, works completely offline)
+   */
+  static async getQrCodeDataUrl(targetUrl: string, width = 260): Promise<string> {
+    try {
+      return await QRCode.toDataURL(targetUrl, {
+        width,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      });
+    } catch (e) {
+      console.warn('[SyncService] QR code generation failed', e);
+      return '';
+    }
+  }
+
+  /**
+   * Generates a QR Code image URL for any target URL (retained for backward compatibility)
    */
   static getQrCodeForUrl(targetUrl: string): string {
     return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(targetUrl)}`;

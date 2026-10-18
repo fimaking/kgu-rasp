@@ -10,8 +10,10 @@ import {
   findNextLessonForSubject,
   getNextLessonDeadline,
   formatTeacherName,
+  sanitizeUrl,
 } from '../src/utils/scheduleParser';
 import { ScheduleService } from '../src/services/scheduleService';
+import { SyncService } from '../src/services/syncService';
 import { ParsedLesson, RawRaspItem } from '../types/schedule';
 
 describe('scheduleParser', () => {
@@ -113,6 +115,36 @@ describe('scheduleParser', () => {
       expect(filterLessonsBySubgroup({ rawDiscipline: 'лек Математика', subgroup: 0 }, 2, 8611)).toBe(true);
     });
 
+    it('filters foreign language dynamically across any group (not only 8953)', () => {
+      // Group 8611 with English preference:
+      expect(
+        filterLessonsBySubgroup(
+          { rawDiscipline: 'пр Иностранный язык (английский)', subgroup: 1 },
+          1,
+          8611,
+          'en'
+        )
+      ).toBe(true);
+      expect(
+        filterLessonsBySubgroup(
+          { rawDiscipline: 'пр Иностранный язык (немецкий)', subgroup: 1 },
+          1,
+          8611,
+          'en'
+        )
+      ).toBe(false);
+
+      // Group 8611 with French preference:
+      expect(
+        filterLessonsBySubgroup(
+          { rawDiscipline: 'пр Французский язык', subgroup: 1 },
+          1,
+          8611,
+          'fr'
+        )
+      ).toBe(true);
+    });
+
     it('loads all 381 available groups from ScheduleService.getAvailableGroups', () => {
       const groups = ScheduleService.getAvailableGroups();
       expect(Array.isArray(groups)).toBe(true);
@@ -141,6 +173,26 @@ describe('scheduleParser', () => {
       expect(parseBuildingAndAuditorium('')).toEqual({
         building: 'КГУ',
         auditorium: 'Не указана',
+      });
+      expect(parseBuildingAndAuditorium('А-302')).toEqual({
+        building: 'Корпус «А»',
+        auditorium: 'ауд. 302',
+      });
+      expect(parseBuildingAndAuditorium('Д-101')).toEqual({
+        building: 'Корпус «Д»',
+        auditorium: 'ауд. 101',
+      });
+      expect(parseBuildingAndAuditorium('Ж-205')).toEqual({
+        building: 'Корпус «Ж»',
+        auditorium: 'ауд. 205',
+      });
+      expect(parseBuildingAndAuditorium('СК')).toEqual({
+        building: 'Спорткомплекс КГУ',
+        auditorium: 'Спортзал',
+      });
+      expect(parseBuildingAndAuditorium('СК-1')).toEqual({
+        building: 'Спорткомплекс КГУ',
+        auditorium: 'зал 1',
       });
     });
   });
@@ -241,6 +293,37 @@ describe('scheduleParser', () => {
       expect(formatTeacherName('Иванов', true)).toBe('Иванов');
       expect(formatTeacherName('Преподаватель не указан', true)).toBe('Преподаватель не указан');
       expect(formatTeacherName(undefined, true)).toBe('Преподаватель не указан');
+    });
+  });
+
+  describe('sanitizeUrl', () => {
+    it('allows valid http, https, and mailto links', () => {
+      expect(sanitizeUrl('https://eios.kosgos.ru/')).toBe('https://eios.kosgos.ru/');
+      expect(sanitizeUrl('http://ksu.edu.ru')).toBe('http://ksu.edu.ru');
+      expect(sanitizeUrl('mailto:teacher@ksu.edu.ru')).toBe('mailto:teacher@ksu.edu.ru');
+    });
+
+    it('auto-prefixes raw domain names with https://', () => {
+      expect(sanitizeUrl('sferum.ru/j/123')).toBe('https://sferum.ru/j/123');
+      expect(sanitizeUrl('zoom.us/my/room')).toBe('https://zoom.us/my/room');
+    });
+
+    it('blocks dangerous xss javascript and data urls', () => {
+      expect(sanitizeUrl('javascript:alert(document.cookie)')).toBeNull();
+      expect(sanitizeUrl('data:text/html,<script>alert(1)</script>')).toBeNull();
+      expect(sanitizeUrl('vbscript:msgbox(1)')).toBeNull();
+      expect(sanitizeUrl('')).toBeNull();
+      expect(sanitizeUrl(undefined)).toBeNull();
+    });
+  });
+
+  describe('SyncService offline QR generation', () => {
+    it('generates a valid client-side data URI base64 image in memory', async () => {
+      const targetUrl = 'https://ksu-student.app#firebase=https://test.firebaseio.com/sync.json';
+      const dataUri = await SyncService.getQrCodeDataUrl(targetUrl);
+      expect(typeof dataUri).toBe('string');
+      expect(dataUri.startsWith('data:image/png;base64,')).toBe(true);
+      expect(dataUri.length).toBeGreaterThan(100);
     });
   });
 });

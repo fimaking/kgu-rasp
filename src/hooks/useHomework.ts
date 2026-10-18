@@ -135,13 +135,6 @@ export function useHomework() {
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('online', handleVisibility);
 
-    // Fast 5-second cloud sync check while tab is visible and online
-    const timer = setInterval(() => {
-      if (SyncService.isFirebaseConfigured()) {
-        performSync();
-      }
-    }, 5000);
-
     // Initial sync
     performSync();
 
@@ -150,7 +143,6 @@ export function useHomework() {
       window.removeEventListener('focus', handleVisibility);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleVisibility);
-      clearInterval(timer);
     };
   }, []);
 
