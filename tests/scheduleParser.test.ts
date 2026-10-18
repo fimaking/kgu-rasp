@@ -14,6 +14,7 @@ import {
 } from '../src/utils/scheduleParser';
 import { ScheduleService } from '../src/services/scheduleService';
 import { SyncService } from '../src/services/syncService';
+import { KSU_BELL_TIMES } from '../src/components/schedule/ScheduleView';
 import { ParsedLesson, RawRaspItem } from '../types/schedule';
 
 describe('scheduleParser', () => {
@@ -324,6 +325,26 @@ describe('scheduleParser', () => {
       expect(typeof dataUri).toBe('string');
       expect(dataUri.startsWith('data:image/png;base64,')).toBe(true);
       expect(dataUri.length).toBeGreaterThan(100);
+    });
+  });
+
+  describe('KSU_BELL_TIMES', () => {
+    it('contains exactly 5 pairs according to official KSU schedule', () => {
+      expect(KSU_BELL_TIMES.length).toBe(5);
+      expect(KSU_BELL_TIMES.map((b) => b.pair)).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it('matches exact pair start and end times from KSU', () => {
+      expect(KSU_BELL_TIMES[0]).toMatchObject({ pair: 1, start: '08:30', end: '10:00' });
+      expect(KSU_BELL_TIMES[1]).toMatchObject({ pair: 2, start: '10:10', end: '11:40' });
+      expect(KSU_BELL_TIMES[2]).toMatchObject({ pair: 3, start: '11:50', end: '13:20' });
+      expect(KSU_BELL_TIMES[3]).toMatchObject({ pair: 4, start: '14:00', end: '15:30' });
+      expect(KSU_BELL_TIMES[4]).toMatchObject({ pair: 5, start: '15:40', end: '17:10' });
+    });
+
+    it('sets a 40-minute big break after the 3rd pair (13:20 to 14:00)', () => {
+      expect(KSU_BELL_TIMES[2].breakAfter).toContain('40 мин');
+      expect(KSU_BELL_TIMES[2].breakAfter).toContain('14:00');
     });
   });
 });

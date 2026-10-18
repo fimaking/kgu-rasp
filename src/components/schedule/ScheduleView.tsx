@@ -40,13 +40,10 @@ interface ScheduleViewProps {
 
 export const KSU_BELL_TIMES = [
   { pair: 1, start: '08:30', end: '10:00', breakAfter: '10 мин перемена (до 10:10)' },
-  { pair: 2, start: '10:10', end: '11:40', breakAfter: '20 мин — Большой перерыв (до 12:00)' },
-  { pair: 3, start: '12:00', end: '13:30', breakAfter: '10 мин перемена (до 13:40)' },
-  { pair: 4, start: '13:40', end: '15:10', breakAfter: '10 мин перемена (до 15:20)' },
-  { pair: 5, start: '15:20', end: '16:50', breakAfter: '10 мин перемена (до 17:00)' },
-  { pair: 6, start: '17:00', end: '18:30', breakAfter: '10 мин перемена (до 18:40)' },
-  { pair: 7, start: '18:40', end: '20:10', breakAfter: '10 мин перемена (до 20:20)' },
-  { pair: 8, start: '20:20', end: '21:50', breakAfter: 'Окончание занятий' },
+  { pair: 2, start: '10:10', end: '11:40', breakAfter: '10 мин перемена (до 11:50)' },
+  { pair: 3, start: '11:50', end: '13:20', breakAfter: '40 мин — Большой перерыв (до 14:00)' },
+  { pair: 4, start: '14:00', end: '15:30', breakAfter: '10 мин перемена (до 15:40)' },
+  { pair: 5, start: '15:40', end: '17:10', breakAfter: 'Окончание учебных занятий' },
 ];
 
 export const ScheduleView: React.FC<ScheduleViewProps> = ({
@@ -60,7 +57,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onGoToDate,
   onOpenCreateHomeworkForSubject,
 }) => {
-  const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => new Date());
+  const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => {
+    const now = new Date();
+    return now.getDay() === 0 ? getMondayOfWeek(now) : now;
+  });
 
   // Default to grid layout on both PC and mobile so the entire week schedule is immediately visible
   const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('grid');
@@ -69,11 +69,15 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [showBellsModal, setShowBellsModal] = useState(false);
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
 
-  // Active pair or break countdown info
+  // Active pair or break countdown info (Sunday is excluded)
   const currentBreakOrPairInfo = useMemo(() => {
     const now = new Date();
+    // В воскресенье учебных занятий нет — не учитываем
+    if (now.getDay() === 0) return null;
+
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
+    // 1. Check if a pair is currently ongoing
     for (const b of KSU_BELL_TIMES) {
       const [sh, sm] = b.start.split(':').map(Number);
       const [eh, em] = b.end.split(':').map(Number);
@@ -82,10 +86,15 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       if (currentMinutes >= startMins && currentMinutes < endMins) {
         const left = endMins - currentMinutes;
-        return { type: 'pair' as const, pair: b.pair, text: `Идёт ${b.pair}-я пара: осталось ${left} мин` };
+        return {
+          type: 'pair' as const,
+          pair: b.pair,
+          text: `Идёт ${b.pair}-я пара: осталось ${left} мин (до ${b.end})`,
+        };
       }
     }
 
+    // 2. Check breaks between pairs
     for (let i = 0; i < KSU_BELL_TIMES.length - 1; i++) {
       const currentPair = KSU_BELL_TIMES[i];
       const nextPair = KSU_BELL_TIMES[i + 1];
@@ -96,34 +105,55 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       if (currentMinutes >= breakStartMins && currentMinutes < breakEndMins) {
         const left = breakEndMins - currentMinutes;
-        const isBigBreak = currentPair.pair === 2;
+        const isBigBreak = currentPair.pair === 3;
         return {
           type: 'break' as const,
           pair: nextPair.pair,
           text: isBigBreak
-            ? `Большой перерыв! До ${nextPair.pair}-й пары: ${left} мин`
-            : `Перемена: до ${nextPair.pair}-й пары ${left} мин`,
+            ? `Большой перерыв (обед)! До ${nextPair.pair}-й пары: ${left} мин (начало в ${nextPair.start})`
+            : `Перемена: до ${nextPair.pair}-й пары ${left} мин (начало в ${nextPair.start})`,
         };
       }
+    }
+
+    // 3. Before 1st pair in the morning (from 07:30 to 08:30)
+    const [p1H, p1M] = KSU_BELL_TIMES[0].start.split(':').map(Number);
+    const p1StartMins = p1H * 60 + p1M;
+    if (currentMinutes >= p1StartMins - 60 && currentMinutes < p1StartMins) {
+      const left = p1StartMins - currentMinutes;
+      return {
+        type: 'break' as const,
+        pair: 1,
+        text: `Скоро 1-я пара: осталось ${left} мин (начало в 08:30)`,
+      };
     }
 
     return null;
   }, []);
 
-  // When opening schedule view, ensure today's week is active and today is selected
+  // When opening schedule view, ensure today's week is active and select current day (or Monday if Sunday)
   useEffect(() => {
     const now = new Date();
     const currentMon = getMondayOfWeek(now);
     if (!isSameDay(selectedWeekMonday, currentMon)) {
       onGoToToday();
     }
-    setSelectedDayDate(now);
+    // Воскресенье не учитываем — если сегодня воскресенье, выбираем понедельник
+    if (now.getDay() === 0) {
+      setSelectedDayDate(currentMon);
+    } else {
+      setSelectedDayDate(now);
+    }
   }, []);
 
   const handleGoToToday = () => {
     onGoToToday();
     const now = new Date();
-    setSelectedDayDate(now);
+    if (now.getDay() === 0) {
+      setSelectedDayDate(getMondayOfWeek(now));
+    } else {
+      setSelectedDayDate(now);
+    }
     if (viewLayout === 'grid') {
       setTimeout(() => {
         const todayEl = document.getElementById('day-card-today');
@@ -165,23 +195,27 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     }
   }, [viewLayout]);
 
-  // Day buttons data for WeekNavigator
+  // Day buttons data for WeekNavigator (excluding Sunday)
   const daysSummary = useMemo(() => {
-    return weekSchedule.map((d) => ({
-      date: d.date,
-      shortDayName: d.shortDayName,
-      isToday: d.isToday,
-      count: d.lessons.length,
-    }));
+    return weekSchedule
+      .filter((d) => d.dayOfWeek !== 7)
+      .map((d) => ({
+        date: d.date,
+        shortDayName: d.shortDayName,
+        isToday: d.isToday,
+        count: d.lessons.length,
+      }));
   }, [weekSchedule]);
 
-  // Search & session filtering
+  // Search & session filtering (excluding Sunday)
   const filteredWeekSchedule = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
-    return weekSchedule.map((day) => ({
-      ...day,
-      lessons: day.lessons.filter((l) => {
+    return weekSchedule
+      .filter((day) => day.dayOfWeek !== 7)
+      .map((day) => ({
+        ...day,
+        lessons: day.lessons.filter((l) => {
         // Mode filter: all pairs or exams & credits only
         if (filterMode === 'session') {
           const isSession =
@@ -412,19 +446,17 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       {/* Schedule Display */}
       {viewLayout === 'grid' ? (
-        /* Full week grid: 6 days (Mon-Sat, plus Sun if it has pairs) */
+        /* Full week grid: 6 study days (Mon-Sat, Sunday excluded) */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filteredWeekSchedule
-            .filter((d) => d.dayOfWeek !== 7 || d.lessons.length > 0 || d.isToday)
-            .map((day) => (
-              <DayCard
-                key={day.dateStr}
-                daySchedule={day}
-                isSelected={isSameDay(day.date, selectedDayDate)}
-                onSelectDay={() => setSelectedDayDate(day.date)}
-                onSelectLesson={(l) => setActiveLessonModal(l)}
-              />
-            ))}
+          {filteredWeekSchedule.map((day) => (
+            <DayCard
+              key={day.dateStr}
+              daySchedule={day}
+              isSelected={isSameDay(day.date, selectedDayDate)}
+              onSelectDay={() => setSelectedDayDate(day.date)}
+              onSelectLesson={(l) => setActiveLessonModal(l)}
+            />
+          ))}
         </div>
       ) : (
         /* Single focused day view */
@@ -487,7 +519,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                       {b.start} — {b.end}
                     </span>
                   </div>
-                  <span className={`text-[11px] font-medium text-right ${b.pair === 2 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-apple-gray-500 dark:text-apple-gray-400'}`}>
+                  <span className={`text-[11px] font-medium text-right ${b.pair === 3 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-apple-gray-500 dark:text-apple-gray-400'}`}>
                     {b.breakAfter}
                   </span>
                 </div>
@@ -495,7 +527,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
             </div>
 
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-300">
-              💡 <b>Большой перерыв (20 мин):</b> после 2-й пары с 11:40 до 12:00. Обычные перемены между парами — по 10 минут.
+              💡 <b>Большой перерыв (40 мин):</b> после 3-й пары с 13:20 до 14:00 (обед). Обычные перемены — по 10 минут. В воскресенье занятий нет.
             </div>
 
             <div className="pt-2 flex justify-end">

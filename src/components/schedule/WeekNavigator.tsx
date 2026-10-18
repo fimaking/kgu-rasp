@@ -23,10 +23,10 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   onSelectDay,
   days,
 }) => {
-  const sunday = new Date(selectedWeekMonday);
-  sunday.setDate(selectedWeekMonday.getDate() + 6);
+  const lastStudyDay = new Date(selectedWeekMonday);
+  lastStudyDay.setDate(selectedWeekMonday.getDate() + (days.length > 0 ? days.length - 1 : 5));
 
-  const rangeStr = `${formatRussianDate(selectedWeekMonday)} — ${formatRussianDate(sunday, true)}`;
+  const rangeStr = `${formatRussianDate(selectedWeekMonday)} — ${formatRussianDate(lastStudyDay, true)}`;
 
   return (
     <div className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4 select-none">
@@ -68,7 +68,10 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
       </div>
 
       {/* Quick Day Selector Pills */}
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2 pt-2 border-t border-black/5 dark:border-white/5">
+      <div
+        className="grid gap-1.5 sm:gap-2 pt-2 border-t border-black/5 dark:border-white/5"
+        style={{ gridTemplateColumns: `repeat(${days.length || 6}, minmax(0, 1fr))` }}
+      >
         {days.map((day, idx) => {
           const isSelected = isSameDay(day.date, selectedDayDate);
           return (
