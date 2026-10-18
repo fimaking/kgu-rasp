@@ -1,3 +1,8 @@
+import { ParsedLesson } from '../types/schedule';
+import { Homework } from '../types/homework';
+import { UserSettings } from '../types/settings';
+import { parseIsoDate } from '../utils/dateUtils';
+
 export class NotificationService {
   /**
    * Check if the browser supports notifications
@@ -96,5 +101,77 @@ export class NotificationService {
       body: 'Уведомления успешно настроены! Вы будете получать напоминания о парах и дедлайнах.',
       tag: 'test-notification',
     });
+  }
+
+  /**
+   * Check and send reminders for upcoming lessons and homework deadlines.
+   * Uses sessionStorage to prevent duplicate alerts within the same session/day.
+   */
+  static checkAndSendReminders(
+    todayLessons: ParsedLesson[],
+    homeworkItems: Homework[],
+    settings: UserSettings
+  ): void {
+    if (!this.isSupported() || Notification.permission !== 'granted') return;
+    if (!settings.notifications || !settings.notifications.enabled) return;
+
+    const now = new Date();
+    const nowMs = now.getTime();
+
+    // 1. Check upcoming lessons
+    const reminderMinutes = settings.notifications.lessonReminderMinutes || 15;
+    for (const lesson of todayLessons) {
+      if (!lesson.startDateTime) continue;
+      const startMs = lesson.startDateTime.getTime();
+      const diffMinutes = Math.round((startMs - nowMs) / (60 * 1000));
+
+      // If lesson starts in <= reminderMinutes (e.g. 15 min) and > 0 min
+      if (diffMinutes > 0 && diffMinutes <= reminderMinutes) {
+        const alertKey = `alert_lesson_${lesson.id}_${lesson.dateStr}`;
+        if (!sessionStorage.getItem(alertKey)) {
+          sessionStorage.setItem(alertKey, '1');
+          this.showNotification(`Пара через ${diffMinutes} мин: ${lesson.subject}`, {
+            body: `${lesson.pairNumber}-я пара • ${lesson.building}, ${lesson.auditorium}\nПреподаватель: ${lesson.teacher}`,
+            tag: alertKey,
+          });
+        }
+      }
+    }
+
+    // 2. Check homework deadlines
+    const hwReminderHours = settings.notifications.homeworkReminderHours || 24;
+    for (const hw of homeworkItems) {
+      if (hw.status === 'completed') continue;
+      const deadlineDate = parseIsoDate(hw.dueDate);
+      const [h, m] = (hw.dueTime || '23:59').split(':').map(Number);
+      deadlineDate.setHours(h || 23, m || 59, 0, 0);
+
+      const diffHours = (deadlineDate.getTime() - nowMs) / (1000 * 60 * 60);
+
+      // Warning if due within hwReminderHours and not expired
+      if (diffHours > 0 && diffHours <= hwReminderHours) {
+        const alertKey = `alert_hw_due_${hw.id}_${hw.dueDate}`;
+        if (!sessionStorage.getItem(alertKey)) {
+          sessionStorage.setItem(alertKey, '1');
+          const hoursLeft = Math.ceil(diffHours);
+          this.showNotification(`Дедлайн по заданию: ${hw.title}`, {
+            body: `${hw.subject} • Осталось ${hoursLeft} ч (до ${hw.dueTime})`,
+            tag: alertKey,
+          });
+        }
+      }
+
+      // Overdue alert if enabled
+      if (settings.notifications.overdueAlert && diffHours < 0 && diffHours > -48) {
+        const alertKey = `alert_hw_overdue_${hw.id}`;
+        if (!sessionStorage.getItem(alertKey)) {
+          sessionStorage.setItem(alertKey, '1');
+          this.showNotification(`Просрочено задание: ${hw.title}`, {
+            body: `${hw.subject} • Срок сдачи истек (${hw.dueDate})`,
+            tag: alertKey,
+          });
+        }
+      }
+    }
   }
 }

@@ -1,10 +1,12 @@
-const CACHE_NAME = 'ksu-student-cache-v59';
+const CACHE_NAME = 'ksu-student-cache-v60';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

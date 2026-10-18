@@ -16,6 +16,7 @@ interface HomeworkFormModalProps {
   defaultDueTime?: string;
   defaultLessonType?: string;
   subjectsList: string[];
+  groupName?: string;
 }
 
 export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
@@ -28,6 +29,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
   defaultDueTime,
   defaultLessonType,
   subjectsList,
+  groupName,
 }) => {
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
@@ -47,7 +49,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
   const [notes, setNotes] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-  const [errors, setErrors] = useState<{ title?: string; subject?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string; subject?: string; link?: string }>({});
 
   useEffect(() => {
     if (initialData) {
@@ -128,7 +130,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalSubject = isCustomSubject ? customSubject.trim() : subject;
-    const newErrors: { title?: string; subject?: string } = {};
+    const newErrors: { title?: string; subject?: string; link?: string } = {};
 
     if (!title.trim()) {
       newErrors.title = 'Пожалуйста, укажите название задания';
@@ -142,7 +144,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
     if (trimmedLink) {
       safeLink = sanitizeUrl(trimmedLink);
       if (!safeLink) {
-        newErrors.title = 'Ссылка должна начинаться с http:// или https://';
+        newErrors.link = 'Ссылка должна начинаться с http:// или https://';
       }
     }
 
@@ -239,7 +241,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               }}
               className="w-full px-3.5 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-sm text-apple-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
             >
-              <optgroup label="Дисциплины группы 8953 (КГУ)">
+              <optgroup label={`Дисциплины группы ${groupName || 'КГУ'}`}>
                 {subjectsList.map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -457,9 +459,17 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               placeholder="https://..."
               value={materialLink}
               maxLength={500}
-              onChange={(e) => setMaterialLink(e.target.value)}
-              className="w-full px-3 py-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-xs text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
+              onChange={(e) => {
+                setMaterialLink(e.target.value);
+                if (errors.link) setErrors((prev) => ({ ...prev, link: undefined }));
+              }}
+              className={`w-full px-3 py-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border text-xs text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 ${
+                errors.link ? 'border-rose-500' : 'border-black/10 dark:border-white/10'
+              }`}
             />
+            {errors.link && (
+              <p className="mt-1 text-xs text-rose-500 font-medium">{errors.link}</p>
+            )}
           </div>
 
           <div>

@@ -19,20 +19,45 @@ import {
   Link2,
   Users,
   RotateCw,
+  Palette,
+  Type,
+  Globe,
+  Calendar,
 } from 'lucide-react';
-import { ThemeMode, UserSettings } from '../../types/settings';
+import {
+  ThemeMode,
+  UserSettings,
+  VisualTheme,
+  FontFamily,
+  ACCENT_COLORS,
+  VISUAL_THEMES,
+  FONT_OPTIONS,
+} from '../../types/settings';
+import { ParsedLesson } from '../../types/schedule';
 import { StorageService } from '../../services/storageService';
 import { SyncService, normalizeFirebaseUrl } from '../../services/syncService';
 import { NotificationService } from '../../services/notificationService';
+import { downloadIcsSchedule } from '../../utils/icsExport';
 import { APP_VERSION } from '../../utils/version';
 import { Button } from '../ui/Button';
 
 interface SettingsViewProps {
   themeMode: ThemeMode;
   onThemeChange: (mode: ThemeMode) => void;
+  visualTheme?: VisualTheme;
+  onVisualThemeChange?: (theme: VisualTheme) => void;
+  accentColor?: string;
+  onAccentColorChange?: (color: string) => void;
+  fontFamily?: FontFamily;
+  onFontFamilyChange?: (font: FontFamily) => void;
   groupId?: number;
   groupName?: string;
   subgroupPreference?: number;
+  onSubgroupChange?: (subgroup: number) => void;
+  foreignLanguagePreference?: 'all' | 'de' | 'en' | 'fr';
+  onForeignLanguageChange?: (lang: 'all' | 'de' | 'en' | 'fr') => void;
+  onOpenGroupSelect?: () => void;
+  lessons?: ParsedLesson[];
   onShowToast: (type: 'success' | 'error' | 'info', title: string, msg?: string) => void;
   onDataImported: () => void;
   onRefreshSchedule: () => void;
@@ -42,9 +67,20 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   themeMode,
   onThemeChange,
+  visualTheme = 'oled',
+  onVisualThemeChange,
+  accentColor = '#007AFF',
+  onAccentColorChange,
+  fontFamily = 'system',
+  onFontFamilyChange,
   groupId = 8953,
   groupName = '26-ИСбо-4',
   subgroupPreference = 1,
+  onSubgroupChange,
+  foreignLanguagePreference = 'de',
+  onForeignLanguageChange,
+  onOpenGroupSelect,
+  lessons = [],
   onShowToast,
   onDataImported,
   onRefreshSchedule,
@@ -253,31 +289,142 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Section 1: Appearance / Theme Mode */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
-        <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
-          <span>Тема оформления</span>
-        </h3>
+      {/* Section 1: Appearance / Theme Mode & Customization */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-6">
+        <div className="space-y-3">
+          <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
+            <Palette className="w-5 h-5 text-apple-blue" />
+            <span>Тема и стиль оформления</span>
+          </h3>
 
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { id: 'light' as ThemeMode, label: 'Светлая', icon: <Sun className="w-5 h-5" /> },
-            { id: 'dark' as ThemeMode, label: 'Тёмная (OLED)', icon: <Moon className="w-5 h-5" /> },
-            { id: 'system' as ThemeMode, label: 'Системная', icon: <Laptop className="w-5 h-5" /> },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => onThemeChange(mode.id)}
-              className={`p-4 rounded-2.5xl flex flex-col items-center justify-center gap-2.5 transition-all ${
-                themeMode === mode.id
-                  ? 'bg-apple-blue text-white shadow-apple-sm font-bold scale-[1.02]'
-                  : 'bg-black/[0.03] dark:bg-white/[0.05] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
-              }`}
+          {/* Light / Dark / System */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { id: 'light' as ThemeMode, label: 'Светлая', icon: <Sun className="w-5 h-5" /> },
+              { id: 'dark' as ThemeMode, label: 'Тёмная', icon: <Moon className="w-5 h-5" /> },
+              { id: 'system' as ThemeMode, label: 'Системная', icon: <Laptop className="w-5 h-5" /> },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => onThemeChange(mode.id)}
+                className={`p-3.5 sm:p-4 rounded-2.5xl flex flex-col items-center justify-center gap-2 transition-all ${
+                  themeMode === mode.id
+                    ? 'bg-apple-blue text-white shadow-apple-sm font-bold scale-[1.02]'
+                    : 'bg-black/[0.03] dark:bg-white/[0.05] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
+                }`}
+              >
+                <div className="p-2 rounded-xl bg-black/5 dark:bg-white/10">{mode.icon}</div>
+                <span className="text-xs font-medium">{mode.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Visual Palette Selection */}
+        <div className="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200">
+              Цветовая гамма темы (Dark):
+            </span>
+            <span className="text-[11px] font-mono text-apple-gray-500 capitalize">
+              {VISUAL_THEMES.find((t) => t.id === visualTheme)?.name || visualTheme}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {VISUAL_THEMES.filter((vt) =>
+              ['oled', 'midnight', 'emerald', 'sunset', 'monochrome', 'classic'].includes(vt.id)
+            ).map((vt) => {
+              const isActive = visualTheme === vt.id;
+              return (
+                <button
+                  key={vt.id}
+                  onClick={() => onVisualThemeChange?.(vt.id)}
+                  className={`p-3 rounded-2xl flex items-center gap-2.5 text-left transition-all border ${
+                    isActive
+                      ? 'border-apple-blue bg-apple-blue/10 dark:bg-apple-blue/15 shadow-sm'
+                      : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:bg-black/[0.04]'
+                  }`}
+                >
+                  <span
+                    className="w-4 h-4 rounded-full border border-black/20 dark:border-white/20 shrink-0 shadow-sm"
+                    style={{ backgroundColor: vt.previewColorDark }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-semibold text-apple-gray-900 dark:text-white truncate">
+                      {vt.name}
+                    </div>
+                  </div>
+                  {isActive && <Check className="w-3.5 h-3.5 text-apple-blue shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Accent Color Selection */}
+        <div className="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200">
+              Акцентный цвет кнопок и элементов:
+            </span>
+            <span
+              className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
             >
-              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/10">{mode.icon}</div>
-              <span className="text-xs font-medium">{mode.label}</span>
-            </button>
-          ))}
+              {ACCENT_COLORS.find((c) => c.hex.toLowerCase() === accentColor.toLowerCase())?.name || accentColor}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5">
+            {ACCENT_COLORS.map((c) => {
+              const isSelected = accentColor.toLowerCase() === c.hex.toLowerCase();
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => onAccentColorChange?.(c.hex)}
+                  title={c.name}
+                  aria-label={c.name}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-transform active:scale-90 flex items-center justify-center relative ${
+                    isSelected ? 'scale-110 ring-2 ring-offset-2 ring-apple-blue dark:ring-offset-black' : 'hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                >
+                  {isSelected && <Check className="w-4 h-4 text-white drop-shadow-md stroke-[3]" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Font Family Selection */}
+        <div className="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
+              <Type className="w-4 h-4 text-apple-blue" />
+              <span>Шрифт интерфейса:</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {FONT_OPTIONS.map((font) => {
+              const isSelected = fontFamily === font.id;
+              return (
+                <button
+                  key={font.id}
+                  onClick={() => onFontFamilyChange?.(font.id)}
+                  className={`p-2.5 rounded-xl text-left border transition-all ${
+                    isSelected
+                      ? 'border-apple-blue bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue font-bold shadow-sm'
+                      : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/[0.04]'
+                  }`}
+                >
+                  <div className="text-xs truncate">{font.name}</div>
+                  <div className="text-[10px] opacity-60 truncate font-mono mt-0.5">Пример текста</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -288,21 +435,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <GraduationCap className="w-5 h-5 text-apple-blue" />
             <span>Группа и профиль студента</span>
           </h3>
-          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-            Закреплено
-          </span>
+          {onOpenGroupSelect && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Users className="w-3.5 h-3.5 text-apple-blue" />}
+              onClick={onOpenGroupSelect}
+            >
+              Сменить группу
+            </Button>
+          )}
         </div>
 
-        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
+        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-apple-gray-500 font-medium">Группа в ЭИОС КГУ:</span>
-            <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
-              {groupName} (ID: {groupId})
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
+                {groupName} (ID: {groupId})
+              </span>
+              {onOpenGroupSelect && (
+                <button
+                  onClick={onOpenGroupSelect}
+                  className="text-xs text-apple-blue hover:underline font-semibold"
+                >
+                  Изменить
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs text-apple-gray-500 font-medium">Официальный сайт:</span>
+            <span className="text-xs text-apple-gray-500 font-medium">Официальный сайт КГУ:</span>
             <a
               href={`https://eios.kosgos.ru/WebApp/#/Rasp/Group/${groupId}`}
               target="_blank"
@@ -314,16 +478,88 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </a>
           </div>
 
-          <div className="flex items-center justify-between pt-1 border-t border-black/5 dark:border-white/5">
+          {/* Subgroup Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
             <span className="text-xs text-apple-gray-500 font-medium">Выбранная подгруппа:</span>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue border border-apple-blue/20 text-xs font-semibold">
-              <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>{subgroupPreference} подгруппа (а)</span>
+            <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 p-1 rounded-xl">
+              {[
+                { id: 1, label: '1-я подгруппа (а)' },
+                { id: 2, label: '2-я подгруппа (б)' },
+                { id: 0, label: 'Все пары' },
+              ].map((sg) => (
+                <button
+                  key={sg.id}
+                  onClick={() => onSubgroupChange?.(sg.id)}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    subgroupPreference === sg.id
+                      ? 'bg-apple-blue text-white shadow-apple-sm'
+                      : 'text-apple-gray-700 dark:text-apple-gray-300 hover:text-apple-blue'
+                  }`}
+                >
+                  {sg.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-apple-gray-500 font-medium">Статус синхронизации:</span>
+          {/* Foreign Language Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
+            <span className="text-xs text-apple-gray-500 font-medium flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-apple-blue" />
+              <span>Изучаемый иностранный язык:</span>
+            </span>
+            <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 p-1 rounded-xl flex-wrap">
+              {[
+                { id: 'de' as const, label: 'Немецкий' },
+                { id: 'en' as const, label: 'Английский' },
+                { id: 'fr' as const, label: 'Французский' },
+                { id: 'all' as const, label: 'Все' },
+              ].map((lang) => (
+                <button
+                  key={lang.id}
+                  onClick={() => onForeignLanguageChange?.(lang.id)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    foreignLanguagePreference === lang.id
+                      ? 'bg-apple-blue text-white shadow-apple-sm'
+                      : 'text-apple-gray-700 dark:text-apple-gray-300 hover:text-apple-blue'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* iCalendar (.ics) Export Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
+            <div>
+              <div className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-apple-blue" />
+                <span>Экспорт расписания в системный календарь:</span>
+              </div>
+              <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 mt-0.5">
+                Apple Календарь, Google Календарь, Outlook с авто-напоминаниями за 15 мин
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Download className="w-3.5 h-3.5 text-apple-blue" />}
+              onClick={() => {
+                downloadIcsSchedule(lessons, groupName);
+                onShowToast(
+                  'success',
+                  'Расписание .ics скачано!',
+                  'Откройте файл, чтобы добавить все пары в календарь телефона или ПК.'
+                );
+              }}
+            >
+              Скачать .ics
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
+            <span className="text-xs text-apple-gray-500 font-medium">Статус расписания КГУ:</span>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

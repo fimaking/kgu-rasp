@@ -34,6 +34,7 @@ interface HomeworkViewProps {
   selectedHomeworkForEdit?: Homework | null;
   todayLessonsCount?: number;
   onNavigateToSchedule?: () => void;
+  groupName?: string;
 }
 
 export const HomeworkView: React.FC<HomeworkViewProps> = ({
@@ -52,6 +53,7 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
   onOpenCreateModal,
   todayLessonsCount = 0,
   onNavigateToSchedule,
+  groupName,
 }) => {
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -145,6 +147,7 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
           }}
           initialData={editingHomework}
           subjectsList={subjectsList}
+          groupName={groupName}
         />
       )}
 

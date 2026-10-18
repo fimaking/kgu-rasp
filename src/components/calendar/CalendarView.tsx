@@ -16,6 +16,7 @@ import {
   getMonthNameNominative,
   formatRussianDate,
   formatDateToIso,
+  parseIsoDate,
   isToday,
   isSameDay,
 } from '../../utils/dateUtils';
@@ -338,7 +339,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-mono font-bold text-apple-gray-900 dark:text-white">
-                            {formatRussianDate(new Date(item.date), true)}
+                            {formatRussianDate(parseIsoDate(item.date), true)}
                           </span>
                           <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-300">
                             {item.tag}

@@ -10,3 +10,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 (window as unknown as { __APP_MOUNTED__: boolean }).__APP_MOUNTED__ = true;
+try {
+  sessionStorage.removeItem('ksu_auto_heal_reload');
+} catch {}

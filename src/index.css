@@ -339,6 +339,66 @@ html.dark[data-visual-theme="oled"] .dark\:bg-\[\#1c1c1e\]\/95 {
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
+/* 2. Midnight Navy */
+html.dark[data-visual-theme="midnight"] body,
+html.dark[data-visual-theme="midnight"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="midnight"] .dark\:bg-black {
+  background-color: #090e1a !important;
+}
+html.dark[data-visual-theme="midnight"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="midnight"] .dark\:bg-zinc-900\/60 {
+  background-color: rgba(14, 23, 42, 0.9) !important;
+  border-color: rgba(56, 189, 248, 0.15) !important;
+}
+
+/* 3. Nordic Forest / Emerald */
+html.dark[data-visual-theme="emerald"] body,
+html.dark[data-visual-theme="emerald"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="emerald"] .dark\:bg-black {
+  background-color: #05140e !important;
+}
+html.dark[data-visual-theme="emerald"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="emerald"] .dark\:bg-zinc-900\/60 {
+  background-color: rgba(6, 28, 20, 0.9) !important;
+  border-color: rgba(52, 199, 89, 0.15) !important;
+}
+
+/* 4. Warm Sunset */
+html.dark[data-visual-theme="sunset"] body,
+html.dark[data-visual-theme="sunset"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="sunset"] .dark\:bg-black {
+  background-color: #171114 !important;
+}
+html.dark[data-visual-theme="sunset"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="sunset"] .dark\:bg-zinc-900\/60 {
+  background-color: rgba(36, 22, 28, 0.9) !important;
+  border-color: rgba(255, 149, 0, 0.15) !important;
+}
+
+/* 5. Monochrome */
+html.dark[data-visual-theme="monochrome"] body,
+html.dark[data-visual-theme="monochrome"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="monochrome"] .dark\:bg-black {
+  background-color: #111114 !important;
+}
+html.dark[data-visual-theme="monochrome"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="monochrome"] .dark\:bg-zinc-900\/60 {
+  background-color: rgba(24, 24, 27, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 6. Apple Classic */
+html.dark[data-visual-theme="classic"] body,
+html.dark[data-visual-theme="classic"] .dark\:bg-\[\#121214\],
+html.dark[data-visual-theme="classic"] .dark\:bg-black {
+  background-color: #121214 !important;
+}
+html.dark[data-visual-theme="classic"] .dark\:bg-zinc-900\/70,
+html.dark[data-visual-theme="classic"] .dark\:bg-zinc-900\/60 {
+  background-color: rgba(28, 28, 30, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 
 /* Reduced Motion Mode */
 html[data-reduced-motion="true"] *,

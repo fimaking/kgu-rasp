@@ -31,32 +31,38 @@
         }
       }, true);
 
-      // Failsafe: if root element is still empty after 2 seconds, auto-heal
+      // Failsafe: if root element is still empty after 8 seconds, auto-heal safely (with loop protection)
       setTimeout(function() {
         var root = document.getElementById('root');
         if (root && root.children.length === 0 && !window.__APP_MOUNTED__) {
-          if ('caches' in window) {
-            caches.keys().then(function(names) {
-              Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
-                window.location.reload();
+          var hasAttempted = sessionStorage.getItem('ksu_auto_heal_reload');
+          if (!hasAttempted) {
+            sessionStorage.setItem('ksu_auto_heal_reload', '1');
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
+                  window.location.reload();
+                });
               });
-            });
-          } else {
-            window.location.reload();
+            } else {
+              window.location.reload();
+            }
           }
         }
-      }, 2000);
+      }, 8000);
     </script>
     <script>
-      // Immediate cleanup of legacy custom showcase themes (e.g. cyber-violet)
+      // Clean up legacy broken prototype themes if present without wiping user choices
       try {
         var rawSettings = localStorage.getItem('ksu_student_settings_v2');
         if (rawSettings) {
           var parsedSettings = JSON.parse(rawSettings);
-          if (parsedSettings.visualTheme !== 'oled' || parsedSettings.accentColor !== '#007AFF') {
+          var legacyThemes = ['cyber-violet', 'electric-mint', 'acid-lime', 'cyber'];
+          if (legacyThemes.indexOf(parsedSettings.visualTheme) !== -1) {
             parsedSettings.visualTheme = 'oled';
-            parsedSettings.accentColor = '#007AFF';
-            parsedSettings.fontFamily = 'system';
+            if (parsedSettings.accentColor === '#B5179E') {
+              parsedSettings.accentColor = '#007AFF';
+            }
             localStorage.setItem('ksu_student_settings_v2', JSON.stringify(parsedSettings));
           }
         }

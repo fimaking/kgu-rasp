@@ -19,6 +19,9 @@ export function useSchedule() {
   const [subgroupFilter, setSubgroupFilter] = useState<number>(
     () => StorageService.getSettings().subgroupPreference ?? 1
   );
+  const [foreignLang, setForeignLang] = useState<'all' | 'de' | 'en' | 'fr'>(
+    () => StorageService.getSettings().foreignLanguagePreference || 'de'
+  );
 
   // Synchronous 0ms startup from memory / cache:
   const [initialData] = useState(() => ScheduleService.getInitialSchedule(groupId));
@@ -73,6 +76,12 @@ export function useSchedule() {
     StorageService.saveSettings({ ...s, subgroupPreference: sg });
   }, []);
 
+  const updateForeignLang = useCallback((lang: 'all' | 'de' | 'en' | 'fr') => {
+    setForeignLang(lang);
+    const s = StorageService.getSettings();
+    StorageService.saveSettings({ ...s, foreignLanguagePreference: lang });
+  }, []);
+
   const changeGroup = useCallback(
     async (newGroupId: number, newGroupName: string, newSubgroup?: number) => {
       setGroupId(newGroupId);
@@ -124,10 +133,10 @@ export function useSchedule() {
     };
   }, []);
 
-  // Filter lessons dynamically according to current subgroupFilter and groupId
+  // Filter lessons dynamically according to current subgroupFilter, groupId, and foreignLang
   const filteredLessons = useMemo(() => {
-    return lessons.filter((l) => filterLessonsBySubgroup(l, subgroupFilter, groupId));
-  }, [lessons, subgroupFilter, groupId]);
+    return lessons.filter((l) => filterLessonsBySubgroup(l, subgroupFilter, groupId, foreignLang));
+  }, [lessons, subgroupFilter, groupId, foreignLang]);
 
   // Lessons for today (uses currentTime for automatic midnight / day transition)
   const todayDateStr = formatDateToIso(currentTime);
@@ -234,6 +243,8 @@ export function useSchedule() {
     groupName,
     subgroupFilter,
     setSubgroupFilter: updateSubgroupFilter,
+    foreignLanguagePreference: foreignLang,
+    setForeignLanguagePreference: updateForeignLang,
     changeGroup,
     subjects,
     prevWeek,

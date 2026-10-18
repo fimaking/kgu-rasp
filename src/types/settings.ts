@@ -36,6 +36,7 @@ export interface UserSettings {
     homeworkReminderHours: number; // e.g. 12 or 24 hrs before
     overdueAlert: boolean;
   };
+  foreignLanguagePreference?: 'all' | 'de' | 'en' | 'fr';
   lastSyncTimestamp: string | null;
   autoSync: boolean;
 }
@@ -44,6 +45,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   groupId: 8953,
   groupName: '26-ИСбо-4',
   subgroupPreference: 1,
+  foreignLanguagePreference: 'de',
   theme: 'dark',
   visualTheme: 'oled',
   accentColor: '#007AFF',

@@ -11,6 +11,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { ThemeMode } from '../../types/settings';
+import { APP_VERSION } from '../../utils/version';
 
 export type NavTab = 'today' | 'schedule' | 'homework' | 'calendar' | 'settings';
 
@@ -24,6 +25,7 @@ interface SidebarProps {
   themeMode: ThemeMode;
   isDark: boolean;
   onToggleTheme: () => void;
+  onOpenGroupSelect?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   groupName = '26-ИСбо-4',
   isDark,
   onToggleTheme,
+  onOpenGroupSelect,
 }) => {
   const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: number; badgeVariant?: 'red' | 'blue' }[] = [
     {
@@ -80,10 +83,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             КГУ Студент
           </h1>
           <div className="mt-1 flex items-center">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue dark:text-blue-400 border border-apple-blue/25 tracking-tight">
-              <span className="w-1.5 h-1.5 rounded-full bg-apple-blue dark:bg-blue-400 animate-pulse" />
-              {groupName}
-            </span>
+            {onOpenGroupSelect ? (
+              <button
+                type="button"
+                onClick={onOpenGroupSelect}
+                title="Нажмите, чтобы сменить учебную группу"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue dark:text-blue-400 border border-apple-blue/25 tracking-tight hover:bg-apple-blue/20 transition-all cursor-pointer active:scale-95"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-apple-blue dark:bg-blue-400 animate-pulse" />
+                <span>{groupName}</span>
+                <span className="text-[9px] opacity-70 ml-0.5">▾</span>
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue dark:text-blue-400 border border-apple-blue/25 tracking-tight">
+                <span className="w-1.5 h-1.5 rounded-full bg-apple-blue dark:bg-blue-400 animate-pulse" />
+                {groupName}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -143,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-apple-indigo" />}
           <span>{isDark ? 'Светлая тема' : 'Тёмная тема'}</span>
         </button>
-        <span className="text-[11px] text-apple-gray-400 font-mono">v1.0</span>
+        <span className="text-[11px] text-apple-gray-400 font-mono font-medium">{APP_VERSION}</span>
       </div>
     </aside>
   );

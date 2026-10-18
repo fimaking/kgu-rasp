@@ -23,13 +23,16 @@ try {
     }
   }
 
-  // Purge legacy showcase themes (e.g. cyber-violet, electric-mint) and lock to standard theme
+  // Clean up legacy prototype themes if present without wiping legitimate user customizations
   const currentSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
   if (currentSettings) {
     const parsed = JSON.parse(currentSettings);
-    if (parsed.visualTheme !== 'oled' || parsed.accentColor !== '#007AFF') {
+    const legacyThemes = ['cyber-violet', 'electric-mint', 'acid-lime', 'cyber'];
+    if (legacyThemes.includes(parsed.visualTheme)) {
       parsed.visualTheme = 'oled';
-      parsed.accentColor = '#007AFF';
+      if (parsed.accentColor === '#B5179E') {
+        parsed.accentColor = '#007AFF';
+      }
       localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
     }
   }

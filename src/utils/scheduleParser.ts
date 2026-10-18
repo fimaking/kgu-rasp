@@ -81,20 +81,23 @@ export function filterLessonsBySubgroup(
     номерПодгруппы?: number;
   },
   subgroupPreference: number = 0,
-  groupId: number = 8953
+  groupId: number = 8953,
+  foreignLangPreference: 'all' | 'de' | 'en' | 'fr' = 'de'
 ): boolean {
   const rawDiscipline = (lesson.rawDiscipline || lesson.дисциплина || '').toLowerCase();
 
-  // If group 8953 (26-ИСбо-4), preserve user's German language preference if foreign language
-  if (groupId === 8953) {
+  // If group 8953 (26-ИСбо-4), filter by user's chosen foreign language
+  if (groupId === 8953 && foreignLangPreference !== 'all') {
     const isForeignLang =
       rawDiscipline.includes('иностранный язык') ||
       rawDiscipline.includes('англ') ||
       rawDiscipline.includes('франц') ||
       rawDiscipline.includes('немец');
 
-    if (isForeignLang && !rawDiscipline.includes('немец')) {
-      return false;
+    if (isForeignLang) {
+      if (foreignLangPreference === 'de' && !rawDiscipline.includes('немец')) return false;
+      if (foreignLangPreference === 'en' && !rawDiscipline.includes('англ')) return false;
+      if (foreignLangPreference === 'fr' && !rawDiscipline.includes('франц')) return false;
     }
   }
 

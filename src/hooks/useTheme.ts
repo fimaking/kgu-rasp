@@ -32,11 +32,8 @@ export function useTheme() {
   const [settings, setSettings] = useState(() => StorageService.getSettings());
 
   const themeMode = settings.theme || DEFAULT_SETTINGS.theme;
-  const visualTheme =
-    settings.visualTheme && !['cyber-violet', 'cyber', 'electric-mint', 'acid-lime'].includes(settings.visualTheme)
-      ? settings.visualTheme
-      : 'oled';
-  const accentColor = settings.accentColor === '#B5179E' ? '#007AFF' : settings.accentColor || '#007AFF';
+  const visualTheme = settings.visualTheme || DEFAULT_SETTINGS.visualTheme;
+  const accentColor = settings.accentColor || DEFAULT_SETTINGS.accentColor;
   const fontFamily = settings.fontFamily || DEFAULT_SETTINGS.fontFamily;
   const fontScale = settings.fontScale || DEFAULT_SETTINGS.fontScale;
   const appRadius = settings.appRadius || DEFAULT_SETTINGS.appRadius;
@@ -160,6 +157,8 @@ export function useTheme() {
   }, []);
 
   return {
+    settings,
+    updateSetting,
     themeMode,
     isDark,
     visualTheme,
