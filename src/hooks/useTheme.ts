@@ -11,6 +11,8 @@ import {
   DEFAULT_SETTINGS,
 } from '../types/settings';
 import { StorageService } from '../services/storageService';
+import { SyncService } from '../services/syncService';
+import { RealtimeSyncService } from '../services/realtimeSync';
 
 function hexToRgb(hex: string): string {
   const match = ACCENT_COLORS.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
@@ -121,6 +123,8 @@ export function useTheme() {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       StorageService.saveSettings(next);
+      SyncService.pushToCloud();
+      RealtimeSyncService.broadcast();
       return next;
     });
   }, []);
@@ -152,9 +156,31 @@ export function useTheme() {
         showTeacherInitials: DEFAULT_SETTINGS.showTeacherInitials,
       };
       StorageService.saveSettings(next);
+      SyncService.pushToCloud();
+      RealtimeSyncService.broadcast();
       return next;
     });
   }, []);
+
+  const reload = useCallback(() => {
+    setSettings(StorageService.getSettings());
+  }, []);
+
+  useEffect(() => {
+    const unsub = RealtimeSyncService.onUpdate(() => {
+      reload();
+    });
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'ksu_student_settings_v2') {
+        reload();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      unsub();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [reload]);
 
   return {
     settings,
@@ -181,5 +207,6 @@ export function useTheme() {
     setReducedMotion,
     setShowTeacherInitials,
     resetCustomizations,
+    reload,
   };
 }

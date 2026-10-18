@@ -240,4 +240,49 @@ describe('RealtimeSyncService - Offline-First & Multi-Device Sync', () => {
 
     expect(localStorage.getItem('ksu_student_pending_sync')).toBe('true');
   });
+
+  it('synchronizes user settings (group, subgroup, language, visual theme) across devices', () => {
+    // Local default settings
+    const initialSettings = StorageService.getSettings();
+    expect(initialSettings.groupId).toBe(8953);
+    expect(initialSettings.subgroupPreference).toBe(1);
+
+    // Incoming remote payload with customized settings from another device
+    const remotePayload: RealtimeSyncPayload = {
+      version: '2.0',
+      senderId: 'dev_laptop_111',
+      updatedAt: '2026-10-18T15:00:00.000Z',
+      homework: [],
+      events: [],
+      deletedHwIds: [],
+      settings: {
+        ...initialSettings,
+        groupId: 8954,
+        groupName: '26-ИСбо-5',
+        subgroupPreference: 2,
+        foreignLanguagePreference: 'en',
+        visualTheme: 'emerald',
+        accentColor: '#34C759',
+      },
+    };
+
+    let notified = false;
+    const unsub = RealtimeSyncService.onUpdate(() => {
+      notified = true;
+    });
+
+    const changed = RealtimeSyncService.applyPayload(remotePayload);
+    unsub();
+
+    expect(changed).toBe(true);
+    expect(notified).toBe(true);
+
+    const updatedSettings = StorageService.getSettings();
+    expect(updatedSettings.groupId).toBe(8954);
+    expect(updatedSettings.groupName).toBe('26-ИСбо-5');
+    expect(updatedSettings.subgroupPreference).toBe(2);
+    expect(updatedSettings.foreignLanguagePreference).toBe('en');
+    expect(updatedSettings.visualTheme).toBe('emerald');
+    expect(updatedSettings.accentColor).toBe('#34C759');
+  });
 });

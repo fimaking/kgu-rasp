@@ -21,8 +21,6 @@ import {
   RotateCw,
   Palette,
   Type,
-  Globe,
-  Calendar,
 } from 'lucide-react';
 import {
   ThemeMode,
@@ -52,10 +50,6 @@ interface SettingsViewProps {
   onFontFamilyChange?: (font: FontFamily) => void;
   groupId?: number;
   groupName?: string;
-  subgroupPreference?: number;
-  onSubgroupChange?: (subgroup: number) => void;
-  foreignLanguagePreference?: 'all' | 'de' | 'en' | 'fr';
-  onForeignLanguageChange?: (lang: 'all' | 'de' | 'en' | 'fr') => void;
   onOpenGroupSelect?: () => void;
   lessons?: ParsedLesson[];
   onShowToast: (type: 'success' | 'error' | 'info', title: string, msg?: string) => void;
@@ -75,10 +69,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onFontFamilyChange,
   groupId = 8953,
   groupName = '26-ИСбо-4',
-  subgroupPreference = 1,
-  onSubgroupChange,
-  foreignLanguagePreference = 'de',
-  onForeignLanguageChange,
   onOpenGroupSelect,
   lessons = [],
   onShowToast,
@@ -478,86 +468,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </a>
           </div>
 
-          {/* Subgroup Selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
-            <span className="text-xs text-apple-gray-500 font-medium">Выбранная подгруппа:</span>
-            <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 p-1 rounded-xl">
-              {[
-                { id: 1, label: '1-я подгруппа (а)' },
-                { id: 2, label: '2-я подгруппа (б)' },
-                { id: 0, label: 'Все пары' },
-              ].map((sg) => (
-                <button
-                  key={sg.id}
-                  onClick={() => onSubgroupChange?.(sg.id)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    subgroupPreference === sg.id
-                      ? 'bg-apple-blue text-white shadow-apple-sm'
-                      : 'text-apple-gray-700 dark:text-apple-gray-300 hover:text-apple-blue'
-                  }`}
-                >
-                  {sg.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Foreign Language Selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
-            <span className="text-xs text-apple-gray-500 font-medium flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-apple-blue" />
-              <span>Изучаемый иностранный язык:</span>
-            </span>
-            <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 p-1 rounded-xl flex-wrap">
-              {[
-                { id: 'de' as const, label: 'Немецкий' },
-                { id: 'en' as const, label: 'Английский' },
-                { id: 'fr' as const, label: 'Французский' },
-                { id: 'all' as const, label: 'Все' },
-              ].map((lang) => (
-                <button
-                  key={lang.id}
-                  onClick={() => onForeignLanguageChange?.(lang.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    foreignLanguagePreference === lang.id
-                      ? 'bg-apple-blue text-white shadow-apple-sm'
-                      : 'text-apple-gray-700 dark:text-apple-gray-300 hover:text-apple-blue'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* iCalendar (.ics) Export Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
-            <div>
-              <div className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-apple-blue" />
-                <span>Экспорт расписания в системный календарь:</span>
-              </div>
-              <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 mt-0.5">
-                Apple Календарь, Google Календарь, Outlook с авто-напоминаниями за 15 мин
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Download className="w-3.5 h-3.5 text-apple-blue" />}
-              onClick={() => {
-                downloadIcsSchedule(lessons, groupName);
-                onShowToast(
-                  'success',
-                  'Расписание .ics скачано!',
-                  'Откройте файл, чтобы добавить все пары в календарь телефона или ПК.'
-                );
-              }}
-            >
-              Скачать .ics
-            </Button>
-          </div>
-
           <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
             <span className="text-xs text-apple-gray-500 font-medium">Статус расписания КГУ:</span>
             <div className="flex items-center gap-2">
@@ -922,6 +832,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={handleExportJson}
           >
             Экспорт в JSON
+          </Button>
+
+          <Button
+            variant="secondary"
+            icon={<Download className="w-4 h-4 text-apple-blue" />}
+            onClick={() => {
+              downloadIcsSchedule(lessons, groupName);
+              onShowToast(
+                'success',
+                'Расписание .ics скачано!',
+                'Откройте файл, чтобы добавить все пары в календарь телефона или ПК.'
+              );
+            }}
+          >
+            Экспорт в iCal (.ics)
           </Button>
 
           <Button

@@ -1,5 +1,6 @@
 import { Homework } from '../types/homework';
 import { CalendarCustomEvent } from '../types/calendar';
+import { UserSettings } from '../types/settings';
 import { StorageService } from './storageService';
 
 const FIREBASE_URL_STORAGE = 'ksu_student_firebase_url';
@@ -14,6 +15,7 @@ export interface CloudPayload {
   events: CalendarCustomEvent[];
   deletedHwIds?: string[];
   deletedEventIds?: string[];
+  settings?: UserSettings;
 }
 
 export function normalizeFirebaseUrl(url: string): string {
@@ -110,6 +112,7 @@ export class SyncService {
         events: StorageService.getEvents(),
         deletedHwIds: StorageService.getDeletedHomeworkIds(),
         deletedEventIds: StorageService.getDeletedEventIds(),
+        settings: StorageService.getSettings(),
       };
 
       const res = await fetch(firebaseUrl, {
@@ -236,6 +239,25 @@ export class SyncService {
         }
       }
 
+      // 5. Merge settings
+      let settingsChanged = false;
+      if (remoteData.settings && typeof remoteData.settings === 'object') {
+        const localSettings = StorageService.getSettings();
+        const remoteSettings = remoteData.settings;
+        let diff = false;
+        const mergedSettings = { ...localSettings };
+        for (const key of Object.keys(remoteSettings)) {
+          if (remoteSettings[key] !== undefined && remoteSettings[key] !== (localSettings as any)[key]) {
+            (mergedSettings as any)[key] = remoteSettings[key];
+            diff = true;
+          }
+        }
+        if (diff) {
+          StorageService.saveSettings(mergedSettings);
+          settingsChanged = true;
+        }
+      }
+
       const updateTimestamp = remoteData.updatedAt || new Date().toISOString();
       localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
 
@@ -245,7 +267,7 @@ export class SyncService {
       }
 
       return {
-        updated: hwChanged || eventsChanged,
+        updated: hwChanged || eventsChanged || settingsChanged,
         countHw: finalHw.length,
       };
     } catch (e: any) {
@@ -271,6 +293,7 @@ export class SyncService {
       events: StorageService.getEvents(),
       deletedHwIds: StorageService.getDeletedHomeworkIds(),
       deletedEventIds: StorageService.getDeletedEventIds(),
+      settings: StorageService.getSettings(),
     };
 
     const jsonStr = JSON.stringify(payload);
@@ -366,6 +389,14 @@ export class SyncService {
       StorageService.saveHomework(payload.homework);
       if (Array.isArray(payload.events)) {
         StorageService.saveEvents(payload.events);
+      }
+
+      if (payload.settings && typeof payload.settings === 'object') {
+        const localSettings = StorageService.getSettings();
+        StorageService.saveSettings({
+          ...localSettings,
+          ...payload.settings,
+        });
       }
 
       const updateTimestamp = payload.updatedAt || new Date().toISOString();

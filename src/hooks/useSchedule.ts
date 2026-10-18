@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ParsedLesson, RaspInfo, WeekDaySchedule } from '../types/schedule';
 import { ScheduleService } from '../services/scheduleService';
 import { StorageService } from '../services/storageService';
+import { SyncService } from '../services/syncService';
+import { RealtimeSyncService } from '../services/realtimeSync';
 import {
   getMondayOfWeek,
   getDaysOfWeek,
@@ -74,21 +76,33 @@ export function useSchedule() {
     setSubgroupFilter(sg);
     const s = StorageService.getSettings();
     StorageService.saveSettings({ ...s, subgroupPreference: sg });
+    SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
   }, []);
 
   const updateForeignLang = useCallback((lang: 'all' | 'de' | 'en' | 'fr') => {
     setForeignLang(lang);
     const s = StorageService.getSettings();
     StorageService.saveSettings({ ...s, foreignLanguagePreference: lang });
+    SyncService.pushToCloud();
+    RealtimeSyncService.broadcast();
   }, []);
 
   const changeGroup = useCallback(
-    async (newGroupId: number, newGroupName: string, newSubgroup?: number) => {
+    async (
+      newGroupId: number,
+      newGroupName: string,
+      newSubgroup?: number,
+      newForeignLang?: 'all' | 'de' | 'en' | 'fr'
+    ) => {
       setGroupId(newGroupId);
       setGroupName(newGroupName);
       const sg = typeof newSubgroup === 'number' ? newSubgroup : subgroupFilter;
       if (typeof newSubgroup === 'number') {
         setSubgroupFilter(newSubgroup);
+      }
+      if (newForeignLang) {
+        setForeignLang(newForeignLang);
       }
       const currentSettings = StorageService.getSettings();
       StorageService.saveSettings({
@@ -96,7 +110,11 @@ export function useSchedule() {
         groupId: newGroupId,
         groupName: newGroupName,
         subgroupPreference: sg,
+        ...(newForeignLang ? { foreignLanguagePreference: newForeignLang } : {}),
       });
+
+      SyncService.pushToCloud();
+      RealtimeSyncService.broadcast();
 
       const cached = ScheduleService.getCachedSchedule(newGroupId);
       if (cached && cached.lessons.length > 0) {
@@ -111,6 +129,40 @@ export function useSchedule() {
     },
     [loadData, subgroupFilter]
   );
+
+  const reload = useCallback(() => {
+    const s = StorageService.getSettings();
+    const newGid = s.groupId || 8953;
+    const newGname = s.groupName || '26-ИСбо-4';
+    const newSg = s.subgroupPreference ?? 1;
+    const newLang = s.foreignLanguagePreference || 'de';
+
+    setGroupId((prevGid) => {
+      if (prevGid !== newGid) {
+        loadData(false, newGid);
+      }
+      return newGid;
+    });
+    setGroupName(newGname);
+    setSubgroupFilter(newSg);
+    setForeignLang(newLang);
+  }, [loadData]);
+
+  useEffect(() => {
+    const unsub = RealtimeSyncService.onUpdate(() => {
+      reload();
+    });
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'ksu_student_settings_v2') {
+        reload();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      unsub();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [reload]);
 
   // Real-time minute ticker for live countdowns & schedule status
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
@@ -252,5 +304,6 @@ export function useSchedule() {
     goToToday,
     goToDate,
     refresh: () => loadData(true),
+    reload,
   };
 }

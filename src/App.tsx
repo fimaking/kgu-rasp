@@ -92,6 +92,8 @@ export const App: React.FC = () => {
         if (res.success) {
           homework.reload();
           calendar.reload();
+          schedule.reload();
+          theme.reload();
           showToast('success', 'Синхронизация завершена!', `Успешно перенесено заданий: ${res.countHw}`);
         } else {
           showToast('error', 'Ошибка импорта', res.error);
@@ -107,6 +109,8 @@ export const App: React.FC = () => {
           const res = await SyncService.pullFromCloud();
           homework.reload();
           calendar.reload();
+          schedule.reload();
+          theme.reload();
           if (res.error) {
             showToast('error', 'Ошибка подключения', res.error);
           } else {
@@ -124,6 +128,8 @@ export const App: React.FC = () => {
           const res = await SyncService.pullFromCloud();
           homework.reload();
           calendar.reload();
+          schedule.reload();
+          theme.reload();
           showToast('success', 'Комната синхронизации подключена!', `Синхронизировано заданий: ${res.countHw ?? 0}`);
           window.history.replaceState(null, '', window.location.pathname);
         }
@@ -131,7 +137,7 @@ export const App: React.FC = () => {
     };
 
     checkHashTransfer();
-  }, [homework, calendar, showToast]);
+  }, [homework, calendar, schedule, theme, showToast]);
 
   const openCreateHomework = (
     options?:
@@ -318,16 +324,14 @@ export const App: React.FC = () => {
                 onFontFamilyChange={theme.setFontFamily}
                 groupId={schedule.groupId}
                 groupName={schedule.groupName}
-                subgroupPreference={schedule.subgroupFilter}
-                onSubgroupChange={schedule.setSubgroupFilter}
-                foreignLanguagePreference={schedule.foreignLanguagePreference}
-                onForeignLanguageChange={schedule.setForeignLanguagePreference}
                 onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
                 lessons={schedule.allLessons || schedule.lessons}
                 onShowToast={showToast}
                 onDataImported={() => {
                   homework.reload();
                   calendar.reload();
+                  schedule.reload();
+                  theme.reload();
                 }}
                 onRefreshSchedule={handleRefreshSchedule}
                 lastUpdated={schedule.lastUpdated}
@@ -373,10 +377,11 @@ export const App: React.FC = () => {
         currentGroupId={schedule.groupId}
         currentGroupName={schedule.groupName}
         currentSubgroup={schedule.subgroupFilter}
-        onSelectGroup={(newGroupId, newGroupName, newSubgroup) => {
-          schedule.changeGroup(newGroupId, newGroupName, newSubgroup);
+        currentForeignLanguage={schedule.foreignLanguagePreference}
+        onSelectGroup={(newGroupId, newGroupName, newSubgroup, newForeignLang) => {
+          schedule.changeGroup(newGroupId, newGroupName, newSubgroup, newForeignLang);
           setIsGroupSelectOpen(false);
-          showToast('success', 'Группа обновлена', `Выбрана группа ${newGroupName}`);
+          showToast('success', 'Настройки группы обновлены', `Выбрана группа ${newGroupName}`);
         }}
       />
 

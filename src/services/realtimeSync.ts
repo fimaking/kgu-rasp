@@ -2,6 +2,7 @@ import { StorageService } from './storageService';
 import { SyncService } from './syncService';
 import { Homework } from '../types/homework';
 import { CalendarCustomEvent } from '../types/calendar';
+import { UserSettings } from '../types/settings';
 
 const REALTIME_ROOM_STORAGE = 'ksu_student_realtime_room';
 const DEVICE_ID_STORAGE = 'ksu_student_device_id';
@@ -30,6 +31,7 @@ export interface RealtimeSyncPayload {
   events: CalendarCustomEvent[];
   deletedHwIds: string[];
   deletedEventIds?: string[];
+  settings?: UserSettings;
 }
 
 type SyncCallback = () => void;
@@ -209,6 +211,7 @@ export class RealtimeSyncService {
       events: StorageService.getEvents(),
       deletedHwIds: StorageService.getDeletedHomeworkIds(),
       deletedEventIds: StorageService.getDeletedEventIds(),
+      settings: StorageService.getSettings(),
     };
 
     // 2. Broadcast immediately to other tabs on this device via BroadcastChannel
@@ -319,7 +322,26 @@ export class RealtimeSyncService {
         }
       }
 
-      // 5. Detect changes compared to BEFORE payload was applied
+      // 5. Smart merge settings
+      let settingsChanged = false;
+      if (data.settings && typeof data.settings === 'object') {
+        const localSettings = StorageService.getSettings();
+        const remoteSettings = data.settings;
+        let diff = false;
+        const mergedSettings = { ...localSettings };
+        for (const key of Object.keys(remoteSettings)) {
+          if ((remoteSettings as any)[key] !== undefined && (remoteSettings as any)[key] !== (localSettings as any)[key]) {
+            (mergedSettings as any)[key] = (remoteSettings as any)[key];
+            diff = true;
+          }
+        }
+        if (diff) {
+          StorageService.saveSettings(mergedSettings);
+          settingsChanged = true;
+        }
+      }
+
+      // 6. Detect changes compared to BEFORE payload was applied
       const hwChanged =
         hasNewTombstones ||
         prevHomework.length !== finalHw.length ||
@@ -329,19 +351,20 @@ export class RealtimeSyncService {
         StorageService.recordLastModified(data.updatedAt);
       }
 
-      // 6. ALWAYS notify UI subscribers immediately if homework, tombstones or events changed!
-      if (hwChanged || eventsChanged) {
+      // 7. ALWAYS notify UI subscribers immediately if homework, tombstones, events, or settings changed!
+      const anyChanged = hwChanged || eventsChanged || settingsChanged;
+      if (anyChanged) {
         console.log('[RealtimeSync] Merged changes applied to local storage. Notifying subscribers...');
         this.notifySubscribers();
       }
 
-      // 7. If local had items or newer edits that remote was missing, broadcast back merged state
+      // 8. If local had items or newer edits that remote was missing, broadcast back merged state
       if (localHadUniqueOrNewer) {
         console.log('[RealtimeSync] Local had unique or newer items. Propagating superset to peers...');
         this.broadcast();
       }
 
-      return hwChanged || eventsChanged;
+      return anyChanged;
     } catch (err) {
       console.error('[RealtimeSync] applyPayload error', err);
       return false;

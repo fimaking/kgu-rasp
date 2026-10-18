@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Users, Check, School, BookOpen, X, Sparkles } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Users, Check, School, BookOpen, X, Sparkles, Globe } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { ScheduleService } from '../../services/scheduleService';
 import { KsuGroup } from '../../types/schedule';
@@ -10,7 +10,8 @@ interface GroupSelectModalProps {
   currentGroupId: number;
   currentGroupName: string;
   currentSubgroup: number;
-  onSelectGroup: (groupId: number, groupName: string, subgroup: number) => void;
+  currentForeignLanguage?: 'all' | 'de' | 'en' | 'fr';
+  onSelectGroup: (groupId: number, groupName: string, subgroup: number, foreignLang: 'all' | 'de' | 'en' | 'fr') => void;
 }
 
 export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
@@ -19,12 +20,21 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
   currentGroupId,
   currentGroupName,
   currentSubgroup,
+  currentForeignLanguage = 'all',
   onSelectGroup,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubgroup, setSelectedSubgroup] = useState<number>(currentSubgroup);
+  const [selectedForeignLang, setSelectedForeignLang] = useState<'all' | 'de' | 'en' | 'fr'>(currentForeignLanguage);
   const [selectedFaculty, setSelectedFaculty] = useState<string>('all');
   const [selectedCourse, setSelectedCourse] = useState<number | 'all'>('all');
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedSubgroup(currentSubgroup);
+      setSelectedForeignLang(currentForeignLanguage);
+    }
+  }, [isOpen, currentSubgroup, currentForeignLanguage]);
 
   // Load all 381 groups
   const allGroups = useMemo<KsuGroup[]>(() => {
@@ -81,13 +91,16 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
     });
   }, [allGroups, searchQuery, selectedFaculty, selectedCourse]);
 
+  const hasSettingsChanges =
+    selectedSubgroup !== currentSubgroup || selectedForeignLang !== currentForeignLanguage;
+
   const handlePickGroup = (group: KsuGroup) => {
-    onSelectGroup(group.id, group.name, selectedSubgroup);
+    onSelectGroup(group.id, group.name, selectedSubgroup, selectedForeignLang);
     onClose();
   };
 
-  const handleApplyCurrentGroupSubgroup = () => {
-    onSelectGroup(currentGroupId, currentGroupName, selectedSubgroup);
+  const handleApplyCurrentGroupSettings = () => {
+    onSelectGroup(currentGroupId, currentGroupName, selectedSubgroup, selectedForeignLang);
     onClose();
   };
 
@@ -95,58 +108,91 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Выбор группы и подгруппы"
+      title="Выбор группы, подгруппы и языка"
       subtitle="Расписание КГУ • Все 381 группа институтов и колледжа"
       maxWidth="xl"
     >
       <div className="space-y-5 select-none">
-        {/* 1. Subgroup Segmented Control */}
-        <div className="p-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/5 dark:border-white/10 space-y-2.5">
+        {/* 1. Subgroup & Foreign Language Configuration */}
+        <div className="p-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/5 dark:border-white/10 space-y-3.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-apple-blue" />
-              <span>Ваша подгруппа</span>
+              <span>Подгруппа и язык</span>
             </span>
-            {currentSubgroup !== selectedSubgroup && (
+            {hasSettingsChanges && (
               <button
-                onClick={handleApplyCurrentGroupSubgroup}
-                className="text-xs font-bold text-apple-blue hover:underline"
+                onClick={handleApplyCurrentGroupSettings}
+                className="text-xs font-bold text-apple-blue hover:underline bg-apple-blue/10 dark:bg-apple-blue/20 px-2.5 py-1 rounded-lg transition-colors"
               >
-                Сохранить подгруппу
+                Сохранить настройки
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-3 p-1 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] gap-1">
-            {[
-              { id: 0, label: 'Вся группа' },
-              { id: 1, label: '1-я подгруппа' },
-              { id: 2, label: '2-я подгруппа' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSelectedSubgroup(tab.id)}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                  selectedSubgroup === tab.id
-                    ? 'bg-white dark:bg-zinc-800 text-apple-gray-900 dark:text-white shadow-apple-sm font-bold scale-[1.01]'
-                    : 'text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-gray-900 dark:hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Subgroup Segmented Control */}
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-semibold text-apple-gray-500 dark:text-apple-gray-400">
+              Ваша подгруппа:
+            </div>
+            <div className="grid grid-cols-3 p-1 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] gap-1">
+              {[
+                { id: 0, label: 'Вся группа' },
+                { id: 1, label: '1-я подгруппа' },
+                { id: 2, label: '2-я подгруппа' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSelectedSubgroup(tab.id)}
+                  className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                    selectedSubgroup === tab.id
+                      ? 'bg-white dark:bg-zinc-800 text-apple-gray-900 dark:text-white shadow-apple-sm font-bold scale-[1.01]'
+                      : 'text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Foreign Language Segmented Control */}
+          <div className="space-y-1.5 pt-2 border-t border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-apple-gray-500 dark:text-apple-gray-400 flex items-center gap-1">
+                <Globe className="w-3 h-3 text-apple-blue" />
+                <span>Изучаемый иностранный язык:</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-4 p-1 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] gap-1">
+              {[
+                { id: 'de' as const, label: 'Немецкий' },
+                { id: 'en' as const, label: 'Английский' },
+                { id: 'fr' as const, label: 'Французский' },
+                { id: 'all' as const, label: 'Все языки' },
+              ].map((lang) => (
+                <button
+                  key={lang.id}
+                  type="button"
+                  onClick={() => setSelectedForeignLang(lang.id)}
+                  className={`py-2 px-1 rounded-lg text-xs font-semibold transition-all text-center truncate ${
+                    selectedForeignLang === lang.id
+                      ? 'bg-apple-blue text-white shadow-apple-sm font-bold scale-[1.01]'
+                      : 'text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 leading-normal">
-            {selectedSubgroup === 0 && 'Отображаются все пары обеих подгрупп без исключений.'}
-            {selectedSubgroup === 1 && (
-              <span>
-                Отображаются общие пары и 1-я подгруппа.
-                {currentGroupId === 8953 && ' Для 26-ИСбо-4 выбран немецкий язык.'}
-              </span>
-            )}
+            {selectedSubgroup === 0 && 'Отображаются все пары обеих подгрупп.'}
+            {selectedSubgroup === 1 && 'Отображаются общие пары и 1-я подгруппа.'}
             {selectedSubgroup === 2 && 'Отображаются общие пары и 2-я подгруппа.'}
+            {selectedForeignLang !== 'all' && ` Фильтр языка: ${selectedForeignLang === 'de' ? 'Немецкий' : selectedForeignLang === 'en' ? 'Английский' : 'Французский'}.`}
           </p>
         </div>
 
