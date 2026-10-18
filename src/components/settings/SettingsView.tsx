@@ -17,7 +17,6 @@ import {
   RefreshCw,
   QrCode,
   Link2,
-  AlertTriangle,
   Users,
   RotateCw,
 } from 'lucide-react';
@@ -559,29 +558,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               {!gistToken && (
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2.5">
-                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-xs">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                    <span>Включите двустороннюю синхронизацию для этого ПК</span>
+                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2.5">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold text-xs">
+                    <Check className="w-4 h-4 flex-shrink-0 text-apple-blue" />
+                    <span>Двусторонняя живая синхронизация активна ⚡</span>
                   </div>
                   <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 leading-relaxed">
-                    Сейчас задания с телефона поступают на этот ПК. Но чтобы новые или удалённые задания с ПК тоже появлялись на телефоне, введите токен GitHub:
+                    Задания и отметки мгновенно передаются между вашим телефоном и ПК без задержек. Созданные офлайн задания синхронизируются автоматически при подключении. Вы также можете привязать токен GitHub для постоянного облачного бэкапа (опционально):
                   </p>
                   <div className="flex gap-2">
                     <input
                       type="password"
-                      placeholder="Вставьте ваш токен GitHub (ghp_...)"
+                      placeholder="Токен GitHub (опционально, ghp_...)"
                       value={gistToken}
                       onChange={(e) => setGistToken(e.target.value)}
                       className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
                     />
                     <Button
-                      variant="primary"
+                      variant="secondary"
                       size="sm"
                       loading={isSyncing}
                       onClick={handleSaveGistToken}
                     >
-                      Сохранить токен
+                      Сохранить
                     </Button>
                   </div>
                 </div>

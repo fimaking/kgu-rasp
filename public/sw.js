@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v52';
+const CACHE_NAME = 'ksu-student-cache-v54';
 
 const STATIC_ASSETS = [
   './',
@@ -70,6 +70,8 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('restful-api.dev') ||
     url.hostname.includes('api.github.com') ||
     url.hostname.includes('broker.emqx.io') ||
+    url.hostname.includes('broker.hivemq.com') ||
+    url.hostname.includes('mosquitto.org') ||
     url.hostname.includes('corsproxy')
   ) {
     event.respondWith(

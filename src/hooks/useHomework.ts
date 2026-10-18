@@ -106,17 +106,21 @@ export function useHomework() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Auto-sync from cloud: window focus, mobile visibility change, and snappy 2.5s polling
+  // Auto-sync from cloud: window focus, mobile visibility change, and network recovery
   useEffect(() => {
     let isMounted = true;
 
     const performSync = async () => {
-      if (!SyncService.isSyncConfigured()) return;
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
 
-      const res = await SyncService.pullFromCloud();
-      if (res.updated && isMounted) {
-        setItems(StorageService.getHomework());
+      RealtimeSyncService.checkAndFlushPendingSync();
+
+      if (SyncService.getGistToken()) {
+        const res = await SyncService.pullFromCloud();
+        if (res.updated && isMounted) {
+          setItems(StorageService.getHomework());
+        }
       }
     };
 
@@ -129,9 +133,10 @@ export function useHomework() {
 
     window.addEventListener('focus', handleVisibility);
     document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('online', handleVisibility);
 
-    // Poll every 2.5 seconds while page is visible
-    const timer = setInterval(performSync, 2500);
+    // Periodic sync check every 30 seconds when visible and online
+    const timer = setInterval(performSync, 30000);
 
     // Initial sync
     performSync();
@@ -140,6 +145,7 @@ export function useHomework() {
       isMounted = false;
       window.removeEventListener('focus', handleVisibility);
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleVisibility);
       clearInterval(timer);
     };
   }, []);

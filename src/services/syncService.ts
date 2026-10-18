@@ -17,6 +17,7 @@ export interface CloudPayload {
   homework: Homework[];
   events: CalendarCustomEvent[];
   deletedHwIds?: string[];
+  deletedEventIds?: string[];
   cloudRoomId?: string;
 }
 
@@ -117,6 +118,7 @@ export class SyncService {
       homework: StorageService.getHomework(),
       events: StorageService.getEvents(),
       deletedHwIds: StorageService.getDeletedHomeworkIds(),
+      deletedEventIds: StorageService.getDeletedEventIds(),
     };
 
     const jsonStr = JSON.stringify(payload);
@@ -195,6 +197,9 @@ export class SyncService {
       if (Array.isArray(payload.deletedHwIds)) {
         StorageService.recordDeletedHomeworkIds(payload.deletedHwIds);
       }
+      if (Array.isArray(payload.deletedEventIds)) {
+        StorageService.recordDeletedEventIds(payload.deletedEventIds);
+      }
 
       // 2. Save active tasks and events
       StorageService.saveHomework(payload.homework);
@@ -245,6 +250,7 @@ export class SyncService {
         homework: StorageService.getHomework(),
         events: StorageService.getEvents(),
         deletedHwIds: StorageService.getDeletedHomeworkIds(),
+        deletedEventIds: StorageService.getDeletedEventIds(),
       };
 
       const res = await fetch('https://api.github.com/gists', {
@@ -331,6 +337,9 @@ export class SyncService {
       if (Array.isArray(cloudData.deletedHwIds)) {
         StorageService.recordDeletedHomeworkIds(cloudData.deletedHwIds);
       }
+      if (Array.isArray(cloudData.deletedEventIds)) {
+        StorageService.recordDeletedEventIds(cloudData.deletedEventIds);
+      }
 
       // Save homework and events
       StorageService.saveHomework(cloudData.homework);
@@ -390,6 +399,7 @@ export class SyncService {
         homework: StorageService.getHomework(),
         events: StorageService.getEvents(),
         deletedHwIds: StorageService.getDeletedHomeworkIds(),
+        deletedEventIds: StorageService.getDeletedEventIds(),
       };
 
       // 1. Instant zero-auth realtime broadcast over HTTPS port 443
@@ -469,6 +479,7 @@ export class SyncService {
           homework: liveData.homework || [],
           events: liveData.events || [],
           deletedHwIds: liveData.deletedHwIds || [],
+          deletedEventIds: liveData.deletedEventIds || [],
         };
       }
     } catch (e) {
@@ -483,12 +494,18 @@ export class SyncService {
     const prevHomework = StorageService.getHomework();
     const prevEvents = StorageService.getEvents();
     const prevDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+    const prevDeletedEvtIds = new Set(StorageService.getDeletedEventIds());
 
-    // 2. Merge tombstones (any task deleted on either device stays deleted permanently)
+    // 2. Merge tombstones (any task or event deleted on either device stays deleted permanently)
     let hasNewTombstones = false;
     const allRemoteTombstones: string[] = [];
+    const allRemoteEvtTombstones: string[] = [];
+
     if (Array.isArray(gistPayload?.deletedHwIds)) allRemoteTombstones.push(...gistPayload.deletedHwIds);
     if (Array.isArray(roomPayload?.deletedHwIds)) allRemoteTombstones.push(...roomPayload.deletedHwIds);
+    if (Array.isArray(gistPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...gistPayload.deletedEventIds);
+    if (Array.isArray(roomPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...roomPayload.deletedEventIds);
+
     if (allRemoteTombstones.length > 0) {
       for (const id of allRemoteTombstones) {
         if (!prevDeletedIds.has(id)) {
@@ -497,7 +514,17 @@ export class SyncService {
       }
       StorageService.recordDeletedHomeworkIds(allRemoteTombstones);
     }
+
+    if (allRemoteEvtTombstones.length > 0) {
+      for (const id of allRemoteEvtTombstones) {
+        if (!prevDeletedEvtIds.has(id)) {
+          hasNewTombstones = true;
+        }
+      }
+      StorageService.recordDeletedEventIds(allRemoteEvtTombstones);
+    }
     const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+    const allDeletedEvtIds = new Set(StorageService.getDeletedEventIds());
 
     // 3. Collect remote homework items from both sources (prefer newer item)
     const remoteHwMap = new Map<string, Homework>();
@@ -547,13 +574,15 @@ export class SyncService {
 
     // 5. Merge custom calendar events
     let eventsChanged = false;
-    const remoteEvents = [...(gistPayload?.events || []), ...(roomPayload?.events || [])];
-    if (remoteEvents.length > 0) {
+    const remoteEvents = [...(gistPayload?.events || []), ...(roomPayload?.events || [])]
+      .filter((e) => !allDeletedEvtIds.has(e.id));
+    const localEvts = prevEvents.filter((e) => !allDeletedEvtIds.has(e.id));
+    if (remoteEvents.length > 0 || localEvts.length !== prevEvents.length) {
       const eventMap = new Map<string, CalendarCustomEvent>();
       for (const e of remoteEvents) {
         eventMap.set(e.id, e);
       }
-      for (const e of prevEvents) {
+      for (const e of localEvts) {
         if (!eventMap.has(e.id)) {
           eventMap.set(e.id, e);
           localHadUniqueOrNewer = true;

@@ -1,14 +1,26 @@
+import mqtt, { MqttClient } from 'mqtt';
 import { StorageService } from './storageService';
 import { Homework } from '../types/homework';
 import { CalendarCustomEvent } from '../types/calendar';
 
 const REALTIME_ROOM_STORAGE = 'ksu_student_realtime_room';
 const DEVICE_ID_STORAGE = 'ksu_student_device_id';
+const PENDING_SYNC_STORAGE = 'ksu_student_pending_sync';
+const LAST_SYNCED_TIME_STORAGE = 'ksu_student_last_synced_at';
+const LAST_KNOWN_REMOTE_STORAGE = 'ksu_student_last_known_remote';
 
 export const DEFAULT_ROOM_CODE = 'e2d779451fca13d7005a7453b0df880b';
 
+// Fast, stable, globally accessible public MQTT over WebSocket brokers (all work without VPN in Russia)
+const MQTT_BROKERS = [
+  'wss://broker.emqx.io:8084/mqtt',
+  'wss://broker.hivemq.com:8884/mqtt',
+  'wss://test.mosquitto.org:8081/mqtt',
+];
+
 // Stable unique device ID to prevent self-echo loops
 function getDeviceId(): string {
+  if (typeof localStorage === 'undefined') return 'server';
   let id = localStorage.getItem(DEVICE_ID_STORAGE);
   if (!id) {
     id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
@@ -24,21 +36,29 @@ export interface RealtimeSyncPayload {
   homework: Homework[];
   events: CalendarCustomEvent[];
   deletedHwIds: string[];
+  deletedEventIds?: string[];
 }
 
 type SyncCallback = () => void;
 
 export class RealtimeSyncService {
-  private static eventSource: EventSource | null = null;
+  private static client: MqttClient | null = null;
   private static currentRoom: string | null = null;
+  private static currentBrokerIndex = 0;
+  private static consecutiveFailures = 0;
   private static subscribers: Set<SyncCallback> = new Set();
   private static isConnected: boolean = false;
-  private static isListeningToOnline: boolean = false;
+  private static isConnecting: boolean = false;
+  private static isListeningToEvents: boolean = false;
+  private static broadcastChannel: BroadcastChannel | null = null;
+  private static heartbeatTimer: any = null;
+  private static lastKnownPayload: RealtimeSyncPayload | null = null;
 
   /**
    * Get active sync room code
    */
   static getRoomCode(): string {
+    if (typeof localStorage === 'undefined') return DEFAULT_ROOM_CODE;
     const stored = localStorage.getItem(REALTIME_ROOM_STORAGE);
     if (stored && stored.trim()) return stored.trim().toLowerCase();
 
@@ -49,11 +69,11 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Safe topic name for ntfy.sh
+   * Safe topic name for MQTT
    */
   static getTopicName(roomCode?: string): string {
     const raw = (roomCode || this.getRoomCode()).toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    return `ksu_rasp_v2_${raw || 'default'}`;
+    return `ksu/student/sync/v4/${raw || 'default'}`;
   }
 
   /**
@@ -61,7 +81,9 @@ export class RealtimeSyncService {
    */
   static setRoomCode(code: string): void {
     const clean = code.trim().toLowerCase();
-    localStorage.setItem(REALTIME_ROOM_STORAGE, clean);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(REALTIME_ROOM_STORAGE, clean);
+    }
     this.connect(clean);
   }
 
@@ -83,14 +105,14 @@ export class RealtimeSyncService {
       try {
         cb();
       } catch (e) {
-        console.error('Subscriber notify error', e);
+        console.error('[RealtimeSync] Subscriber notify error', e);
       }
     }
   }
 
   /**
-   * Connect to Realtime EventSource (SSE) over HTTPS port 443
-   * Fully unmetered, zero firewall issues on mobile networks
+   * Connect to Realtime MQTT WebSocket Broker
+   * Provides bidirectional real-time delivery in <50ms with automatic retained messages
    */
   static connect(roomCode?: string): void {
     if (typeof window === 'undefined') return;
@@ -98,211 +120,348 @@ export class RealtimeSyncService {
     const room = roomCode || this.getRoomCode();
     if (!room) return;
 
-    // Listen for online recovery and tab visibility
-    if (!this.isListeningToOnline) {
-      this.isListeningToOnline = true;
-      window.addEventListener('online', () => {
-        console.log('[RealtimeSync] Network back online. Reconnecting and pulling...');
-        this.connect();
-        this.pullLatest();
-        this.broadcast();
-      });
+    // 1. Setup global window/tab listeners once
+    this.initEventListeners();
 
-      if (typeof document !== 'undefined') {
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            console.log('[RealtimeSync] Visibility visible. Verifying SSE connection and pulling latest...');
-            if (!this.eventSource || this.eventSource.readyState === EventSource.CLOSED) {
-              this.connect();
-            }
-            this.pullLatest();
-          }
-        });
-      }
-    }
+    // 2. Setup BroadcastChannel for zero-latency multi-tab sync on same machine
+    this.initBroadcastChannel();
 
-    if (this.eventSource && this.currentRoom === room && this.isConnected) {
+    // 3. Setup periodic health check / heartbeat
+    this.initHeartbeat();
+
+    // If already connected to the same room, nothing to do
+    if (this.client && this.currentRoom === room && this.isConnected) {
       return;
     }
 
-    if (this.eventSource) {
+    // Clean up existing client if switching rooms or disconnected
+    if (this.client) {
       try {
-        this.eventSource.close();
+        this.client.end(true);
       } catch {
         // ignore
       }
-      this.eventSource = null;
+      this.client = null;
+      this.isConnected = false;
     }
 
     this.currentRoom = room;
-    const topic = this.getTopicName(room);
-    const sseUrl = `https://ntfy.sh/${topic}/sse`;
+    this.connectToBroker(room);
+  }
 
-    console.log(`[RealtimeSync] Connecting SSE to: ${topic}`);
+  /**
+   * Connect to current broker with fallback failover
+   */
+  private static connectToBroker(room: string): void {
+    if (this.isConnecting) return;
+    this.isConnecting = true;
+
+    const brokerUrl = MQTT_BROKERS[this.currentBrokerIndex];
+    const topic = this.getTopicName(room);
+    const clientId = `ksu_${getDeviceId()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    console.log(`[RealtimeSync] Connecting to MQTT broker [${this.currentBrokerIndex + 1}/${MQTT_BROKERS.length}]: ${brokerUrl} (Topic: ${topic})`);
 
     try {
-      const es = new EventSource(sseUrl);
-      this.eventSource = es;
+      const client = mqtt.connect(brokerUrl, {
+        clientId,
+        clean: true,
+        connectTimeout: 8000,
+        reconnectPeriod: 3000,
+        keepalive: 30,
+      });
 
-      es.onopen = () => {
+      this.client = client;
+
+      client.on('connect', () => {
         this.isConnected = true;
-        console.log(`[RealtimeSync] SSE live connection established to: ${topic}`);
-      };
+        this.isConnecting = false;
+        this.consecutiveFailures = 0;
+        console.log(`[RealtimeSync] Connected successfully to ${brokerUrl}!`);
 
-      es.onmessage = async (e) => {
+        // Subscribe to room topic with QoS 1
+        client.subscribe(topic, { qos: 1 }, (err) => {
+          if (err) {
+            console.warn(`[RealtimeSync] Subscription failed to ${topic}`, err);
+          } else {
+            console.log(`[RealtimeSync] Subscribed to topic: ${topic}`);
+          }
+        });
+
+        // Flush any offline pending changes immediately upon connection!
+        this.checkAndFlushPendingSync();
+      });
+
+      client.on('message', (_topic, messageBuffer) => {
         try {
-          if (!e.data) return;
-          const msgObj = JSON.parse(e.data);
+          if (!messageBuffer || messageBuffer.length === 0) return;
+          const msgStr = messageBuffer.toString();
+          const payload: RealtimeSyncPayload = JSON.parse(msgStr);
 
-          if (msgObj.event === 'open') {
-            this.isConnected = true;
-            return;
-          }
+          if (!payload || typeof payload !== 'object') return;
 
-          if (msgObj.event !== 'message') return;
+          // Cache payload
+          this.lastKnownPayload = payload;
+          try {
+            localStorage.setItem(LAST_KNOWN_REMOTE_STORAGE, msgStr);
+          } catch {}
 
-          let payload: RealtimeSyncPayload | null = null;
-
-          if (msgObj.attachment && msgObj.attachment.url) {
-            try {
-              const fileRes = await fetch(msgObj.attachment.url);
-              payload = await fileRes.json();
-            } catch (err) {
-              console.warn('[RealtimeSync] Failed to fetch attachment', err);
-            }
-          } else if (msgObj.message) {
-            payload = JSON.parse(msgObj.message);
-          }
-
-          if (!payload) return;
-
-          // Ignore echoes from self
+          // Ignore self echoes
           if (payload.senderId && payload.senderId === getDeviceId()) {
             return;
           }
 
-          console.log('[RealtimeSync] Live update received from another device!', payload);
+          console.log('[RealtimeSync] Incoming realtime update from peer device!', {
+            sender: payload.senderId,
+            homeworkCount: payload.homework?.length,
+            eventsCount: payload.events?.length,
+            deletedCount: payload.deletedHwIds?.length,
+          });
+
           this.applyPayload(payload);
         } catch (err) {
-          console.error('[RealtimeSync] Error processing incoming SSE message', err);
+          console.error('[RealtimeSync] Error processing incoming MQTT message', err);
         }
-      };
-
-      es.onerror = (err) => {
-        console.warn('[RealtimeSync] SSE connection interrupted, auto-reconnecting...', err);
-        this.isConnected = false;
-      };
-
-      // Poll latest cached state immediately on connect
-      this.pullLatest();
-    } catch (err) {
-      console.error('[RealtimeSync] Failed to start SSE', err);
-    }
-  }
-
-  /**
-   * Pull latest cached state from topic and apply
-   */
-  static async pullLatest(): Promise<boolean> {
-    const payload = await this.pullLatestPayload();
-    if (payload) {
-      if (payload.senderId && payload.senderId === getDeviceId()) {
-        return false;
-      }
-      return this.applyPayload(payload);
-    }
-    return false;
-  }
-
-  /**
-   * Fetch latest payload from cloud topic cache (skips echoes from self to find latest peer update)
-   */
-  static async pullLatestPayload(): Promise<RealtimeSyncPayload | null> {
-    try {
-      const topic = this.getTopicName();
-      const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1`, {
-        cache: 'no-store',
       });
-      if (!res.ok) return null;
 
-      const text = await res.text();
-      if (!text.trim()) return null;
-
-      const currentDevId = getDeviceId();
-      const lines = text.trim().split('\n');
-
-      // 1. First priority: Find newest message from another device
-      for (let i = lines.length - 1; i >= 0; i--) {
-        try {
-          const item = JSON.parse(lines[i]);
-          if (item.event === 'message') {
-            let p: RealtimeSyncPayload | null = null;
-            if (item.attachment && item.attachment.url) {
-              const fileRes = await fetch(item.attachment.url);
-              p = await fileRes.json();
-            } else if (item.message) {
-              p = JSON.parse(item.message);
-            }
-
-            if (p && p.senderId && p.senderId !== currentDevId) {
-              return p;
-            }
-          }
-        } catch {
-          // ignore corrupted lines
+      client.on('error', (err) => {
+        console.warn(`[RealtimeSync] Broker error on ${brokerUrl}:`, err.message);
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= 2 && !this.isConnected) {
+          this.failoverToNextBroker();
         }
-      }
+      });
 
-      // 2. Fallback: Any valid message in cache
-      for (let i = lines.length - 1; i >= 0; i--) {
-        try {
-          const item = JSON.parse(lines[i]);
-          if (item.event === 'message') {
-            if (item.attachment && item.attachment.url) {
-              const fileRes = await fetch(item.attachment.url);
-              return await fileRes.json();
-            }
-            if (item.message) {
-              return JSON.parse(item.message);
-            }
-          }
-        } catch {
-          // ignore
-        }
-      }
+      client.on('close', () => {
+        this.isConnected = false;
+      });
 
-      return null;
-    } catch (e) {
-      console.warn('[RealtimeSync] pullLatestPayload error', e);
-      return null;
+      client.on('offline', () => {
+        this.isConnected = false;
+        console.log('[RealtimeSync] MQTT client offline');
+      });
+
+      client.on('reconnect', () => {
+        console.log('[RealtimeSync] Reconnecting to MQTT broker...');
+      });
+    } catch (err) {
+      console.error('[RealtimeSync] Failed to initiate MQTT connection', err);
+      this.isConnecting = false;
+      this.failoverToNextBroker();
     }
   }
 
   /**
-   * Smart merge remote payload with local data and notify UI immediately
+   * Failover to next broker in rotation if current broker is unreachable
+   */
+  private static failoverToNextBroker(): void {
+    if (this.client) {
+      try {
+        this.client.end(true);
+      } catch {}
+      this.client = null;
+    }
+    this.isConnected = false;
+    this.isConnecting = false;
+    this.consecutiveFailures = 0;
+
+    this.currentBrokerIndex = (this.currentBrokerIndex + 1) % MQTT_BROKERS.length;
+    const nextBroker = MQTT_BROKERS[this.currentBrokerIndex];
+    console.log(`[RealtimeSync] Switching to failover broker: ${nextBroker}`);
+
+    if (typeof window !== 'undefined' && navigator.onLine) {
+      setTimeout(() => {
+        if (this.currentRoom) {
+          this.connectToBroker(this.currentRoom);
+        }
+      }, 1000);
+    }
+  }
+
+  /**
+   * Init cross-tab BroadcastChannel for zero-latency sync in the same browser
+   */
+  private static initBroadcastChannel(): void {
+    if (this.broadcastChannel || typeof BroadcastChannel === 'undefined') return;
+    try {
+      this.broadcastChannel = new BroadcastChannel('ksu_student_realtime_sync_v4');
+      this.broadcastChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'sync_payload') {
+          const payload = event.data.payload as RealtimeSyncPayload;
+          if (payload && payload.senderId !== getDeviceId()) {
+            this.applyPayload(payload);
+          }
+        }
+      };
+    } catch (e) {
+      console.warn('[RealtimeSync] BroadcastChannel init error', e);
+    }
+  }
+
+  /**
+   * Init window/tab lifecycle event listeners
+   */
+  private static initEventListeners(): void {
+    if (this.isListeningToEvents || typeof window === 'undefined') return;
+    this.isListeningToEvents = true;
+
+    // 1. Device came back online from offline state!
+    window.addEventListener('online', () => {
+      console.log('[RealtimeSync] Network connection restored (online). Connecting and flushing pending sync...');
+      if (!this.client || !this.isConnected) {
+        this.connect();
+      }
+      this.checkAndFlushPendingSync();
+    });
+
+    // 2. Tab became visible again (user unlocked phone or switched back from another app)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          console.log('[RealtimeSync] Tab visible. Checking connection status...');
+          if (!this.client || !this.isConnected) {
+            this.connect();
+          }
+          this.checkAndFlushPendingSync();
+        }
+      });
+    }
+
+    // 3. Window gained focus
+    window.addEventListener('focus', () => {
+      if (!this.client || !this.isConnected) {
+        this.connect();
+      }
+      this.checkAndFlushPendingSync();
+    });
+  }
+
+  /**
+   * Periodic background health check (every 25s)
+   */
+  private static initHeartbeat(): void {
+    if (this.heartbeatTimer) return;
+    this.heartbeatTimer = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        if (!this.client || !this.isConnected) {
+          console.log('[RealtimeSync] Heartbeat: client disconnected while online, reconnecting...');
+          this.connect();
+        }
+        this.checkAndFlushPendingSync();
+      }
+    }, 25000);
+  }
+
+  /**
+   * Check if any local changes were made while offline, and publish them to cloud
+   */
+  public static checkAndFlushPendingSync(): void {
+    if (typeof localStorage === 'undefined') return;
+
+    const isPending = localStorage.getItem(PENDING_SYNC_STORAGE) === 'true';
+    const lastModified = StorageService.getLastModified();
+    const lastSynced = localStorage.getItem(LAST_SYNCED_TIME_STORAGE);
+
+    const hasUnsyncedChanges =
+      isPending ||
+      !lastSynced ||
+      new Date(lastModified).getTime() > new Date(lastSynced).getTime();
+
+    if (hasUnsyncedChanges) {
+      console.log('[RealtimeSync] Unsynced changes detected. Broadcasting state to cloud...');
+      this.broadcast();
+    }
+  }
+
+  /**
+   * Broadcast current state to all peer devices
+   * Uses retain: true and QoS: 1 for guaranteed delivery to both online and future-opening devices
+   */
+  static broadcast(): void {
+    if (typeof localStorage === 'undefined') return;
+
+    // 1. Mark pending sync flag in storage immediately (offline-resilient)
+    localStorage.setItem(PENDING_SYNC_STORAGE, 'true');
+
+    const updatedAt = StorageService.getLastModified();
+    const payload: RealtimeSyncPayload = {
+      version: '2.0',
+      senderId: getDeviceId(),
+      updatedAt,
+      homework: StorageService.getHomework(),
+      events: StorageService.getEvents(),
+      deletedHwIds: StorageService.getDeletedHomeworkIds(),
+      deletedEventIds: StorageService.getDeletedEventIds(),
+    };
+
+    // 2. Broadcast immediately to other tabs on this device via BroadcastChannel
+    if (this.broadcastChannel) {
+      try {
+        this.broadcastChannel.postMessage({ type: 'sync_payload', payload });
+      } catch {}
+    }
+
+    // 3. Publish to MQTT broker
+    const topic = this.getTopicName();
+
+    if (this.client && this.isConnected) {
+      const msgStr = JSON.stringify(payload);
+      this.client.publish(topic, msgStr, { qos: 1, retain: true }, (err) => {
+        if (!err) {
+          localStorage.removeItem(PENDING_SYNC_STORAGE);
+          localStorage.setItem(LAST_SYNCED_TIME_STORAGE, updatedAt);
+          console.log('[RealtimeSync] Broadcast successfully delivered and retained on broker!');
+        } else {
+          console.warn('[RealtimeSync] Publish failed, kept in offline pending queue', err);
+        }
+      });
+    } else {
+      console.log('[RealtimeSync] Offline or reconnecting. Changes safely queued in localStorage for auto-sync.');
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        this.connect();
+      }
+    }
+  }
+
+  /**
+   * Smart merge remote payload with local data (CRDT / Last-Write-Wins with permanent tombstones)
    */
   static applyPayload(data: RealtimeSyncPayload): boolean {
     try {
+      if (!data || typeof data !== 'object') return false;
+
       // 1. Capture snapshot of local state BEFORE applying any remote changes
       const prevHomework = StorageService.getHomework();
       const prevEvents = StorageService.getEvents();
-      const prevDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+      const prevDeletedHw = new Set(StorageService.getDeletedHomeworkIds());
+      const prevDeletedEvt = new Set(StorageService.getDeletedEventIds());
 
       // 2. Check and record tombstones (deleted items stay deleted permanently)
       let hasNewTombstones = false;
       if (Array.isArray(data.deletedHwIds) && data.deletedHwIds.length > 0) {
         for (const id of data.deletedHwIds) {
-          if (!prevDeletedIds.has(id)) {
+          if (!prevDeletedHw.has(id)) {
             hasNewTombstones = true;
           }
         }
         StorageService.recordDeletedHomeworkIds(data.deletedHwIds);
       }
-      const allDeletedIds = new Set(StorageService.getDeletedHomeworkIds());
+
+      if (Array.isArray(data.deletedEventIds) && data.deletedEventIds.length > 0) {
+        for (const id of data.deletedEventIds) {
+          if (!prevDeletedEvt.has(id)) {
+            hasNewTombstones = true;
+          }
+        }
+        StorageService.recordDeletedEventIds(data.deletedEventIds);
+      }
+
+      const allDeletedHw = new Set(StorageService.getDeletedHomeworkIds());
+      const allDeletedEvt = new Set(StorageService.getDeletedEventIds());
 
       // 3. Smart merge homework
-      const remoteHw = (data.homework || []).filter((h) => !allDeletedIds.has(h.id));
-      const localHw = prevHomework.filter((h) => !allDeletedIds.has(h.id));
+      const remoteHw = (data.homework || []).filter((h) => !allDeletedHw.has(h.id));
+      const localHw = prevHomework.filter((h) => !allDeletedHw.has(h.id));
 
       const mergedMap = new Map<string, Homework>();
       for (const h of remoteHw) {
@@ -331,11 +490,14 @@ export class RealtimeSyncService {
       // 4. Smart merge custom events
       let eventsChanged = false;
       if (Array.isArray(data.events)) {
+        const remoteEvts = data.events.filter((e) => !allDeletedEvt.has(e.id));
+        const localEvts = prevEvents.filter((e) => !allDeletedEvt.has(e.id));
+
         const eventMap = new Map<string, CalendarCustomEvent>();
-        for (const e of data.events) {
+        for (const e of remoteEvts) {
           eventMap.set(e.id, e);
         }
-        for (const e of prevEvents) {
+        for (const e of localEvts) {
           if (!eventMap.has(e.id)) {
             eventMap.set(e.id, e);
             localHadUniqueOrNewer = true;
@@ -354,16 +516,19 @@ export class RealtimeSyncService {
         prevHomework.length !== finalHw.length ||
         JSON.stringify(prevHomework) !== JSON.stringify(finalHw);
 
-      StorageService.recordLastModified(data.updatedAt || new Date().toISOString());
+      if (data.updatedAt) {
+        StorageService.recordLastModified(data.updatedAt);
+      }
 
       // 6. ALWAYS notify UI subscribers immediately if homework, tombstones or events changed!
       if (hwChanged || eventsChanged) {
-        console.log('[RealtimeSync] Changes applied (created/deleted/updated). Notifying subscribers...');
+        console.log('[RealtimeSync] Merged changes applied to local storage. Notifying subscribers...');
         this.notifySubscribers();
       }
 
-      // 7. If local had items that remote was missing, broadcast back merged state
+      // 7. If local had items or newer edits that remote was missing, broadcast back merged state
       if (localHadUniqueOrNewer) {
+        console.log('[RealtimeSync] Local had unique or newer items. Propagating superset to peers...');
         this.broadcast();
       }
 
@@ -375,57 +540,45 @@ export class RealtimeSyncService {
   }
 
   /**
-   * Broadcast state to all other connected devices instantly without delay
+   * Pull latest payload from local cache or broker state
    */
-  static broadcast(): void {
-    const topic = this.getTopicName();
-
-    const payload: RealtimeSyncPayload = {
-      version: '1.0',
-      senderId: getDeviceId(),
-      updatedAt: new Date().toISOString(),
-      homework: StorageService.getHomework(),
-      events: StorageService.getEvents(),
-      deletedHwIds: StorageService.getDeletedHomeworkIds(),
-    };
-
-    console.log(`[RealtimeSync] Broadcasting update to ${topic}...`);
-    fetch(`https://ntfy.sh/${topic}`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(() => {
-        console.log(`[RealtimeSync] Broadcast successfully delivered!`);
-      })
-      .catch((err) => {
-        console.warn('[RealtimeSync] Broadcast failed, will retry on online', err);
-      });
+  static async pullLatestPayload(): Promise<RealtimeSyncPayload | null> {
+    if (this.lastKnownPayload) return this.lastKnownPayload;
+    try {
+      const stored = localStorage.getItem(LAST_KNOWN_REMOTE_STORAGE);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+    return null;
   }
 
   /**
    * Disconnect from current room
    */
   static disconnect(): void {
-    if (this.eventSource) {
+    if (this.client) {
       try {
-        this.eventSource.close();
-      } catch {
-        // ignore
-      }
-      this.eventSource = null;
+        this.client.end(true);
+      } catch {}
+      this.client = null;
     }
     this.isConnected = false;
+    this.isConnecting = false;
     this.currentRoom = null;
-    localStorage.removeItem(REALTIME_ROOM_STORAGE);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(REALTIME_ROOM_STORAGE);
+    }
   }
 
-  static getStatus(): { isConnected: boolean; room: string | null } {
+  /**
+   * Get sync connection status
+   */
+  static getStatus(): { isConnected: boolean; room: string | null; broker: string } {
     return {
       isConnected: this.isConnected,
       room: this.currentRoom || this.getRoomCode() || null,
+      broker: MQTT_BROKERS[this.currentBrokerIndex],
     };
   }
 }

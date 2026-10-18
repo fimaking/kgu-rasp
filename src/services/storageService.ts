@@ -305,6 +305,18 @@ export class StorageService {
     }
   }
 
+  static recordDeletedEventIds(newIds: string[]): void {
+    if (!Array.isArray(newIds) || newIds.length === 0) return;
+    try {
+      const ids = new Set(this.getDeletedEventIds());
+      newIds.forEach((id) => ids.add(id));
+      localStorage.setItem(STORAGE_KEY_DELETED_EVENTS, JSON.stringify([...ids]));
+      this.recordLastModified();
+    } catch (e) {
+      console.error('Failed to record deleted event IDs', e);
+    }
+  }
+
   static getEvents(): CalendarCustomEvent[] {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_EVENTS);
