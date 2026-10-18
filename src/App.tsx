@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Sidebar, NavTab } from './components/ui/Sidebar';
 import { MobileNav } from './components/ui/MobileNav';
-import { Header } from './components/ui/Header';
 import { ToastContainer, ToastMessage } from './components/ui/Toast';
 import { TodayView } from './components/today/TodayView';
 import { ScheduleView } from './components/schedule/ScheduleView';
@@ -171,16 +170,6 @@ export const App: React.FC = () => {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* Sticky Header */}
-        <Header
-          groupName={schedule.groupName || schedule.info?.group?.name || '26-ИСбо-4'}
-          subgroupFilter={schedule.subgroupFilter}
-          onRefresh={handleRefreshSchedule}
-          refreshing={schedule.refreshing}
-          isOffline={schedule.isOffline}
-          lastUpdated={schedule.lastUpdated}
-        />
-
         {/* Scrollable View Area with Smooth Transitions */}
         <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-28 md:pb-8">
           <div className="max-w-7xl mx-auto">

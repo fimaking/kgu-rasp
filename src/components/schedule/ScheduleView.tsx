@@ -12,7 +12,7 @@ import { ParsedLesson, WeekDaySchedule, RaspInfo } from '../../types/schedule';
 import { WeekNavigator } from './WeekNavigator';
 import { DayCard } from './DayCard';
 import { LessonModal } from './LessonModal';
-import { isSameDay, formatDateToIso, formatRussianDate } from '../../utils/dateUtils';
+import { isSameDay, formatDateToIso, formatRussianDate, getMondayOfWeek } from '../../utils/dateUtils';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
 
 interface ScheduleViewProps {
@@ -45,22 +45,11 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onGoToDate,
   onOpenCreateHomeworkForSubject,
 }) => {
-  const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => {
-    const now = new Date();
-    if (now.getDay() === 0) {
-      const mon = new Date(now);
-      mon.setDate(now.getDate() - 6);
-      return mon;
-    }
-    return now;
-  });
+  const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => new Date());
 
-  // Default to grid on desktop or on Sunday so the full week's schedule is immediately visible
+  // Default to grid on desktop so the full week's schedule is immediately visible
   const [viewLayout, setViewLayout] = useState<'grid' | 'single'>(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      return 'grid';
-    }
-    if (new Date().getDay() === 0) {
       return 'grid';
     }
     return 'single';
@@ -68,16 +57,19 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
 
+  // When opening schedule view, ensure today's week is active and today is selected
+  useEffect(() => {
+    const now = new Date();
+    const currentMon = getMondayOfWeek(now);
+    if (!isSameDay(selectedWeekMonday, currentMon)) {
+      onGoToToday();
+    }
+    setSelectedDayDate(now);
+  }, []);
+
   const handleGoToToday = () => {
     onGoToToday();
-    const now = new Date();
-    if (now.getDay() === 0) {
-      const mon = new Date(now);
-      mon.setDate(now.getDate() - 6);
-      setSelectedDayDate(mon);
-    } else {
-      setSelectedDayDate(now);
-    }
+    setSelectedDayDate(new Date());
   };
 
   const handlePrevWeek = () => {
@@ -287,7 +279,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         /* Full week grid: 6 days (Mon-Sat, plus Sun if it has pairs) */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredWeekSchedule
-            .filter((d) => d.dayOfWeek !== 7 || d.lessons.length > 0)
+            .filter((d) => d.dayOfWeek !== 7 || d.lessons.length > 0 || d.isToday)
             .map((day) => (
               <DayCard
                 key={day.dateStr}

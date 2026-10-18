@@ -71,17 +71,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="hidden md:flex flex-col w-64 h-full bg-[#f6f6f8]/85 dark:bg-[#121214]/85 backdrop-blur-2xl border-r border-black/5 dark:border-white/10 p-4 shrink-0 select-none">
       {/* Brand Header */}
-      <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-2xl select-none">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-apple-blue to-apple-indigo flex items-center justify-center text-white shadow-apple-sm">
+      <div className="flex items-center gap-3 px-3 py-2.5 mb-4 rounded-2xl bg-white/70 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-apple-sm backdrop-blur-md select-none">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-apple-blue via-blue-600 to-apple-indigo flex items-center justify-center text-white shadow-md shadow-apple-blue/25 ring-1 ring-white/20 shrink-0">
           <GraduationCap className="w-5 h-5" />
         </div>
-        <div className="min-w-0">
-          <h1 className="text-sm font-semibold tracking-tight text-apple-gray-900 dark:text-white truncate">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-sm font-bold tracking-tight text-apple-gray-900 dark:text-white truncate leading-tight">
             КГУ Студент
           </h1>
-          <p className="text-xs text-apple-blue dark:text-apple-blue font-mono font-semibold truncate">
-            {groupName} • Немецкий
-          </p>
+          <div className="mt-1 flex items-center">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue dark:text-blue-400 border border-apple-blue/25 tracking-tight">
+              <span className="w-1.5 h-1.5 rounded-full bg-apple-blue dark:bg-blue-400 animate-pulse" />
+              {groupName}
+            </span>
+          </div>
         </div>
       </div>
 
