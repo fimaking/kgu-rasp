@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksu-student-cache-v54';
+const CACHE_NAME = 'ksu-student-cache-v56';
 
 const STATIC_ASSETS = [
   './',
@@ -63,12 +63,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. API / sync requests: Network-First
+  // 2. Real-time sync requests: Pure Network (Never cache stale payloads in SW)
+  if (
+    url.hostname.includes('restful-api.dev') ||
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('workers.dev') ||
+    url.hostname.includes('api.github.com')
+  ) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // 3. API requests: Network-First
   if (
     url.pathname.includes('/api') ||
     url.hostname.includes('eios.kosgos.ru') ||
-    url.hostname.includes('restful-api.dev') ||
-    url.hostname.includes('api.github.com') ||
     url.hostname.includes('broker.emqx.io') ||
     url.hostname.includes('broker.hivemq.com') ||
     url.hostname.includes('mosquitto.org') ||

@@ -8,7 +8,10 @@ const SYNC_LAST_PULL_STORAGE = 'ksu_student_sync_last_pull';
 const GIST_TOKEN_STORAGE = 'ksu_student_gist_token';
 const GIST_ID_STORAGE = 'ksu_student_gist_id';
 const CLOUD_ROOM_ID_STORAGE = 'ksu_student_cloud_room_id';
+const REST_ROOM_ID_STORAGE = 'ksu_student_rest_room_id';
+const CUSTOM_SYNC_URL_STORAGE = 'ksu_student_custom_sync_url';
 
+export const DEFAULT_REST_ROOM_ID = 'ff808181a09d98f701a14eff567f0bfb';
 export const DEFAULT_GIST_ID = 'e2d779451fca13d7005a7453b0df880b';
 
 export interface CloudPayload {
@@ -36,6 +39,80 @@ export class SyncService {
   static clearSyncKey(): void {
     localStorage.removeItem(SYNC_KEY_STORAGE);
     localStorage.removeItem(SYNC_LAST_PULL_STORAGE);
+  }
+
+  static getRestRoomId(): string {
+    const stored = localStorage.getItem(REST_ROOM_ID_STORAGE);
+    if (stored && stored.trim()) return stored.trim();
+    return DEFAULT_REST_ROOM_ID;
+  }
+
+  static setRestRoomId(id: string): void {
+    if (id && id.trim()) {
+      const clean = id.trim();
+      localStorage.setItem(REST_ROOM_ID_STORAGE, clean);
+      RealtimeSyncService.setRoomCode(clean);
+    } else {
+      localStorage.removeItem(REST_ROOM_ID_STORAGE);
+    }
+  }
+
+  static getCustomSyncUrl(): string | null {
+    const stored = localStorage.getItem(CUSTOM_SYNC_URL_STORAGE);
+    if (stored && stored.trim()) return stored.trim();
+    return null;
+  }
+
+  static setCustomSyncUrl(url: string | null): void {
+    if (url && url.trim()) {
+      localStorage.setItem(CUSTOM_SYNC_URL_STORAGE, url.trim());
+    } else {
+      localStorage.removeItem(CUSTOM_SYNC_URL_STORAGE);
+    }
+  }
+
+  /**
+   * Create a new unique private cloud room on HTTPS 443 in 1 click
+   */
+  static async createNewRestRoom(): Promise<{ success: boolean; roomId?: string; error?: string }> {
+    try {
+      const payload: CloudPayload = {
+        version: '2.0',
+        updatedAt: StorageService.getLastModified(),
+        homework: StorageService.getHomework(),
+        events: StorageService.getEvents(),
+        deletedHwIds: StorageService.getDeletedHomeworkIds(),
+        deletedEventIds: StorageService.getDeletedEventIds(),
+      };
+
+      const res = await fetch('https://api.restful-api.dev/objects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'ksu_student_sync_room',
+          data: payload,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`Ошибка сервиса (${res.status})`);
+      const resJson = await res.json();
+      const newRoomId = resJson.id;
+      if (!newRoomId) throw new Error('Сервис не вернул ID комнаты');
+
+      this.setRestRoomId(newRoomId);
+      RealtimeSyncService.setRoomCode(newRoomId);
+      return { success: true, roomId: newRoomId };
+    } catch (e: any) {
+      return { success: false, error: e?.message || 'Не удалось создать комнату' };
+    }
+  }
+
+  static getRoomPairingUrl(roomId?: string): string {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const rId = roomId || this.getRestRoomId();
+    return `${origin}${pathname}#room=${encodeURIComponent(rId)}`;
   }
 
   static getGistToken(): string | null {
@@ -388,13 +465,15 @@ export class SyncService {
   static async pushToCloud(): Promise<boolean> {
     const token = this.getGistToken();
     const gistId = this.getGistId();
+    const restRoomId = this.getRestRoomId();
+    const customUrl = this.getCustomSyncUrl();
 
     try {
       const updatedAt = new Date().toISOString();
       StorageService.recordLastModified(updatedAt);
 
       const payload: CloudPayload = {
-        version: '1.0',
+        version: '2.0',
         updatedAt,
         homework: StorageService.getHomework(),
         events: StorageService.getEvents(),
@@ -402,10 +481,38 @@ export class SyncService {
         deletedEventIds: StorageService.getDeletedEventIds(),
       };
 
-      // 1. Instant zero-auth realtime broadcast over HTTPS port 443
+      // 1. Primary zero-auth HTTPS Port 443 REST Cloud (Universal, works everywhere without VPN)
+      if (customUrl) {
+        try {
+          await fetch(customUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          console.log('[SyncService] Pushed to custom cloud backend successfully!');
+        } catch (e) {
+          console.warn('[SyncService] Custom URL push failed', e);
+        }
+      } else if (restRoomId) {
+        try {
+          await fetch(`https://api.restful-api.dev/objects/${restRoomId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: 'ksu_student_sync_room',
+              data: payload,
+            }),
+          });
+          console.log('[SyncService] Pushed state to HTTPS 443 REST cloud successfully!');
+        } catch (e) {
+          console.warn('[SyncService] REST cloud push failed', e);
+        }
+      }
+
+      // 2. Realtime WebSocket MQTT broadcast
       RealtimeSyncService.broadcast();
 
-      // 2. Push to GitHub Gist if personal access token is configured
+      // 3. Push to GitHub Gist if personal access token is configured
       if (token && gistId) {
         try {
           await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -442,11 +549,41 @@ export class SyncService {
   static async pullFromCloud(): Promise<{ updated: boolean; countHw?: number }> {
     const token = this.getGistToken();
     const gistId = this.getGistId();
+    const restRoomId = this.getRestRoomId();
+    const customUrl = this.getCustomSyncUrl();
 
     let gistPayload: CloudPayload | null = null;
+    let restPayload: CloudPayload | null = null;
     let roomPayload: CloudPayload | null = null;
 
-    // 1. Pull from Gist if gistId is configured (works without token for reading)
+    // 1. Pull from custom backend or standard HTTPS 443 REST Cloud
+    if (customUrl) {
+      try {
+        const res = await fetch(customUrl, { cache: 'no-store' });
+        if (res.ok) {
+          const raw = await res.json();
+          restPayload = raw.data || raw;
+        }
+      } catch (e) {
+        console.warn('Custom backend pull failed', e);
+      }
+    } else if (restRoomId) {
+      try {
+        const res = await fetch(`https://api.restful-api.dev/objects/${restRoomId}`, {
+          cache: 'no-store',
+        });
+        if (res.ok) {
+          const resJson = await res.json();
+          if (resJson && resJson.data) {
+            restPayload = resJson.data;
+          }
+        }
+      } catch (e) {
+        console.warn('REST cloud pull failed', e);
+      }
+    }
+
+    // 2. Pull from Gist if gistId is configured (works without token for reading)
     if (gistId) {
       try {
         const headers: Record<string, string> = {
@@ -456,7 +593,10 @@ export class SyncService {
           headers.Authorization = `Bearer ${token}`;
         }
 
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+          headers,
+          cache: 'no-store',
+        });
         if (res.ok) {
           const resJson = await res.json();
           const fileObj = resJson.files?.['ksu_planner_sync.json'];
@@ -486,7 +626,7 @@ export class SyncService {
       console.warn('Realtime channel pull failed', e);
     }
 
-    if (!gistPayload && !roomPayload) {
+    if (!gistPayload && !restPayload && !roomPayload) {
       return { updated: false };
     }
 
@@ -502,8 +642,11 @@ export class SyncService {
     const allRemoteEvtTombstones: string[] = [];
 
     if (Array.isArray(gistPayload?.deletedHwIds)) allRemoteTombstones.push(...gistPayload.deletedHwIds);
+    if (Array.isArray(restPayload?.deletedHwIds)) allRemoteTombstones.push(...restPayload.deletedHwIds);
     if (Array.isArray(roomPayload?.deletedHwIds)) allRemoteTombstones.push(...roomPayload.deletedHwIds);
+
     if (Array.isArray(gistPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...gistPayload.deletedEventIds);
+    if (Array.isArray(restPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...restPayload.deletedEventIds);
     if (Array.isArray(roomPayload?.deletedEventIds)) allRemoteEvtTombstones.push(...roomPayload.deletedEventIds);
 
     if (allRemoteTombstones.length > 0) {
@@ -546,6 +689,7 @@ export class SyncService {
     };
 
     feedHw(gistPayload?.homework);
+    feedHw(restPayload?.homework);
     feedHw(roomPayload?.homework);
 
     // 4. Smart Merge with local tasks
@@ -574,8 +718,11 @@ export class SyncService {
 
     // 5. Merge custom calendar events
     let eventsChanged = false;
-    const remoteEvents = [...(gistPayload?.events || []), ...(roomPayload?.events || [])]
-      .filter((e) => !allDeletedEvtIds.has(e.id));
+    const remoteEvents = [
+      ...(gistPayload?.events || []),
+      ...(restPayload?.events || []),
+      ...(roomPayload?.events || []),
+    ].filter((e) => !allDeletedEvtIds.has(e.id));
     const localEvts = prevEvents.filter((e) => !allDeletedEvtIds.has(e.id));
     if (remoteEvents.length > 0 || localEvts.length !== prevEvents.length) {
       const eventMap = new Map<string, CalendarCustomEvent>();

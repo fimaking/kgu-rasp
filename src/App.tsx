@@ -93,6 +93,19 @@ export const App: React.FC = () => {
           }
           window.history.replaceState(null, '', window.location.pathname);
         }
+      } else if (hash && hash.includes('#room=')) {
+        const query = hash.replace(/^#/, '');
+        const params = new URLSearchParams(query);
+        const roomId = params.get('room') || '';
+        if (roomId) {
+          SyncService.setRestRoomId(roomId);
+          showToast('info', 'Подключение к комнате...', `ID: ${roomId.slice(0, 8)}...`);
+          const res = await SyncService.pullFromCloud();
+          homework.reload();
+          calendar.reload();
+          showToast('success', 'Комната синхронизации подключена!', `Синхронизировано заданий: ${res.countHw ?? 0}`);
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       }
     };
 

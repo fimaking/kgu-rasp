@@ -147,6 +147,48 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isGistCopied, setIsGistCopied] = useState(false);
   const [showGistQr, setShowGistQr] = useState(false);
 
+  // HTTPS 443 Room & Custom Cloud state
+  const [restRoomId, setRestRoomIdState] = useState<string>(() => SyncService.getRestRoomId());
+  const [customSyncUrl, setCustomSyncUrlState] = useState<string>(() => SyncService.getCustomSyncUrl() || '');
+  const [showFirebaseHelp, setShowFirebaseHelp] = useState(false);
+  const [showRoomQr, setShowRoomQr] = useState(false);
+  const [isRoomCopied, setIsRoomCopied] = useState(false);
+
+  const handleCopyRoomUrl = () => {
+    const url = SyncService.getRoomPairingUrl(restRoomId);
+    navigator.clipboard.writeText(url);
+    setIsRoomCopied(true);
+    setTimeout(() => setIsRoomCopied(false), 2000);
+    onShowToast('info', 'Ссылка комнаты скопирована!', 'Откройте её на телефоне для мгновенного подключения.');
+  };
+
+  const handleCreateNewRoom = async () => {
+    setIsSyncing(true);
+    const res = await SyncService.createNewRestRoom();
+    setIsSyncing(false);
+    if (res.success && res.roomId) {
+      setRestRoomIdState(res.roomId);
+      onShowToast('success', 'Новая комната создана!', 'Отсканируйте QR-код на телефоне для подключения.');
+    } else {
+      onShowToast('error', 'Не удалось создать комнату', res.error);
+    }
+  };
+
+  const handleSaveCustomSyncUrl = async () => {
+    const clean = customSyncUrl.trim();
+    SyncService.setCustomSyncUrl(clean || null);
+    setIsSyncing(true);
+    await SyncService.pushToCloud();
+    const res = await SyncService.pullFromCloud();
+    setIsSyncing(false);
+    if (res.updated) {
+      onDataImported();
+      onShowToast('success', 'Свое облако сохранено и синхронизировано!');
+    } else {
+      onShowToast('success', 'Адрес облака сохранен!');
+    }
+  };
+
   const handleGenerateTransferQr = async () => {
     setIsGeneratingQr(true);
     const url = await SyncService.createDirectTransferUrl();
@@ -174,22 +216,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
-  const handleSaveGistToken = async () => {
-    const cleanToken = gistToken.trim();
-    if (!cleanToken) {
-      onShowToast('error', 'Укажите токен GitHub', 'Вставьте ваш токен с разрешением gist.');
-      return;
-    }
-    setIsSyncing(true);
-    SyncService.setGistToken(cleanToken);
-    const ok = await SyncService.pushToCloud();
-    setIsSyncing(false);
-    if (ok) {
-      onShowToast('success', 'Двусторонняя синхронизация включена!', 'Все задания с этого устройства сохранены в облако.');
-    } else {
-      onShowToast('info', 'Токен сохранён', 'Теперь изменения с этого устройства будут отправляться в облако.');
-    }
-  };
 
   const handleCreateGistSync = async () => {
     if (!gistToken.trim()) {
@@ -445,16 +471,160 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
-        {/* Option 1: Direct QR Code Transfer (Recommended & 100% Reliable) */}
+        {/* Method 1: Instant Live Room (Universal HTTPS 443, Zero Config) */}
+        <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-apple-blue">
+                <Cloud className="w-3.5 h-3.5" />
+                <span>Способ 1: Живая связка (Телефон ⇄ ПК) — Без авторизации</span>
+              </div>
+              <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 mt-0.5">
+                Работает через HTTPS 443 на любых операторах РФ. Мгновенно передает задания между телефоном и ПК.
+              </p>
+            </div>
+
+            <Button
+              variant="primary"
+              size="sm"
+              loading={isSyncing}
+              icon={<RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />}
+              onClick={handleManualSyncNow}
+            >
+              Синхронизировать сейчас
+            </Button>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400">
+                  ID комнаты связки:
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  HTTPS 443 Активен
+                </span>
+              </div>
+              <span className="font-mono text-xs font-bold text-apple-blue select-all break-all">
+                {restRoomId}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<QrCode className="w-3.5 h-3.5" />}
+                onClick={() => setShowRoomQr(!showRoomQr)}
+              >
+                {showRoomQr ? 'Скрыть QR' : 'Показать QR-код'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={isRoomCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
+                onClick={handleCopyRoomUrl}
+              >
+                {isRoomCopied ? 'Скопировано!' : 'Скопировать ссылку для телефона'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCreateNewRoom}
+                className="text-xs text-apple-gray-500"
+              >
+                Новая комната
+              </Button>
+            </div>
+          </div>
+
+          {showRoomQr && (
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
+              <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
+                <img
+                  src={SyncService.getQrCodeForUrl(SyncService.getRoomPairingUrl(restRoomId))}
+                  alt="QR-код связки"
+                  className="w-32 h-32 rounded-lg"
+                />
+              </div>
+              <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1.5 text-center sm:text-left">
+                <p className="font-bold text-apple-gray-900 dark:text-white">
+                  Наведите камеру смартфона на этот QR-код:
+                </p>
+                <p>
+                  Телефон сразу откроет приложение и подключится к этой же комнате. Все задания моментально перенесутся!
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Method 2: Custom Cloud / Google Firebase */}
+        <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>Способ 2: Свое облако (Google Firebase / Свой сервер)</span>
+              </h4>
+              <p className="text-xs text-apple-gray-500 mt-0.5">
+                Бесплатная постоянная альтернатива GitHub. Создается за 2 минуты в Google Firebase Realtime Database.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="https://[проект]-default-rtdb.firebaseio.com/sync.json"
+              value={customSyncUrl}
+              onChange={(e) => setCustomSyncUrlState(e.target.value)}
+              className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={isSyncing}
+              onClick={handleSaveCustomSyncUrl}
+            >
+              Сохранить
+            </Button>
+          </div>
+
+          <div>
+            <button
+              onClick={() => setShowFirebaseHelp(!showFirebaseHelp)}
+              className="text-xs text-apple-blue font-semibold hover:underline flex items-center gap-1"
+            >
+              <span>{showFirebaseHelp ? 'Скрыть инструкцию по Firebase' : 'Инструкция: как создать базу в Google Firebase за 2 минуты (бесплатно)'}</span>
+            </button>
+            {showFirebaseHelp && (
+              <div className="mt-2.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-apple-gray-700 dark:text-apple-gray-200 space-y-2 leading-relaxed animate-in fade-in duration-200">
+                <p className="font-bold">Как подключить личный Google Firebase за 2 минуты:</p>
+                <ol className="list-decimal list-inside space-y-1 text-apple-gray-600 dark:text-apple-gray-300">
+                  <li>Зайдите на <b>console.firebase.google.com</b> под своим Google-аккаунтом и нажмите «Добавить проект».</li>
+                  <li>В боковом меню выберите <b>Сборка (Build) → Realtime Database</b> и нажмите «Создать базу данных».</li>
+                  <li>Во вкладке <b>Правила (Rules)</b> замените текст на:<br />
+                    <code className="font-mono bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-[11px] block mt-1">
+                      {`{"rules": {".read": true, ".write": true}}`}
+                    </code>
+                  </li>
+                  <li>Скопируйте URL вашей базы из шапки (например <code className="font-mono text-[11px]">https://my-sync-default-rtdb.firebaseio.com/</code>), припишите в конец <code className="font-mono text-[11px]">sync.json</code> и вставьте в поле выше!</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Method 3: Direct QR Code Transfer (Offline, 0 Server Dependency) */}
         <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-apple-blue">
                 <QrCode className="w-3.5 h-3.5" />
-                <span>Способ 1: Мгновенно по QR-коду (Без авторизации)</span>
+                <span>Способ 3: Прямой разовый перенос по QR-коду (Без серверов)</span>
               </div>
               <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 mt-0.5">
-                Переносит все домашние задания прямо в браузер смартфона за 1 секунду.
+                Зашифровывает все задания прямо в картинку QR-кода. Работает даже без интернета.
               </p>
             </div>
 
@@ -487,7 +657,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <p className="text-xs text-apple-gray-700 dark:text-apple-gray-200 leading-relaxed">
                   1. Наведите камеру телефона на этот QR-код.<br />
                   2. Нажмите на всплывающее уведомление со ссылкой.<br />
-                  3. Все ваши задания и расписание моментально откроются на телефоне!
+                  3. Все ваши задания моментально откроются на телефоне!
                 </p>
                 <div className="pt-1 flex items-center justify-center sm:justify-start gap-2">
                   <Button
@@ -504,16 +674,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
         </div>
 
-        {/* Option 2: Permanent GitHub Gist Cloud Sync */}
+        {/* Method 4: Permanent GitHub Gist Cloud Sync */}
         <div className="p-4 sm:p-5 rounded-2.5xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-xs font-bold text-apple-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                 <Cloud className="w-3.5 h-3.5 text-apple-indigo" />
-                <span>Способ 2: Постоянное облако через GitHub Gist</span>
+                <span>Способ 4: Постоянное облако через GitHub Gist (Опционально)</span>
               </h4>
               <p className="text-xs text-apple-gray-500 mt-0.5">
-                Автоматически обновляет телефон и компьютер в фоне через ваш личный GitHub.
+                Синхронизация через ваш личный аккаунт GitHub.
               </p>
             </div>
 
@@ -529,16 +699,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           {gistId ? (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-2 border-t border-black/5 dark:border-white/5">
               <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400">
                       ID связки:
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 inline-flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Живая синхронизация ⚡ (Телефон ⇄ ПК)
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                      Подключено к GitHub Gist
                     </span>
                   </div>
                   <span className="font-mono text-xs font-bold text-apple-blue select-all">
@@ -553,7 +722,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     icon={<RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />}
                     onClick={handleManualSyncNow}
                   >
-                    Синхронизировать сейчас
+                    Синхронизировать
                   </Button>
                   <button
                     onClick={handleDisconnect}
@@ -564,85 +733,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              {!gistToken && (
-                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2.5">
-                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold text-xs">
-                    <Check className="w-4 h-4 flex-shrink-0 text-apple-blue" />
-                    <span>Двусторонняя живая синхронизация активна ⚡</span>
-                  </div>
-                  <p className="text-xs text-apple-gray-600 dark:text-apple-gray-300 leading-relaxed">
-                    Задания и отметки мгновенно передаются между вашим телефоном и ПК без задержек. Созданные офлайн задания синхронизируются автоматически при подключении. Вы также можете привязать токен GitHub для постоянного облачного бэкапа (опционально):
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      placeholder="Токен GitHub (опционально, ghp_...)"
-                      value={gistToken}
-                      onChange={(e) => setGistToken(e.target.value)}
-                      className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-apple-blue"
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<QrCode className="w-3.5 h-3.5" />}
+                  onClick={() => setShowGistQr(!showGistQr)}
+                >
+                  {showGistQr ? 'Скрыть QR' : 'Показать QR-код'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={isGistCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
+                  onClick={handleCopyGistUrl}
+                >
+                  {isGistCopied ? 'Ссылка скопирована!' : 'Скопировать ссылку для второго устройства'}
+                </Button>
+              </div>
+
+              {showGistQr && (
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
+                  <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
+                    <img
+                      src={SyncService.getQrCodeForUrl(SyncService.getGistPairingUrl(gistId, gistToken || undefined))}
+                      alt="QR-код связки"
+                      className="w-32 h-32 rounded-lg"
                     />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      loading={isSyncing}
-                      onClick={handleSaveGistToken}
-                    >
-                      Сохранить
-                    </Button>
+                  </div>
+                  <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1 text-center sm:text-left">
+                    <p className="font-bold text-apple-gray-900 dark:text-white">
+                      QR-код для подключения второго устройства:
+                    </p>
+                    <p>
+                      Отсканируйте камерой второго устройства — оно автоматически подключится к этой же связке заданий.
+                    </p>
                   </div>
                 </div>
               )}
-
-              <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-xs font-bold text-apple-gray-900 dark:text-white block">
-                      Связка со вторым устройством (Телефон ⇄ ПК)
-                    </span>
-                    <span className="text-xs text-apple-gray-500">
-                      Отправьте ссылку себе в Telegram/VK или отсканируйте QR-код для моментального подключения.
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<QrCode className="w-3.5 h-3.5" />}
-                      onClick={() => setShowGistQr(!showGistQr)}
-                    >
-                      {showGistQr ? 'Скрыть QR' : 'Показать QR-код'}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={isGistCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-apple-blue" />}
-                      onClick={handleCopyGistUrl}
-                    >
-                      {isGistCopied ? 'Ссылка скопирована!' : 'Скопировать ссылку для второго устройства'}
-                    </Button>
-                  </div>
-                </div>
-
-                {showGistQr && (
-                  <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">
-                    <div className="bg-white p-3 rounded-2xl shadow-apple-sm flex-shrink-0 border border-black/5">
-                      <img
-                        src={SyncService.getQrCodeForUrl(SyncService.getGistPairingUrl(gistId, gistToken || undefined))}
-                        alt="QR-код связки"
-                        className="w-32 h-32 rounded-lg"
-                      />
-                    </div>
-                    <div className="text-xs text-apple-gray-600 dark:text-apple-gray-300 space-y-1 text-center sm:text-left">
-                      <p className="font-bold text-apple-gray-900 dark:text-white">
-                        QR-код для подключения второго устройства:
-                      </p>
-                      <p>
-                        Отсканируйте камерой второго устройства — оно автоматически подключится к этой же связке заданий.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           ) : showGistConfig ? (
             <div className="space-y-3 pt-2 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-200">

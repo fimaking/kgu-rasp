@@ -116,11 +116,9 @@ export function useHomework() {
 
       RealtimeSyncService.checkAndFlushPendingSync();
 
-      if (SyncService.getGistToken()) {
-        const res = await SyncService.pullFromCloud();
-        if (res.updated && isMounted) {
-          setItems(StorageService.getHomework());
-        }
+      const res = await SyncService.pullFromCloud();
+      if (res.updated && isMounted) {
+        setItems(StorageService.getHomework());
       }
     };
 
@@ -135,8 +133,8 @@ export function useHomework() {
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('online', handleVisibility);
 
-    // Periodic sync check every 30 seconds when visible and online
-    const timer = setInterval(performSync, 30000);
+    // Fast 4-second cloud sync check while tab is visible and online
+    const timer = setInterval(performSync, 4000);
 
     // Initial sync
     performSync();
