@@ -34,6 +34,7 @@ import {
 import { ParsedLesson } from '../../types/schedule';
 import { StorageService } from '../../services/storageService';
 import { SyncService, normalizeFirebaseUrl } from '../../services/syncService';
+import { RealtimeSyncService } from '../../services/realtimeSync';
 import { NotificationService } from '../../services/notificationService';
 import { downloadIcsSchedule } from '../../utils/icsExport';
 import { APP_VERSION } from '../../utils/version';
@@ -194,6 +195,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       onShowToast('error', 'Ошибка подключения', res.error);
     } else {
       setIsFirebaseConfigured(true);
+      RealtimeSyncService.initFirebaseStream();
       setLastSyncTime(SyncService.getLastSyncTime());
       onDataImported();
       onShowToast('success', 'Google Firebase подключен!', 'Синхронизация между ПК и телефоном активна.');
@@ -202,6 +204,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const handleDisconnectFirebase = () => {
     SyncService.clearFirebaseUrl();
+    RealtimeSyncService.initFirebaseStream();
     setIsFirebaseConfigured(false);
     setFirebaseUrlState('');
     onShowToast('info', 'Облако отвязано', 'Синхронизация отключена на этом устройстве.');

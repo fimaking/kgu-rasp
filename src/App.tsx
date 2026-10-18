@@ -17,6 +17,7 @@ import { useHomework } from './hooks/useHomework';
 import { useCalendar } from './hooks/useCalendar';
 import { useTheme } from './hooks/useTheme';
 import { SyncService } from './services/syncService';
+import { RealtimeSyncService } from './services/realtimeSync';
 import { NotificationService } from './services/notificationService';
 
 export const App: React.FC = () => {
@@ -49,6 +50,11 @@ export const App: React.FC = () => {
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Connect RealtimeSyncService globally on mount
+  useEffect(() => {
+    RealtimeSyncService.connect();
   }, []);
 
   // Keyboard shortcut listener: Cmd/Ctrl+K or 'n' for quick task
@@ -105,6 +111,7 @@ export const App: React.FC = () => {
         const fUrl = params.get('firebase') || params.get('cloud') || '';
         if (fUrl) {
           SyncService.setFirebaseUrl(fUrl);
+          RealtimeSyncService.initFirebaseStream();
           showToast('info', 'Подключение к Google Firebase...', 'Загрузка ваших заданий из облака');
           const res = await SyncService.pullFromCloud();
           homework.reload();

@@ -171,7 +171,7 @@ export function useTheme() {
       reload();
     });
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'ksu_student_settings_v2') {
+      if (!e.key || e.key === 'ksu_student_settings_v2') {
         reload();
       }
     };

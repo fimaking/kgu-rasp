@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RealtimeSyncService, RealtimeSyncPayload } from '../src/services/realtimeSync';
+import { SyncService } from '../src/services/syncService';
 import { StorageService } from '../src/services/storageService';
 import { Homework } from '../src/types/homework';
 import { CalendarCustomEvent } from '../src/types/calendar';
@@ -284,5 +285,43 @@ describe('RealtimeSyncService - Offline-First & Multi-Device Sync', () => {
     expect(updatedSettings.foreignLanguagePreference).toBe('en');
     expect(updatedSettings.visualTheme).toBe('emerald');
     expect(updatedSettings.accentColor).toBe('#34C759');
+  });
+
+  it('automatically notifies RealtimeSyncService subscribers when SyncService.pullFromCloud detects setting changes', async () => {
+    const mockRemoteSettings = {
+      ...StorageService.getSettings(),
+      groupId: 9999,
+      groupName: '99-ТЕСТ-1',
+      subgroupPreference: 2,
+      foreignLanguagePreference: 'fr',
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        version: '2.0',
+        updatedAt: '2026-10-18T16:00:00.000Z',
+        homework: [],
+        events: [],
+        settings: mockRemoteSettings,
+      }),
+    });
+
+    SyncService.setFirebaseUrl('https://test-db.firebaseio.com/sync.json');
+
+    let notifiedCount = 0;
+    const unsub = RealtimeSyncService.onUpdate(() => {
+      notifiedCount++;
+    });
+
+    const res = await SyncService.pullFromCloud();
+    unsub();
+
+    expect(res.updated).toBe(true);
+    expect(notifiedCount).toBeGreaterThan(0);
+    expect(StorageService.getSettings().groupId).toBe(9999);
+    expect(StorageService.getSettings().groupName).toBe('99-ТЕСТ-1');
+    expect(StorageService.getSettings().foreignLanguagePreference).toBe('fr');
   });
 });

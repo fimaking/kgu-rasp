@@ -32,6 +32,25 @@ export function normalizeFirebaseUrl(url: string): string {
 }
 
 export class SyncService {
+  private static updateListeners: Set<() => void> = new Set();
+
+  static onSyncUpdate(cb: () => void): () => void {
+    this.updateListeners.add(cb);
+    return () => {
+      this.updateListeners.delete(cb);
+    };
+  }
+
+  static notifyUpdate(): void {
+    for (const cb of this.updateListeners) {
+      try {
+        cb();
+      } catch (e) {
+        console.error('[SyncService] notifyUpdate error', e);
+      }
+    }
+  }
+
   /* =====================================================================
    * 1. Google Firebase Realtime Database Configuration
    * ===================================================================== */
@@ -266,8 +285,13 @@ export class SyncService {
         this.pushToCloud();
       }
 
+      const updated = hwChanged || eventsChanged || settingsChanged;
+      if (updated) {
+        this.notifyUpdate();
+      }
+
       return {
-        updated: hwChanged || eventsChanged || settingsChanged,
+        updated,
         countHw: finalHw.length,
       };
     } catch (e: any) {
@@ -402,6 +426,8 @@ export class SyncService {
       const updateTimestamp = payload.updatedAt || new Date().toISOString();
       StorageService.recordLastModified(updateTimestamp);
       localStorage.setItem(SYNC_LAST_PULL_STORAGE, updateTimestamp);
+
+      this.notifyUpdate();
 
       return {
         success: true,

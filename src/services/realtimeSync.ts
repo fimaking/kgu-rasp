@@ -43,6 +43,8 @@ export class RealtimeSyncService {
   private static isListeningToEvents: boolean = false;
   private static broadcastChannel: BroadcastChannel | null = null;
   private static heartbeatTimer: any = null;
+  private static cloudWatcherTimer: any = null;
+  private static eventSource: EventSource | null = null;
   private static lastKnownPayload: RealtimeSyncPayload | null = null;
 
   /**
@@ -113,7 +115,71 @@ export class RealtimeSyncService {
     this.initEventListeners();
     this.initBroadcastChannel();
     this.initHeartbeat();
+    this.initCloudWatcher();
     this.isConnected = true;
+  }
+
+  /**
+   * Cloud sync listener: Firebase SSE streaming + rapid 3s polling
+   */
+  private static initCloudWatcher(): void {
+    if (typeof window === 'undefined') return;
+
+    this.initFirebaseStream();
+
+    if (!this.cloudWatcherTimer) {
+      this.cloudWatcherTimer = setInterval(() => {
+        if (
+          SyncService.isFirebaseConfigured() &&
+          typeof navigator !== 'undefined' &&
+          navigator.onLine &&
+          typeof document !== 'undefined' &&
+          document.visibilityState === 'visible'
+        ) {
+          SyncService.pullFromCloud();
+        }
+      }, 3000);
+    }
+  }
+
+  /**
+   * Real-time Firebase streaming via Server-Sent Events (SSE)
+   */
+  static initFirebaseStream(): void {
+    if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
+    const url = SyncService.getFirebaseUrl();
+    if (!url) return;
+
+    if (this.eventSource) {
+      try {
+        this.eventSource.close();
+      } catch {}
+      this.eventSource = null;
+    }
+
+    try {
+      this.eventSource = new EventSource(url);
+      this.eventSource.addEventListener('put', (e: MessageEvent) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          if (parsed && parsed.data && typeof parsed.data === 'object') {
+            const payload = parsed.data as RealtimeSyncPayload;
+            if (payload && payload.senderId !== getDeviceId()) {
+              this.applyPayload(payload);
+            }
+          } else {
+            SyncService.pullFromCloud();
+          }
+        } catch {
+          SyncService.pullFromCloud();
+        }
+      });
+      this.eventSource.onerror = () => {
+        // SSE will auto-reconnect or polling will cover it
+      };
+    } catch (e) {
+      console.warn('[RealtimeSync] EventSource init notice:', e);
+    }
   }
 
   /**
@@ -123,22 +189,23 @@ export class RealtimeSyncService {
     if (this.isListeningToEvents || typeof window === 'undefined') return;
     this.isListeningToEvents = true;
 
-    window.addEventListener('online', () => {
-      console.log('[RealtimeSync] Network connection restored (online). Flushing pending sync...');
+    const pullLatest = () => {
       this.checkAndFlushPendingSync();
-    });
+      if (SyncService.isFirebaseConfigured()) {
+        SyncService.pullFromCloud();
+      }
+    };
+
+    window.addEventListener('online', pullLatest);
+    window.addEventListener('focus', pullLatest);
 
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-          this.checkAndFlushPendingSync();
+          pullLatest();
         }
       });
     }
-
-    window.addEventListener('focus', () => {
-      this.checkAndFlushPendingSync();
-    });
   }
 
   /**
@@ -407,3 +474,8 @@ export class RealtimeSyncService {
     };
   }
 }
+
+// Automatically notify RealtimeSync subscribers whenever SyncService finishes a pull or import
+SyncService.onSyncUpdate(() => {
+  RealtimeSyncService.notifySubscribers();
+});

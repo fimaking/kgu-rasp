@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { ParsedLesson, RaspInfo, WeekDaySchedule } from '../types/schedule';
 import { ScheduleService } from '../services/scheduleService';
 import { StorageService } from '../services/storageService';
@@ -41,9 +41,14 @@ export function useSchedule() {
     getMondayOfWeek(new Date())
   );
 
+  const groupIdRef = useRef(groupId);
+  useEffect(() => {
+    groupIdRef.current = groupId;
+  }, [groupId]);
+
   const loadData = useCallback(
     async (force = false, targetGroupId?: number) => {
-      const idToFetch = typeof targetGroupId === 'number' ? targetGroupId : groupId;
+      const idToFetch = typeof targetGroupId === 'number' ? targetGroupId : groupIdRef.current;
       if (force) setRefreshing(true);
       setError(null);
 
@@ -63,7 +68,7 @@ export function useSchedule() {
         setRefreshing(false);
       }
     },
-    [groupId]
+    []
   );
 
   useEffect(() => {
@@ -137,15 +142,22 @@ export function useSchedule() {
     const newSg = s.subgroupPreference ?? 1;
     const newLang = s.foreignLanguagePreference || 'de';
 
-    setGroupId((prevGid) => {
-      if (prevGid !== newGid) {
-        loadData(false, newGid);
-      }
-      return newGid;
-    });
+    const prevGid = groupIdRef.current;
+    groupIdRef.current = newGid;
+    setGroupId(newGid);
     setGroupName(newGname);
     setSubgroupFilter(newSg);
     setForeignLang(newLang);
+
+    if (prevGid !== newGid) {
+      const cached = ScheduleService.getCachedSchedule(newGid);
+      if (cached && cached.lessons.length > 0) {
+        setLessons(cached.lessons);
+        setInfo(cached.info);
+        setLastUpdated(cached.lastUpdated);
+      }
+      loadData(false, newGid);
+    }
   }, [loadData]);
 
   useEffect(() => {
@@ -153,7 +165,7 @@ export function useSchedule() {
       reload();
     });
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'ksu_student_settings_v2') {
+      if (!e.key || e.key === 'ksu_student_settings_v2') {
         reload();
       }
     };
