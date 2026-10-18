@@ -24,6 +24,7 @@ import { ThemeMode, UserSettings } from '../../types/settings';
 import { StorageService } from '../../services/storageService';
 import { SyncService } from '../../services/syncService';
 import { NotificationService } from '../../services/notificationService';
+import { APP_VERSION } from '../../utils/version';
 import { Button } from '../ui/Button';
 
 interface SettingsViewProps {
@@ -258,13 +259,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200 select-none pb-12">
-      {/* Top Banner: Settings Badge */}
+      {/* Top Banner: Settings Badge & App Version */}
       <div className="flex items-center justify-between select-none">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm">
           <Settings className="w-3.5 h-3.5 text-apple-blue shrink-0" />
           <span className="text-xs sm:text-sm font-semibold tracking-tight text-apple-gray-800 dark:text-zinc-200">
             Настройки
           </span>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold tracking-tight text-apple-gray-700 dark:text-zinc-300">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Версия:</span>
+          <span className="font-mono font-bold text-apple-blue">{APP_VERSION}</span>
         </div>
       </div>
 
@@ -720,6 +727,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           формате JSON или восстановить сохранённые данные на другом устройстве.
         </p>
 
+        <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <div>
+              <div className="text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 flex items-center gap-1.5 flex-wrap">
+                <span>Текущая версия приложения:</span>
+                <span className="font-mono font-bold text-apple-blue">{APP_VERSION}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Актуальная
+                </span>
+              </div>
+              <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
+                PWA • Кэш Service Worker {APP_VERSION}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-3 pt-2">
           <Button
             variant="secondary"
@@ -772,9 +797,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }, 300);
             }}
           >
-            Сбросить кэш и обновить версию
+            Сбросить кэш ({APP_VERSION})
           </Button>
         </div>
+      </div>
+
+      {/* App Version & Info Footer */}
+      <div className="text-center pt-2 pb-6 space-y-1 select-none text-apple-gray-400 dark:text-zinc-500">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 text-xs">
+          <span className="font-semibold text-apple-gray-700 dark:text-zinc-300">КГУ Студент</span>
+          <span>•</span>
+          <span className="font-mono font-bold text-apple-blue">{APP_VERSION}</span>
+        </div>
+        <p className="text-[11px]">Костромской государственный университет</p>
       </div>
     </div>
   );
