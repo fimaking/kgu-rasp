@@ -147,7 +147,7 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
                   onClick={() => setSelectedSubgroup(tab.id)}
                   className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                     selectedSubgroup === tab.id
-                      ? 'bg-white dark:bg-zinc-800 text-apple-gray-900 dark:text-white shadow-apple-sm font-bold scale-[1.01]'
+                      ? 'bg-apple-blue text-white shadow-apple-sm font-bold scale-[1.01]'
                       : 'text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-gray-900 dark:hover:text-white'
                   }`}
                 >
