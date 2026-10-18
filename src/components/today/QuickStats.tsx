@@ -6,7 +6,8 @@ interface QuickStatsProps {
   activeHomeworkCount: number;
   overdueHomeworkCount: number;
   dueTodayHomeworkCount: number;
-  onNavigateToTab: (tab: 'schedule' | 'homework') => void;
+  onNavigateToTab?: (tab: 'schedule' | 'homework') => void;
+  onSelectFilter?: (tab: 'all' | 'today' | 'overdue') => void;
 }
 
 export const QuickStats: React.FC<QuickStatsProps> = ({
@@ -15,12 +16,13 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   overdueHomeworkCount,
   dueTodayHomeworkCount,
   onNavigateToTab,
+  onSelectFilter,
 }) => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 select-none">
       {/* Lessons today */}
       <div
-        onClick={() => onNavigateToTab('schedule')}
+        onClick={() => onNavigateToTab?.('schedule')}
         className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group"
       >
         <div className="flex items-center justify-between">
@@ -46,7 +48,10 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
 
       {/* Due Today */}
       <div
-        onClick={() => onNavigateToTab('homework')}
+        onClick={() => {
+          if (onSelectFilter) onSelectFilter('today');
+          else onNavigateToTab?.('homework');
+        }}
         className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group"
       >
         <div className="flex items-center justify-between">
@@ -70,7 +75,10 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
 
       {/* Overdue */}
       <div
-        onClick={() => onNavigateToTab('homework')}
+        onClick={() => {
+          if (onSelectFilter) onSelectFilter('overdue');
+          else onNavigateToTab?.('homework');
+        }}
         className={`p-4 sm:p-5 rounded-3xl backdrop-blur-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group ${
           overdueHomeworkCount > 0
             ? 'bg-rose-500/5 dark:bg-rose-500/10 border-rose-500/20 shadow-apple-card'
@@ -110,7 +118,10 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
 
       {/* Active homework */}
       <div
-        onClick={() => onNavigateToTab('homework')}
+        onClick={() => {
+          if (onSelectFilter) onSelectFilter('all');
+          else onNavigateToTab?.('homework');
+        }}
         className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card hover:shadow-apple-hover transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer group"
       >
         <div className="flex items-center justify-between">

@@ -216,6 +216,8 @@ export const App: React.FC = () => {
                 stats={homework.stats}
                 filters={homework.filters}
                 onFilterChange={homework.setFilters}
+                todayLessonsCount={schedule.todayLessons.length}
+                onNavigateToSchedule={() => setCurrentTab('schedule')}
                 onToggleComplete={(id) => {
                   homework.toggleComplete(id);
                   showToast('success', 'Статус задания обновлен');

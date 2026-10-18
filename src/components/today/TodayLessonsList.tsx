@@ -7,11 +7,15 @@ import { getLessonStatus } from '../../utils/scheduleParser';
 interface TodayLessonsListProps {
   lessons: ParsedLesson[];
   onSelectLesson: (lesson: ParsedLesson) => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
   lessons,
   onSelectLesson,
+  emptyTitle,
+  emptyDescription,
 }) => {
   const [now, setNow] = useState(() => new Date());
 
@@ -38,10 +42,11 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
       <div className="p-8 text-center rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card">
         <CalendarCheck className="w-12 h-12 mx-auto text-emerald-500/70 mb-3" />
         <h4 className="text-base font-semibold text-apple-gray-900 dark:text-white">
-          Пар сегодня нет
+          {emptyTitle || 'Пар сегодня нет'}
         </h4>
         <p className="mt-1 text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400 max-w-sm mx-auto">
-          Расписание на сегодня пустое. Вы можете заняться домашними заданиями или посмотреть расписание на другие дни.
+          {emptyDescription ||
+            'Расписание на сегодня пустое. Вы можете заняться домашними заданиями или посмотреть расписание на другие дни.'}
         </p>
       </div>
     );

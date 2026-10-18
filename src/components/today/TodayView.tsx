@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ParsedLesson, RaspInfo } from '../../types/schedule';
 import { Homework } from '../../types/homework';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
-import { QuickStats } from './QuickStats';
+import { formatDateToIso, formatDayOfWeek, formatRussianDate } from '../../utils/dateUtils';
 import { NextPairBanner } from './NextPairBanner';
 import { TodayLessonsList } from './TodayLessonsList';
 import { TodayHomeworkWidget } from './TodayHomeworkWidget';
@@ -22,7 +22,7 @@ interface TodayViewProps {
   } | null;
   dueTodayList: Homework[];
   overdueList: Homework[];
-  activeHomeworkCount: number;
+  activeHomeworkCount?: number;
   info?: RaspInfo | null;
   onNavigateToTab: (tab: 'schedule' | 'homework' | 'calendar') => void;
   onToggleCompleteHomework: (id: string) => void;
@@ -41,13 +41,30 @@ export const TodayView: React.FC<TodayViewProps> = ({
   currentOrNextLesson,
   dueTodayList,
   overdueList,
-  activeHomeworkCount,
   onNavigateToTab,
   onToggleCompleteHomework,
   onOpenCreateHomework,
   onSelectHomework,
 }) => {
   const [selectedLesson, setSelectedLesson] = useState<ParsedLesson | null>(null);
+
+  const tomorrow = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d;
+  }, []);
+
+  const tomorrowDateStr = useMemo(() => formatDateToIso(tomorrow), [tomorrow]);
+
+  const tomorrowLessons = useMemo(() => {
+    return allLessons
+      .filter((l) => l.dateStr === tomorrowDateStr)
+      .sort((a, b) => a.pairNumber - b.pairNumber);
+  }, [allLessons, tomorrowDateStr]);
+
+  const tomorrowDayFormatted = useMemo(() => {
+    return `${formatDayOfWeek(tomorrow)}, ${formatRussianDate(tomorrow, false)}`;
+  }, [tomorrow]);
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-200">
@@ -74,14 +91,29 @@ export const TodayView: React.FC<TodayViewProps> = ({
         />
       </div>
 
-      {/* 3. Quick Stats Grid (4 плашки: перенесены вниз перед заданиями и дедлайнами) */}
-      <QuickStats
-        todayLessonsCount={todayLessons.length}
-        activeHomeworkCount={activeHomeworkCount}
-        overdueHomeworkCount={overdueList.length}
-        dueTodayHomeworkCount={dueTodayList.length}
-        onNavigateToTab={onNavigateToTab}
-      />
+      {/* 3. Tomorrow's pairs (пары на завтра) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white">
+              Пары на завтра
+            </h3>
+            <span className="text-xs text-apple-gray-500 dark:text-apple-gray-400 font-medium">
+              • {tomorrowDayFormatted}
+            </span>
+          </div>
+          <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-500">
+            {tomorrowLessons.length}
+          </span>
+        </div>
+
+        <TodayLessonsList
+          lessons={tomorrowLessons}
+          onSelectLesson={(l) => setSelectedLesson(l)}
+          emptyTitle="Пар завтра нет"
+          emptyDescription="Расписание на завтра пустое. Отличный свободный день для отдыха или подготовки к занятиям!"
+        />
+      </div>
 
       {/* 4. Homework & Deadlines (задания и дедлайны) */}
       <div className="space-y-4">

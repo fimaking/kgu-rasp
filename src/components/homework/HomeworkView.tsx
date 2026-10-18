@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { CheckSquare, Clock, AlertTriangle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckSquare, AlertCircle } from 'lucide-react';
 import { Homework, HomeworkFilters as IHomeworkFilters } from '../../types/homework';
 import { HomeworkCard } from './HomeworkCard';
 import { HomeworkFilters } from './HomeworkFilters';
 import { HomeworkFormModal } from './HomeworkFormModal';
+import { QuickStats } from '../today/QuickStats';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 
@@ -31,6 +32,8 @@ interface HomeworkViewProps {
   onCloseCreateModal: () => void;
   onOpenCreateModal: () => void;
   selectedHomeworkForEdit?: Homework | null;
+  todayLessonsCount?: number;
+  onNavigateToSchedule?: () => void;
 }
 
 export const HomeworkView: React.FC<HomeworkViewProps> = ({
@@ -47,6 +50,8 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
   isCreateModalOpen,
   onCloseCreateModal,
   onOpenCreateModal,
+  todayLessonsCount = 0,
+  onNavigateToSchedule,
 }) => {
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -60,101 +65,19 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 3 Summary Stats Cards: 0 активных • 0 просроченных • 0 выполненных */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 select-none">
-        {/* Активных */}
-        <div
-          onClick={() => onFilterChange({ ...filters, tab: 'all' })}
-          className={`p-3.5 sm:p-5 rounded-2.5xl sm:rounded-3xl backdrop-blur-xl border transition-all duration-200 cursor-pointer active:scale-[0.98] ${
-            filters.tab === 'all'
-              ? 'bg-blue-500/10 dark:bg-blue-500/15 border-apple-blue/30 shadow-apple-card ring-1 ring-apple-blue/20'
-              : 'bg-white/70 dark:bg-zinc-900/70 border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20 shadow-apple-card'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-apple-gray-400">
-              Активных
-            </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-apple-blue flex items-center justify-center shrink-0">
-              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-apple-gray-900 dark:text-white">
-              {stats.active}
-            </span>
-            <span className="text-xs text-apple-gray-400 dark:text-apple-gray-500 font-medium">
-              активных
-            </span>
-          </div>
-        </div>
-
-        {/* Просроченных */}
-        <div
-          onClick={() => onFilterChange({ ...filters, tab: 'overdue' })}
-          className={`p-3.5 sm:p-5 rounded-2.5xl sm:rounded-3xl backdrop-blur-xl border transition-all duration-200 cursor-pointer active:scale-[0.98] ${
-            filters.tab === 'overdue'
-              ? 'bg-rose-500/15 dark:bg-rose-500/20 border-rose-500/30 shadow-apple-card ring-1 ring-rose-500/30'
-              : stats.overdue > 0
-              ? 'bg-rose-500/5 dark:bg-rose-500/10 border-rose-500/20 shadow-apple-card'
-              : 'bg-white/70 dark:bg-zinc-900/70 border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20 shadow-apple-card'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-apple-gray-400">
-              Просроченных
-            </span>
-            <div
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                stats.overdue > 0
-                  ? 'bg-rose-500/15 text-rose-500 dark:text-rose-400'
-                  : 'bg-black/5 dark:bg-white/10 text-apple-gray-400'
-              }`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline gap-1.5">
-            <span
-              className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight ${
-                stats.overdue > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-apple-gray-900 dark:text-white'
-              }`}
-            >
-              {stats.overdue}
-            </span>
-            <span className="text-xs text-apple-gray-400 dark:text-apple-gray-500 font-medium">
-              просроченных
-            </span>
-          </div>
-        </div>
-
-        {/* Выполненных */}
-        <div
-          onClick={() => onFilterChange({ ...filters, tab: 'completed' })}
-          className={`p-3.5 sm:p-5 rounded-2.5xl sm:rounded-3xl backdrop-blur-xl border transition-all duration-200 cursor-pointer active:scale-[0.98] ${
-            filters.tab === 'completed'
-              ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30 shadow-apple-card ring-1 ring-emerald-500/20'
-              : 'bg-white/70 dark:bg-zinc-900/70 border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20 shadow-apple-card'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-apple-gray-400">
-              Выполненных
-            </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-apple-gray-900 dark:text-white">
-              {stats.completed}
-            </span>
-            <span className="text-xs text-apple-gray-400 dark:text-apple-gray-500 font-medium">
-              выполненных
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* 4 Mini Windows (Quick Stats) */}
+      <QuickStats
+        todayLessonsCount={todayLessonsCount}
+        activeHomeworkCount={stats.active}
+        overdueHomeworkCount={stats.overdue}
+        dueTodayHomeworkCount={stats.dueToday}
+        onNavigateToTab={(tab) => {
+          if (tab === 'schedule') {
+            onNavigateToSchedule?.();
+          }
+        }}
+        onSelectFilter={(filterTab) => onFilterChange({ ...filters, tab: filterTab })}
+      />
 
       {/* Filter and Search Bar */}
       <HomeworkFilters
