@@ -147,8 +147,12 @@ export function useHomework() {
   }, []);
 
   // Compute dates
-  const todayStr = formatDateToIso(new Date());
   const now = new Date();
+  const todayStr = formatDateToIso(now);
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(now.getDate() + 1);
+  const tomorrowStr = formatDateToIso(tomorrowDate);
+
   const currentWeekMonday = getMondayOfWeek(now);
   const currentWeekSunday = new Date(currentWeekMonday);
   currentWeekSunday.setDate(currentWeekMonday.getDate() + 6);
@@ -201,6 +205,11 @@ export function useHomework() {
   const dueTodayList = useMemo(() => {
     return items.filter((h) => h.dueDate === todayStr && h.status !== 'completed');
   }, [items, todayStr]);
+
+  // Due tomorrow list
+  const dueTomorrowList = useMemo(() => {
+    return items.filter((h) => h.dueDate === tomorrowStr && h.status !== 'completed');
+  }, [items, tomorrowStr]);
 
   // Overdue list
   const overdueList = useMemo(() => {
@@ -289,6 +298,7 @@ export function useHomework() {
     allItems: items,
     stats,
     dueTodayList,
+    dueTomorrowList,
     overdueList,
     filters,
     setFilters,

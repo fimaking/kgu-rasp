@@ -63,14 +63,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       )}
 
       {/* Docked bottom navigation bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/85 dark:bg-[#18181b]/85 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-around select-none">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/85 dark:bg-[#18181b]/85 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 px-1 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-between select-none">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
+              className={`relative flex-1 min-w-0 flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
                 isActive
                   ? 'text-apple-blue font-semibold scale-105'
                   : 'text-apple-gray-500 dark:text-apple-gray-400 hover:text-apple-gray-800'
@@ -88,7 +88,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-0.5 tracking-tight">{tab.label}</span>
+              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-full text-center leading-tight">
+                {tab.label}
+              </span>
             </button>
           );
         })}

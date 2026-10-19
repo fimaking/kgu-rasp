@@ -20,7 +20,8 @@ interface TodayViewProps {
       minutesUntilEnd: number;
     };
   } | null;
-  dueTodayList: Homework[];
+  dueTodayList?: Homework[];
+  dueTomorrowList?: Homework[];
   overdueList: Homework[];
   activeHomeworkCount?: number;
   info?: RaspInfo | null;
@@ -39,7 +40,8 @@ export const TodayView: React.FC<TodayViewProps> = ({
   todayLessons,
   allLessons = [],
   currentOrNextLesson,
-  dueTodayList,
+  dueTodayList = [],
+  dueTomorrowList,
   overdueList,
   onNavigateToTab,
   onToggleCompleteHomework,
@@ -115,19 +117,24 @@ export const TodayView: React.FC<TodayViewProps> = ({
         />
       </div>
 
-      {/* 4. Homework & Deadlines (задания и дедлайны) */}
+      {/* 4. Homework & Deadlines (задания и дедлайны на завтра) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white">
-            Задания и дедлайны
+            Задания и дедлайны на завтра
           </h3>
         </div>
 
         <TodayHomeworkWidget
+          dueTomorrowList={dueTomorrowList}
           dueTodayList={dueTodayList}
           overdueList={overdueList}
           onToggleComplete={onToggleCompleteHomework}
-          onOpenCreateModal={onOpenCreateHomework}
+          onOpenCreateModal={() =>
+            onOpenCreateHomework({
+              dueDate: tomorrowDateStr,
+            })
+          }
           onViewAllHomework={() => onNavigateToTab('homework')}
           onSelectHomework={onSelectHomework}
         />

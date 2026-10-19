@@ -83,24 +83,24 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
-                    {lesson.startTime} — {lesson.endTime}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white whitespace-nowrap shrink-0">
+                    {lesson.startTime}&nbsp;—&nbsp;{lesson.endTime}
                   </span>
                   {isCurrent && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-apple-blue text-white animate-pulse">
+                    <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-apple-blue text-white animate-pulse whitespace-nowrap shrink-0">
                       Идёт пара
                     </span>
                   )}
                   {isPassed && (
-                    <span className="text-[11px] text-apple-gray-400">Завершено</span>
+                    <span className="text-[11px] text-apple-gray-400 whitespace-nowrap shrink-0">Завершено</span>
                   )}
                 </div>
-                <div className="mt-1 flex items-center gap-2">
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
                   <LessonTypeBadge type={lesson.type} label={lesson.typeLabel} />
                   {lesson.subgroup > 0 && (
-                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-apple-gray-500 font-medium">
-                      {lesson.subgroup} п/г
+                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-apple-gray-500 font-medium whitespace-nowrap shrink-0">
+                      {lesson.subgroup}&nbsp;п/г
                     </span>
                   )}
                 </div>

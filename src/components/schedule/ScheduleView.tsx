@@ -9,8 +9,6 @@ import {
   Sparkles,
   Bell,
   GraduationCap,
-  Clock,
-  Download,
 } from 'lucide-react';
 import { ParsedLesson, WeekDaySchedule, RaspInfo } from '../../types/schedule';
 import { WeekNavigator } from './WeekNavigator';
@@ -19,7 +17,6 @@ import { LessonModal } from './LessonModal';
 import { Modal } from '../ui/Modal';
 import { isSameDay, formatDateToIso, formatRussianDate, getMondayOfWeek } from '../../utils/dateUtils';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
-import { downloadIcsSchedule } from '../../utils/icsExport';
 
 export type ScheduleFilterMode = 'all' | 'lecture' | 'practice' | 'lab' | 'session';
 
@@ -61,7 +58,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onGoToToday,
   onGoToDate,
   onOpenCreateHomeworkForSubject,
-  onShowToast,
+  onShowToast: _onShowToast,
 }) => {
   const [selectedDayDate, setSelectedDayDate] = useState<Date>(() => {
     const now = new Date();
@@ -77,67 +74,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
-  // Active pair or break countdown info (Sunday is excluded)
-  const currentBreakOrPairInfo = useMemo(() => {
-    const now = new Date();
-    // В воскресенье учебных занятий нет — не учитываем
-    if (now.getDay() === 0) return null;
 
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-    // 1. Check if a pair is currently ongoing
-    for (const b of KSU_BELL_TIMES) {
-      const [sh, sm] = b.start.split(':').map(Number);
-      const [eh, em] = b.end.split(':').map(Number);
-      const startMins = sh * 60 + sm;
-      const endMins = eh * 60 + em;
-
-      if (currentMinutes >= startMins && currentMinutes < endMins) {
-        const left = endMins - currentMinutes;
-        return {
-          type: 'pair' as const,
-          pair: b.pair,
-          text: `Идёт ${b.pair}-я пара: осталось ${left} мин (до ${b.end})`,
-        };
-      }
-    }
-
-    // 2. Check breaks between pairs
-    for (let i = 0; i < KSU_BELL_TIMES.length - 1; i++) {
-      const currentPair = KSU_BELL_TIMES[i];
-      const nextPair = KSU_BELL_TIMES[i + 1];
-      const [ceh, cem] = currentPair.end.split(':').map(Number);
-      const [nsh, nsm] = nextPair.start.split(':').map(Number);
-      const breakStartMins = ceh * 60 + cem;
-      const breakEndMins = nsh * 60 + nsm;
-
-      if (currentMinutes >= breakStartMins && currentMinutes < breakEndMins) {
-        const left = breakEndMins - currentMinutes;
-        const isBigBreak = currentPair.pair === 3;
-        return {
-          type: 'break' as const,
-          pair: nextPair.pair,
-          text: isBigBreak
-            ? `Большой перерыв (обед)! До ${nextPair.pair}-й пары: ${left} мин (начало в ${nextPair.start})`
-            : `Перемена: до ${nextPair.pair}-й пары ${left} мин (начало в ${nextPair.start})`,
-        };
-      }
-    }
-
-    // 3. Before 1st pair in the morning (from 07:30 to 08:30)
-    const [p1H, p1M] = KSU_BELL_TIMES[0].start.split(':').map(Number);
-    const p1StartMins = p1H * 60 + p1M;
-    if (currentMinutes >= p1StartMins - 60 && currentMinutes < p1StartMins) {
-      const left = p1StartMins - currentMinutes;
-      return {
-        type: 'break' as const,
-        pair: 1,
-        text: `Скоро 1-я пара: осталось ${left} мин (начало в 08:30)`,
-      };
-    }
-
-    return null;
-  }, []);
 
   // When opening schedule view, ensure today's week is active and select current day (or Monday if Sunday)
   useEffect(() => {
@@ -328,18 +265,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     }
   };
 
-  const handleExportIcs = () => {
-    const group = info?.group?.name || 'КГУ';
-    downloadIcsSchedule(allLessons, group);
-    if (onShowToast) {
-      onShowToast(
-        'success',
-        'Расписание .ics скачано!',
-        'Откройте файл на телефоне или ПК, чтобы добавить пары в системный календарь.'
-      );
-    }
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Top Banner: Semester Badge & Controls */}
@@ -362,20 +287,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
             <Bell className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span>Звонки КГУ</span>
           </button>
-
-          {/* Export to .ics calendar button */}
-          <button
-            type="button"
-            onClick={handleExportIcs}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95"
-            title="Экспортировать расписание семестра в Apple Calendar, Google Calendar или Outlook (.ics)"
-          >
-            <Download className="w-3.5 h-3.5 text-apple-blue shrink-0" />
-            <span>В календарь (.ics)</span>
-          </button>
         </div>
-
-        {/* View Mode Toggle, Session filter & Search */}
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Quick Filter: All / Lectures / Practicals / Labs / Exams */}
           <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5 text-xs font-medium overflow-x-auto scrollbar-none">
@@ -473,24 +385,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         </div>
       </div>
 
-      {/* Break / Pair Realtime Countdown Banner */}
-      {currentBreakOrPairInfo && (
-        <div className="p-3.5 rounded-2.5xl bg-apple-blue/[0.07] dark:bg-apple-blue/[0.12] border border-apple-blue/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-200 shadow-apple-sm">
-          <div className="flex items-center gap-2.5 font-semibold text-apple-gray-900 dark:text-white">
-            <span className="w-2 h-2 rounded-full bg-apple-blue animate-pulse shrink-0" />
-            <span>{currentBreakOrPairInfo.text}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowBellsModal(true)}
-            className="text-apple-blue hover:underline font-bold inline-flex items-center gap-1 shrink-0"
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Расписание звонков</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+
 
       {/* Week Navigator Bar */}
       <WeekNavigator

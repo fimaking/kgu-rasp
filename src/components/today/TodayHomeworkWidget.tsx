@@ -4,8 +4,9 @@ import { Homework } from '../../types/homework';
 import { PriorityBadge } from '../ui/Badge';
 
 interface TodayHomeworkWidgetProps {
-  dueTodayList: Homework[];
-  overdueList: Homework[];
+  dueTomorrowList?: Homework[];
+  dueTodayList?: Homework[];
+  overdueList?: Homework[];
   onToggleComplete: (id: string) => void;
   onOpenCreateModal: () => void;
   onViewAllHomework: () => void;
@@ -13,13 +14,15 @@ interface TodayHomeworkWidgetProps {
 }
 
 export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
-  dueTodayList,
-  overdueList,
+  dueTomorrowList,
+  dueTodayList = [],
+  overdueList = [],
   onToggleComplete,
   onOpenCreateModal,
   onViewAllHomework,
   onSelectHomework,
 }) => {
+  const tomorrowList = dueTomorrowList ?? dueTodayList;
   return (
     <div className="space-y-4">
       {/* Overdue alert banner if overdue tasks exist */}
@@ -72,7 +75,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
         </div>
       )}
 
-      {/* Due Today Card */}
+      {/* Due Tomorrow Card */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -80,7 +83,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
               <CheckSquare className="w-4 h-4" />
             </div>
             <h4 className="text-base font-bold text-apple-gray-900 dark:text-white">
-              Сдать сегодня ({dueTodayList.length})
+              Сдать завтра ({tomorrowList.length})
             </h4>
           </div>
 
@@ -93,19 +96,19 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
           </button>
         </div>
 
-        {dueTodayList.length === 0 ? (
+        {tomorrowList.length === 0 ? (
           <div className="py-6 text-center">
             <Clock className="w-8 h-8 mx-auto text-apple-gray-300 dark:text-apple-gray-600 mb-2" />
             <p className="text-xs sm:text-sm font-medium text-apple-gray-600 dark:text-apple-gray-400">
-              На сегодня нет горящих дедлайнов
+              На завтра нет дедлайнов
             </p>
             <p className="mt-0.5 text-xs text-apple-gray-400">
-              Можно заняться заданиями на следующую неделю
+              Все задания выполнены или дедлайны позже
             </p>
           </div>
         ) : (
           <div className="space-y-2.5">
-            {dueTodayList.map((item) => {
+            {tomorrowList.map((item) => {
               const subtasks = Array.isArray(item.subtasks) ? item.subtasks : [];
               const completedSubtasks = subtasks.filter((s) => s.completed).length;
 

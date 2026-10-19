@@ -234,6 +234,7 @@ export const App: React.FC = () => {
                 allLessons={schedule.lessons}
                 currentOrNextLesson={schedule.currentOrNextLesson}
                 dueTodayList={homework.dueTodayList}
+                dueTomorrowList={homework.dueTomorrowList}
                 overdueList={homework.overdueList}
                 activeHomeworkCount={homework.stats.active}
                 info={schedule.info}

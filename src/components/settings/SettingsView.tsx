@@ -37,7 +37,6 @@ import { StorageService } from '../../services/storageService';
 import { SyncService, normalizeFirebaseUrl } from '../../services/syncService';
 import { RealtimeSyncService } from '../../services/realtimeSync';
 import { NotificationService } from '../../services/notificationService';
-import { downloadIcsSchedule } from '../../utils/icsExport';
 import { APP_VERSION } from '../../utils/version';
 import { Button } from '../ui/Button';
 
@@ -72,7 +71,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   groupId = 8953,
   groupName = '26-ИСбо-4',
   onOpenGroupSelect,
-  lessons = [],
+  lessons: _lessons = [],
   onShowToast,
   onDataImported,
   onRefreshSchedule,
@@ -303,7 +302,76 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Section 1: Appearance / Theme Mode & Customization */}
+      {/* Section 1: Subgroup and Group details (Смена группы вверху) */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-apple-blue" />
+            <span>Группа и профиль студента</span>
+          </h3>
+          {onOpenGroupSelect && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Users className="w-3.5 h-3.5 text-apple-blue" />}
+              onClick={onOpenGroupSelect}
+            >
+              Сменить группу
+            </Button>
+          )}
+        </div>
+
+        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-apple-gray-500 font-medium">Группа в ЭИОС КГУ:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
+                {groupName} (ID: {groupId})
+              </span>
+              {onOpenGroupSelect && (
+                <button
+                  onClick={onOpenGroupSelect}
+                  className="text-xs text-apple-blue hover:underline font-semibold"
+                >
+                  Изменить
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-apple-gray-500 font-medium">Официальный сайт КГУ:</span>
+            <a
+              href={`https://eios.kosgos.ru/WebApp/#/Rasp/Group/${groupId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-apple-blue font-semibold hover:underline flex items-center gap-1"
+            >
+              <span>eios.kosgos.ru</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
+            <span className="text-xs text-apple-gray-500 font-medium">Статус расписания КГУ:</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{formatLastSync(lastUpdated)}</span>
+              </div>
+              <button
+                onClick={onRefreshSchedule}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-all duration-200 ease-out active:scale-90"
+                title="Обновить расписание с сайта КГУ"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 2: Appearance / Theme Mode & Customization */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-6">
         <div className="space-y-3">
           <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
@@ -441,75 +509,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               );
             })}
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Subgroup and Group details */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-apple-blue" />
-            <span>Группа и профиль студента</span>
-          </h3>
-          {onOpenGroupSelect && (
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Users className="w-3.5 h-3.5 text-apple-blue" />}
-              onClick={onOpenGroupSelect}
-            >
-              Сменить группу
-            </Button>
-          )}
-        </div>
-
-        <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-apple-gray-500 font-medium">Группа в ЭИОС КГУ:</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold font-mono text-apple-gray-900 dark:text-white">
-                {groupName} (ID: {groupId})
-              </span>
-              {onOpenGroupSelect && (
-                <button
-                  onClick={onOpenGroupSelect}
-                  className="text-xs text-apple-blue hover:underline font-semibold"
-                >
-                  Изменить
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-apple-gray-500 font-medium">Официальный сайт КГУ:</span>
-            <a
-              href={`https://eios.kosgos.ru/WebApp/#/Rasp/Group/${groupId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-apple-blue font-semibold hover:underline flex items-center gap-1"
-            >
-              <span>eios.kosgos.ru</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
-            <span className="text-xs text-apple-gray-500 font-medium">Статус расписания КГУ:</span>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{formatLastSync(lastUpdated)}</span>
-              </div>
-              <button
-                onClick={onRefreshSchedule}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-all duration-200 ease-out active:scale-90"
-                title="Обновить расписание с сайта КГУ"
-              >
-                <RotateCw className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -914,21 +913,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={handleExportJson}
           >
             Экспорт в JSON
-          </Button>
-
-          <Button
-            variant="secondary"
-            icon={<Download className="w-4 h-4 text-apple-blue" />}
-            onClick={() => {
-              downloadIcsSchedule(lessons, groupName);
-              onShowToast(
-                'success',
-                'Расписание .ics скачано!',
-                'Откройте файл, чтобы добавить все пары в календарь телефона или ПК.'
-              );
-            }}
-          >
-            Экспорт в iCal (.ics)
           </Button>
 
           <Button
