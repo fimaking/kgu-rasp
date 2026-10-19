@@ -232,7 +232,7 @@
 :root {
   --color-accent-rgb: 0 122 255;
   --color-accent-hex: #007AFF;
-  --font-family-app: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-family-app: "Comfortaa", cursive, sans-serif;
 }
 
 /* Font Families */

@@ -67,7 +67,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
   visualTheme: 'oled',
   accentColor: '#007AFF',
-  fontFamily: 'system',
+  fontFamily: 'comfortaa',
   fontScale: 'normal',
   appRadius: 'normal',
   cardStyle: 'glass',

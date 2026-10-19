@@ -34,7 +34,7 @@ describe('App Customization & Theming Suite', () => {
     expect(DEFAULT_SETTINGS.theme).toBe('dark');
     expect(DEFAULT_SETTINGS.visualTheme).toBe('oled');
     expect(DEFAULT_SETTINGS.accentColor).toBe('#007AFF');
-    expect(DEFAULT_SETTINGS.fontFamily).toBe('system');
+    expect(DEFAULT_SETTINGS.fontFamily).toBe('comfortaa');
     expect(DEFAULT_SETTINGS.fontScale).toBe('normal');
     expect(DEFAULT_SETTINGS.appRadius).toBe('normal');
     expect(DEFAULT_SETTINGS.cardStyle).toBe('glass');

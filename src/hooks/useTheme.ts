@@ -34,9 +34,10 @@ export function useTheme() {
   const [settings, setSettings] = useState(() => StorageService.getSettings());
 
   const themeMode = settings.theme || DEFAULT_SETTINGS.theme;
-  const visualTheme = settings.visualTheme || DEFAULT_SETTINGS.visualTheme;
-  const accentColor = settings.accentColor || DEFAULT_SETTINGS.accentColor;
-  const fontFamily = settings.fontFamily || DEFAULT_SETTINGS.fontFamily;
+  // Default and locked to OLED Black, Comfortaa font, and Apple Blue accent
+  const visualTheme: VisualTheme = 'oled';
+  const accentColor = '#007AFF';
+  const fontFamily: FontFamily = 'comfortaa';
   const fontScale = settings.fontScale || DEFAULT_SETTINGS.fontScale;
   const appRadius = settings.appRadius || DEFAULT_SETTINGS.appRadius;
   const cardStyle = settings.cardStyle || DEFAULT_SETTINGS.cardStyle;

@@ -325,12 +325,6 @@ export const App: React.FC = () => {
               <SettingsView
                 themeMode={theme.themeMode}
                 onThemeChange={theme.setThemeMode}
-                visualTheme={theme.visualTheme}
-                onVisualThemeChange={theme.setVisualTheme}
-                accentColor={theme.accentColor}
-                onAccentColorChange={theme.setAccentColor}
-                fontFamily={theme.fontFamily}
-                onFontFamilyChange={theme.setFontFamily}
                 groupId={schedule.groupId}
                 groupName={schedule.groupName}
                 onOpenGroupSelect={() => setIsGroupSelectOpen(true)}

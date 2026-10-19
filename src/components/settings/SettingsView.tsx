@@ -20,17 +20,11 @@ import {
   Users,
   RotateCw,
   Palette,
-  Type,
   Database,
 } from 'lucide-react';
 import {
   ThemeMode,
   UserSettings,
-  VisualTheme,
-  FontFamily,
-  ACCENT_COLORS,
-  VISUAL_THEMES,
-  FONT_OPTIONS,
 } from '../../types/settings';
 import { ParsedLesson } from '../../types/schedule';
 import { StorageService } from '../../services/storageService';
@@ -43,12 +37,6 @@ import { Button } from '../ui/Button';
 interface SettingsViewProps {
   themeMode: ThemeMode;
   onThemeChange: (mode: ThemeMode) => void;
-  visualTheme?: VisualTheme;
-  onVisualThemeChange?: (theme: VisualTheme) => void;
-  accentColor?: string;
-  onAccentColorChange?: (color: string) => void;
-  fontFamily?: FontFamily;
-  onFontFamilyChange?: (font: FontFamily) => void;
   groupId?: number;
   groupName?: string;
   onOpenGroupSelect?: () => void;
@@ -62,12 +50,6 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   themeMode,
   onThemeChange,
-  visualTheme = 'oled',
-  onVisualThemeChange,
-  accentColor = '#007AFF',
-  onAccentColorChange,
-  fontFamily = 'system',
-  onFontFamilyChange,
   groupId = 8953,
   groupName = '26-ИСбо-4',
   onOpenGroupSelect,
@@ -371,12 +353,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Section 2: Appearance / Theme Mode & Customization */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-6">
+      {/* Section 2: Appearance / Theme Mode */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
         <div className="space-y-3">
           <h3 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
             <Palette className="w-5 h-5 text-apple-blue" />
-            <span>Тема и стиль оформления</span>
+            <span>Тема оформления</span>
           </h3>
 
           {/* Light / Dark / System */}
@@ -400,116 +382,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Visual Palette Selection */}
-        <div className="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200">
-              Цветовая гамма темы (Dark):
-            </span>
-            <span className="text-[11px] font-mono text-apple-gray-500 capitalize">
-              {VISUAL_THEMES.find((t) => t.id === visualTheme)?.name || visualTheme}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {VISUAL_THEMES.filter(
-              (vt) => !['cyber-violet', 'electric-mint', 'acid-lime', 'cyber'].includes(vt.id)
-            ).map((vt) => {
-              const isActive = visualTheme === vt.id;
-              return (
-                <button
-                  key={vt.id}
-                  onClick={() => onVisualThemeChange?.(vt.id)}
-                  className={`p-3 rounded-2xl flex items-center gap-2.5 text-left transition-all border ${
-                    isActive
-                      ? 'border-apple-blue bg-apple-blue/10 dark:bg-apple-blue/15 shadow-sm ring-1 ring-apple-blue/30'
-                      : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] hover:bg-black/[0.04]'
-                  }`}
-                >
-                  <span
-                    className="w-4 h-4 rounded-full border border-black/20 dark:border-white/20 shrink-0 shadow-sm"
-                    style={{ backgroundColor: vt.previewColorDark }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-apple-gray-900 dark:text-white truncate">
-                      {vt.name}
-                    </div>
-                  </div>
-                  {isActive && <Check className="w-3.5 h-3.5 text-apple-blue shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Accent Color Selection */}
-        <div className="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200">
-              Акцентный цвет кнопок и элементов:
-            </span>
-            <span
-              className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
-            >
-              {ACCENT_COLORS.find((c) => c.hex.toLowerCase() === accentColor.toLowerCase())?.name || accentColor}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5">
-            {ACCENT_COLORS.map((c) => {
-              const isSelected = accentColor.toLowerCase() === c.hex.toLowerCase();
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => onAccentColorChange?.(c.hex)}
-                  title={c.name}
-                  aria-label={c.name}
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-transform active:scale-90 flex items-center justify-center relative ${
-                    isSelected ? 'scale-110 ring-2 ring-offset-2 ring-apple-blue dark:ring-offset-black' : 'hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: c.hex }}
-                >
-                  {isSelected && <Check className="w-4 h-4 text-white drop-shadow-md stroke-[3]" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Font Family Selection */}
-        <div className="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-apple-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
-              <Type className="w-4 h-4 text-apple-blue" />
-              <span>Шрифт интерфейса:</span>
-            </span>
-            <span className="text-[11px] font-mono text-apple-gray-500">
-              {FONT_OPTIONS.find((f) => f.id === fontFamily)?.name || fontFamily}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {FONT_OPTIONS.map((font) => {
-              const isSelected = fontFamily === font.id;
-              return (
-                <button
-                  key={font.id}
-                  onClick={() => onFontFamilyChange?.(font.id)}
-                  className={`p-2.5 rounded-xl text-left border transition-all ${
-                    isSelected
-                      ? 'border-apple-blue bg-apple-blue/10 dark:bg-apple-blue/15 text-apple-blue font-bold shadow-sm'
-                      : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.03] text-apple-gray-700 dark:text-apple-gray-300 hover:bg-black/[0.04]'
-                  }`}
-                >
-                  <div className="text-xs truncate font-medium" style={{ fontFamily: font.fontFamilyCss }}>{font.name}</div>
-                  <div className="text-[10px] opacity-70 truncate mt-0.5" style={{ fontFamily: font.fontFamilyCss }}>Пример: Аа Бб 123</div>
-                </button>
-              );
-            })}
-          </div>
+          <p className="text-xs text-apple-gray-500 dark:text-apple-gray-400 pt-1">
+            По умолчанию активна контрастная тема OLED Black и шрифт Comfortaa.
+          </p>
         </div>
       </div>
 
