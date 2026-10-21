@@ -103,3 +103,46 @@ export interface KsuGroup {
   facultyID?: number;
   lessonsCount?: number;
 }
+
+export interface GroupPreset {
+  id: string;
+  title: string;
+  subtitle: string;
+  groupId: number;
+  groupName: string;
+  subgroup: number;
+  subgroupLabel: string;
+  foreignLang: 'all' | 'de' | 'en' | 'fr';
+  langLabel: string;
+  facul: string;
+  kurs: number;
+}
+
+export const GROUP_PRESETS: GroupPreset[] = [
+  {
+    id: 'my-group',
+    title: 'Моя группа',
+    subtitle: 'Основной профиль',
+    groupId: 8953,
+    groupName: '26-ИСбо-4',
+    subgroup: 1,
+    subgroupLabel: '1 подгруппа',
+    foreignLang: 'de',
+    langLabel: 'Немецкий',
+    facul: 'ИВИТШ',
+    kurs: 1,
+  },
+  {
+    id: 'friend-group',
+    title: 'Группа моего друга',
+    subtitle: 'Профиль друга',
+    groupId: 8921,
+    groupName: '26-ТМбо-8',
+    subgroup: 0,
+    subgroupLabel: 'Вся группа',
+    foreignLang: 'en',
+    langLabel: 'Английский',
+    facul: 'ИПТД',
+    kurs: 1,
+  },
+];

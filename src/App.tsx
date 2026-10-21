@@ -327,7 +327,27 @@ export const App: React.FC = () => {
                 onThemeChange={theme.setThemeMode}
                 groupId={schedule.groupId}
                 groupName={schedule.groupName}
+                subgroup={schedule.subgroupFilter}
+                foreignLanguage={schedule.foreignLanguagePreference}
                 onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
+                onSelectGroup={(newGid, newGname, newSg, newLang) => {
+                  schedule.changeGroup(newGid, newGname, newSg, newLang);
+                  const langText =
+                    newLang === 'de'
+                      ? 'Немецкий'
+                      : newLang === 'en'
+                      ? 'Английский'
+                      : newLang === 'fr'
+                      ? 'Французский'
+                      : 'Все языки';
+                  const sgText =
+                    newSg === 1
+                      ? '1 подгруппа'
+                      : newSg === 2
+                      ? '2 подгруппа'
+                      : 'Вся группа';
+                  showToast('success', 'Группа обновлена', `${newGname} • ${sgText} • ${langText}`);
+                }}
                 lessons={schedule.allLessons || schedule.lessons}
                 onShowToast={showToast}
                 onDataImported={() => {
@@ -384,7 +404,21 @@ export const App: React.FC = () => {
         onSelectGroup={(newGroupId, newGroupName, newSubgroup, newForeignLang) => {
           schedule.changeGroup(newGroupId, newGroupName, newSubgroup, newForeignLang);
           setIsGroupSelectOpen(false);
-          showToast('success', 'Настройки группы обновлены', `Выбрана группа ${newGroupName}`);
+          const langText =
+            newForeignLang === 'de'
+              ? 'Немецкий'
+              : newForeignLang === 'en'
+              ? 'Английский'
+              : newForeignLang === 'fr'
+              ? 'Французский'
+              : 'Все языки';
+          const sgText =
+            newSubgroup === 1
+              ? '1 подгруппа'
+              : newSubgroup === 2
+              ? '2 подгруппа'
+              : 'Вся группа';
+          showToast('success', 'Группа обновлена', `${newGroupName} • ${sgText} • ${langText}`);
         }}
       />
 

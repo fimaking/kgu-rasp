@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Users, Check, School, BookOpen, X, Sparkles, Globe } from 'lucide-react';
+import { Search, Users, Check, School, BookOpen, X, Sparkles, Globe, User, ArrowRight } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { ScheduleService } from '../../services/scheduleService';
-import { KsuGroup } from '../../types/schedule';
+import { KsuGroup, GROUP_PRESETS, GroupPreset } from '../../types/schedule';
 
 interface GroupSelectModalProps {
   isOpen: boolean;
@@ -104,6 +104,13 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
     onClose();
   };
 
+  const handleApplyPreset = (preset: GroupPreset) => {
+    setSelectedSubgroup(preset.subgroup);
+    setSelectedForeignLang(preset.foreignLang);
+    onSelectGroup(preset.groupId, preset.groupName, preset.subgroup, preset.foreignLang);
+    onClose();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -113,7 +120,93 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
       maxWidth="xl"
     >
       <div className="space-y-5 select-none">
-        {/* 1. Subgroup & Foreign Language Configuration */}
+        {/* 1. Quick Presets Section */}
+        <div className="p-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/5 dark:border-white/10 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Быстрые пресеты</span>
+            </span>
+            <span className="text-[11px] text-apple-gray-400">Переключение в 1 клик</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {GROUP_PRESETS.map((preset) => {
+              const isCurrent =
+                currentGroupId === preset.groupId &&
+                currentSubgroup === preset.subgroup &&
+                (currentForeignLanguage || 'all') === preset.foreignLang;
+
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleApplyPreset(preset)}
+                  className={`p-3.5 rounded-xl text-left transition-all duration-200 border flex flex-col justify-between gap-2.5 active:scale-[0.98] group relative ${
+                    isCurrent
+                      ? 'bg-apple-blue/10 dark:bg-apple-blue/20 border-apple-blue/40 shadow-apple-sm ring-1 ring-apple-blue/30'
+                      : 'bg-white/80 dark:bg-zinc-800/80 border-black/5 dark:border-white/10 hover:border-apple-blue/30 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-apple-sm'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isCurrent
+                            ? 'bg-apple-blue text-white shadow-apple-sm'
+                            : 'bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-300 group-hover:text-apple-blue group-hover:bg-apple-blue/10'
+                        }`}
+                      >
+                        {preset.id === 'my-group' ? (
+                          <User className="w-4 h-4" />
+                        ) : (
+                          <Users className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-apple-gray-900 dark:text-white flex items-center gap-1.5">
+                          <span>{preset.title}</span>
+                        </div>
+                        <div className="text-[10px] text-apple-gray-500 dark:text-apple-gray-400">
+                          {preset.facul} • {preset.kurs} курс
+                        </div>
+                      </div>
+                    </div>
+
+                    {isCurrent ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-apple-blue text-white shadow-apple-sm">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                        <span>Активна</span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-semibold text-apple-gray-400 group-hover:text-apple-blue transition-colors flex items-center gap-0.5">
+                        <span>Выбрать</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-sm text-apple-gray-900 dark:text-white">
+                      {preset.groupName}
+                    </span>
+                    <div className="flex items-center gap-1 text-[11px] text-apple-gray-600 dark:text-apple-gray-300">
+                      <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-medium">
+                        {preset.subgroupLabel}
+                      </span>
+                      <span>•</span>
+                      <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-medium">
+                        {preset.langLabel}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. Subgroup & Foreign Language Configuration */}
         <div className="p-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/5 dark:border-white/10 space-y-3.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
@@ -196,7 +289,7 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
           </p>
         </div>
 
-        {/* 2. Search Bar */}
+        {/* 3. Search Bar */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-apple-gray-400" />
           <input

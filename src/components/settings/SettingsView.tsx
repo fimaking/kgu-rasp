@@ -18,6 +18,9 @@ import {
   QrCode,
   Link2,
   Users,
+  User,
+  Sparkles,
+  ArrowRight,
   RotateCw,
   Palette,
   Database,
@@ -26,7 +29,7 @@ import {
   ThemeMode,
   UserSettings,
 } from '../../types/settings';
-import { ParsedLesson } from '../../types/schedule';
+import { ParsedLesson, GROUP_PRESETS } from '../../types/schedule';
 import { StorageService } from '../../services/storageService';
 import { SyncService, normalizeFirebaseUrl } from '../../services/syncService';
 import { RealtimeSyncService } from '../../services/realtimeSync';
@@ -39,7 +42,10 @@ interface SettingsViewProps {
   onThemeChange: (mode: ThemeMode) => void;
   groupId?: number;
   groupName?: string;
+  subgroup?: number;
+  foreignLanguage?: 'all' | 'de' | 'en' | 'fr';
   onOpenGroupSelect?: () => void;
+  onSelectGroup?: (groupId: number, groupName: string, subgroup: number, foreignLang: 'all' | 'de' | 'en' | 'fr') => void;
   lessons?: ParsedLesson[];
   onShowToast: (type: 'success' | 'error' | 'info', title: string, msg?: string) => void;
   onDataImported: () => void;
@@ -52,7 +58,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onThemeChange,
   groupId = 8953,
   groupName = '26-ИСбо-4',
+  subgroup = 1,
+  foreignLanguage = 'de',
   onOpenGroupSelect,
+  onSelectGroup,
   lessons: _lessons = [],
   onShowToast,
   onDataImported,
@@ -348,6 +357,71 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               >
                 <RotateCw className="w-3.5 h-3.5" />
               </button>
+            </div>
+          </div>
+
+          {/* Quick presets for switching groups in 1 click */}
+          <div className="pt-3 border-t border-black/5 dark:border-white/5 space-y-2">
+            <div className="flex items-center justify-between text-xs text-apple-gray-500">
+              <span className="font-semibold flex items-center gap-1.5 text-apple-gray-700 dark:text-apple-gray-300">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Быстрые пресеты для выбора:</span>
+              </span>
+              <span className="text-[11px] text-apple-gray-400">1 клик для переключения</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {GROUP_PRESETS.map((preset) => {
+                const isCurrent =
+                  groupId === preset.groupId &&
+                  subgroup === preset.subgroup &&
+                  (foreignLanguage || 'all') === preset.foreignLang;
+
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => onSelectGroup?.(preset.groupId, preset.groupName, preset.subgroup, preset.foreignLang)}
+                    className={`p-2.5 rounded-xl text-left border transition-all flex items-center justify-between gap-2 active:scale-[0.98] ${
+                      isCurrent
+                        ? 'bg-apple-blue/10 dark:bg-apple-blue/20 border-apple-blue/40 text-apple-blue font-semibold ring-1 ring-apple-blue/30 shadow-apple-sm'
+                        : 'bg-white/80 dark:bg-zinc-800/80 border-black/5 dark:border-white/10 hover:border-apple-blue/30 hover:bg-white dark:hover:bg-zinc-800 text-apple-gray-800 dark:text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                          isCurrent
+                            ? 'bg-apple-blue text-white shadow-apple-sm'
+                            : 'bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-300'
+                        }`}
+                      >
+                        {preset.id === 'my-group' ? (
+                          <User className="w-3.5 h-3.5" />
+                        ) : (
+                          <Users className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold truncate">{preset.title}</div>
+                        <div className="text-[10px] text-apple-gray-500 dark:text-apple-gray-400 truncate">
+                          {preset.groupName} • {preset.subgroupLabel} • {preset.langLabel}
+                        </div>
+                      </div>
+                    </div>
+                    {isCurrent ? (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-apple-blue text-white shrink-0">
+                        Активна
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-apple-gray-400 hover:text-apple-blue flex items-center gap-0.5 shrink-0">
+                        <span>Выбрать</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
