@@ -1,8 +1,9 @@
 import React from 'react';
-import { Coffee } from 'lucide-react';
+import { Coffee, Flag, GraduationCap } from 'lucide-react';
 import { WeekDaySchedule, ParsedLesson } from '../../types/schedule';
 import { LessonCard } from './LessonCard';
 import { formatRussianDate } from '../../utils/dateUtils';
+import { getHolidayForDate, getAcademicStageForDate } from '../../data/academicCalendar';
 
 interface DayCardProps {
   daySchedule: WeekDaySchedule;
@@ -19,6 +20,8 @@ export const DayCard: React.FC<DayCardProps> = ({
 }) => {
   const { dayName, date, dateStr, isToday, lessons } = daySchedule;
   const isHighlighted = isToday || isSelected;
+  const holiday = getHolidayForDate(date);
+  const stage = getAcademicStageForDate(date);
 
   return (
     <div
@@ -49,6 +52,12 @@ export const DayCard: React.FC<DayCardProps> = ({
                 Сегодня
               </span>
             )}
+            {holiday && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                <Flag className="w-2.5 h-2.5" />
+                <span>Праздник</span>
+              </span>
+            )}
           </div>
           <p className="text-xs text-apple-gray-500 dark:text-apple-gray-400 mt-0.5">
             {formatRussianDate(date, false)}
@@ -73,17 +82,39 @@ export const DayCard: React.FC<DayCardProps> = ({
 
       {/* Lessons List */}
       {lessons.length === 0 ? (
-        <div className="py-8 text-center">
-          <Coffee
-            className={`w-7 h-7 mx-auto mb-2 ${
-              isHighlighted ? 'text-apple-blue/60 dark:text-blue-400/60' : 'text-apple-gray-300 dark:text-apple-gray-600'
-            }`}
-          />
-          <p className="text-xs font-medium text-apple-gray-500 dark:text-apple-gray-400">
-            Нет занятий
-          </p>
-          <p className="text-[11px] text-apple-gray-400">Свободный день</p>
-        </div>
+        holiday ? (
+          <div className="py-7 text-center">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 mx-auto mb-2 flex items-center justify-center shadow-apple-sm">
+              <Flag className="w-5 h-5" />
+            </div>
+            <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
+              {holiday.name}
+            </p>
+            <p className="text-[11px] text-apple-gray-400 mt-0.5">Нерабочий праздничный день КГУ</p>
+          </div>
+        ) : stage && stage.type !== 'theory' ? (
+          <div className="py-7 text-center">
+            <div className={`w-10 h-10 rounded-2xl ${stage.color.bg} ${stage.color.text} mx-auto mb-2 flex items-center justify-center shadow-apple-sm`}>
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <p className={`text-xs font-bold ${stage.color.text}`}>
+              {stage.title}
+            </p>
+            <p className="text-[11px] text-apple-gray-400 mt-0.5 line-clamp-1">{stage.description}</p>
+          </div>
+        ) : (
+          <div className="py-8 text-center">
+            <Coffee
+              className={`w-7 h-7 mx-auto mb-2 ${
+                isHighlighted ? 'text-apple-blue/60 dark:text-blue-400/60' : 'text-apple-gray-300 dark:text-apple-gray-600'
+              }`}
+            />
+            <p className="text-xs font-medium text-apple-gray-500 dark:text-apple-gray-400">
+              Нет занятий
+            </p>
+            <p className="text-[11px] text-apple-gray-400">Свободный день</p>
+          </div>
+        )
       ) : (
         <div className="space-y-2.5">
           {lessons.map((lesson) => (

@@ -5,7 +5,10 @@ import {
   ChevronRight,
   Plus,
   ListOrdered,
+  GraduationCap,
 } from 'lucide-react';
+import { AcademicScheduleModal } from '../schedule/AcademicScheduleModal';
+import { getHolidayForDate } from '../../data/academicCalendar';
 import { DayEventsSummary, CalendarCustomEvent } from '../../types/calendar';
 import { ParsedLesson } from '../../types/schedule';
 import { Homework } from '../../types/homework';
@@ -52,6 +55,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     () => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
   );
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+  const [isAcademicModalOpen, setIsAcademicModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'month' | 'agenda'>('month');
 
   // Month navigation
@@ -135,13 +139,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Top Banner: Calendar Badge & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
-        <div>
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm">
             <CalendarIcon className="w-3.5 h-3.5 text-apple-blue shrink-0" />
             <span className="text-xs sm:text-sm font-semibold tracking-tight text-apple-gray-800 dark:text-zinc-200">
               Учебный календарь
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAcademicModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95"
+            title="Посмотреть официальный график учебного процесса 1 курса"
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span>График уч. процесса</span>
+          </button>
         </div>
 
         {/* View Mode & Add Event */}
@@ -235,6 +249,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 const isTodayCell = isToday(cellDate);
                 const isoStr = formatDateToIso(cellDate);
                 const dots = eventsByDate.get(isoStr);
+                const cellHoliday = getHolidayForDate(cellDate);
 
                 return (
                   <button
@@ -278,6 +293,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             isSelected ? 'bg-rose-300' : 'bg-rose-500'
                           }`}
                           title={`${dots.customCount} событий`}
+                        />
+                      )}
+                      {cellHoliday && (
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            isSelected ? 'bg-rose-200' : 'bg-rose-500'
+                          }`}
+                          title={`Праздник: ${cellHoliday.name}`}
                         />
                       )}
                     </div>
@@ -369,6 +392,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         initialDate={formatDateToIso(selectedDate)}
         subjectsList={subjectsList}
       />
+
+      {/* Academic Schedule Modal */}
+      {isAcademicModalOpen && (
+        <AcademicScheduleModal
+          isOpen={isAcademicModalOpen}
+          onClose={() => setIsAcademicModalOpen(false)}
+          onSelectWeek={(_weekNum, monday) => {
+            onSelectDate(monday);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -5,7 +5,10 @@ import {
   AlertCircle,
   Plus,
   Trash2,
+  Flag,
+  GraduationCap,
 } from 'lucide-react';
+import { getHolidayForDate, getAcademicStageForDate } from '../../data/academicCalendar';
 import { DayEventsSummary } from '../../types/calendar';
 import { ParsedLesson } from '../../types/schedule';
 import { Homework } from '../../types/homework';
@@ -29,6 +32,8 @@ export const DayScheduleDrawer: React.FC<DayScheduleDrawerProps> = ({
 }) => {
   const dateObj = parseIsoDate(summary.dateStr);
   const formattedTitle = `${formatDayOfWeek(dateObj)}, ${formatRussianDate(dateObj, true)}`;
+  const holiday = getHolidayForDate(dateObj);
+  const stage = getAcademicStageForDate(dateObj);
 
   const totalItems =
     summary.lessons.length + summary.homeworks.length + summary.customEvents.length;
@@ -54,6 +59,31 @@ export const DayScheduleDrawer: React.FC<DayScheduleDrawerProps> = ({
           <span>Событие</span>
         </button>
       </div>
+
+      {/* Holiday or Academic Stage Banner */}
+      {holiday && (
+        <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <Flag className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-rose-600 dark:text-rose-400">{holiday.name}</div>
+            <div className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">Нерабочий праздничный день КГУ</div>
+          </div>
+        </div>
+      )}
+
+      {!holiday && stage && stage.type !== 'theory' && (
+        <div className={`p-3.5 rounded-2xl ${stage.color.bg} border ${stage.color.border} text-xs flex items-center gap-3`}>
+          <div className={`w-8 h-8 rounded-xl ${stage.color.badge} flex items-center justify-center shrink-0 font-bold font-mono text-sm`}>
+            <GraduationCap className="w-4 h-4" />
+          </div>
+          <div>
+            <div className={`font-bold ${stage.color.text}`}>{stage.title}</div>
+            <div className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">{stage.description}</div>
+          </div>
+        </div>
+      )}
 
       {totalItems === 0 ? (
         <div className="py-10 text-center">

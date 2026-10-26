@@ -14,6 +14,8 @@ import { ParsedLesson, WeekDaySchedule, RaspInfo } from '../../types/schedule';
 import { WeekNavigator } from './WeekNavigator';
 import { DayCard } from './DayCard';
 import { LessonModal } from './LessonModal';
+import { AcademicScheduleModal } from './AcademicScheduleModal';
+import { getAcademicWeekByDate } from '../../data/academicCalendar';
 import { Modal } from '../ui/Modal';
 import { isSameDay, formatDateToIso, formatRussianDate, getMondayOfWeek } from '../../utils/dateUtils';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
@@ -70,6 +72,11 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<ScheduleFilterMode>('all');
   const [showBellsModal, setShowBellsModal] = useState(false);
+  const [showAcademicModal, setShowAcademicModal] = useState(false);
+
+  const viewedAcademicWeek = useMemo(() => {
+    return getAcademicWeekByDate(selectedWeekMonday);
+  }, [selectedWeekMonday]);
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
@@ -286,6 +293,22 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           >
             <Bell className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span>Звонки КГУ</span>
+          </button>
+
+          {/* Academic Schedule button */}
+          <button
+            type="button"
+            onClick={() => setShowAcademicModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95"
+            title="Посмотреть официальный график учебного процесса 1 курса"
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span>График уч. процесса</span>
+            {viewedAcademicWeek && (
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono font-bold">
+                {viewedAcademicWeek.weekNumber} нед.
+              </span>
+            )}
           </button>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -577,6 +600,21 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Academic Schedule Modal */}
+      {showAcademicModal && (
+        <AcademicScheduleModal
+          isOpen={showAcademicModal}
+          onClose={() => setShowAcademicModal(false)}
+          currentSelectedMonday={selectedWeekMonday}
+          onSelectWeek={(_weekNumber, monday) => {
+            if (onGoToDate) {
+              onGoToDate(monday);
+            }
+            setSelectedDayDate(monday);
+          }}
+        />
       )}
     </div>
   );
