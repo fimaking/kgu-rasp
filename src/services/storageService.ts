@@ -78,6 +78,7 @@ function sanitizeHomework(item: any): Homework | null {
     id: String(item.id).slice(0, 100),
     title: String(item.title).slice(0, 300),
     subject: String(item.subject).slice(0, 200),
+    lessonType: typeof item.lessonType === 'string' ? item.lessonType.slice(0, 50) : undefined,
     description: typeof item.description === 'string' ? item.description.slice(0, 5000) : undefined,
     assignedDate: typeof item.assignedDate === 'string' ? item.assignedDate.slice(0, 30) : formatDateToIso(new Date()),
     dueDate: typeof item.dueDate === 'string' ? item.dueDate.slice(0, 30) : formatDateToIso(new Date()),

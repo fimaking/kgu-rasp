@@ -34,49 +34,51 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
     <div className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4 select-none">
       {/* Top Bar: Nav controls, Academic schedule badge & Date Range */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Navigation buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onPrevWeek}
-            className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
-            title="Предыдущая неделя"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+        {/* Navigation buttons and Academic schedule button together on the same line */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onPrevWeek}
+              className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
+              title="Предыдущая неделя"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={onGoToToday}
-            className="px-3.5 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue font-semibold text-xs transition-all duration-200 ease-out active:scale-95 flex items-center gap-1.5"
-          >
-            <CalendarIcon className="w-3.5 h-3.5" />
-            <span>Сегодня</span>
-          </button>
+            <button
+              onClick={onGoToToday}
+              className="px-3 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue font-semibold text-xs transition-all duration-200 ease-out active:scale-95 flex items-center gap-1.5"
+            >
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>Сегодня</span>
+            </button>
 
-          <button
-            onClick={onNextWeek}
-            className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
-            title="Следующая неделя"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <button
+              onClick={onNextWeek}
+              className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
+              title="Следующая неделя"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Academic schedule button (График) - next to today button on the same line */}
+          {onOpenAcademicSchedule && (
+            <button
+              type="button"
+              onClick={onOpenAcademicSchedule}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-apple-gray-600 hover:text-apple-gray-900 dark:text-zinc-400 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.05] hover:bg-black/[0.08] dark:hover:bg-white/[0.09] transition-all duration-150 ease-out active:scale-95 shrink-0"
+              title="Посмотреть график учебного процесса"
+            >
+              <GraduationCap className="w-3.5 h-3.5 opacity-70" />
+              <span>График</span>
+            </button>
+          )}
         </div>
 
-        {/* Academic schedule button (График) - discreet & minimalist */}
-        {onOpenAcademicSchedule && (
-          <button
-            type="button"
-            onClick={onOpenAcademicSchedule}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-medium text-apple-gray-500 hover:text-apple-gray-900 dark:text-zinc-400 dark:hover:text-white bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.07] dark:hover:bg-white/[0.08] transition-all duration-150 ease-out active:scale-95"
-            title="Посмотреть график учебного процесса"
-          >
-            <GraduationCap className="w-3.5 h-3.5 opacity-70" />
-            <span>График</span>
-          </button>
-        )}
-
         {/* Date Range */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-apple-gray-900 dark:text-white">
+        <div className="flex items-center">
+          <span className="text-xs sm:text-sm font-bold text-apple-gray-900 dark:text-white">
             {rangeStr}
           </span>
         </div>

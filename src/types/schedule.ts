@@ -43,7 +43,7 @@ export interface ParsedLesson {
   subject: string; // Cleaned subject name, e.g. "Основы российской государственности"
   rawDiscipline: string;
   type: LessonType;
-  typeLabel: string; // "Лекция", "Практика", "Лабораторная"
+  typeLabel: string; // "Лекция", "Практика", "Лаба"
   typeBadgeColor: {
     bg: string;
     text: string;

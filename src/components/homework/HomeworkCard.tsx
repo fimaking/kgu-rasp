@@ -12,6 +12,7 @@ import { Homework } from '../../types/homework';
 import { PriorityBadge, StatusBadge } from '../ui/Badge';
 import { formatRelativeDeadline } from '../../utils/dateUtils';
 import { sanitizeUrl } from '../../services/storageService';
+import { getHomeworkLessonType } from '../../utils/scheduleParser';
 
 interface HomeworkCardProps {
   homework: Homework;
@@ -31,6 +32,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
   const isCompleted = homework.status === 'completed';
   const deadlineInfo = formatRelativeDeadline(homework.dueDate, homework.dueTime || '23:59');
   const safeMaterialLink = sanitizeUrl(homework.materialLink);
+  const detectedLessonType = homework.lessonType || getHomeworkLessonType(homework);
 
   const subtasksList = Array.isArray(homework.subtasks) ? homework.subtasks : [];
   const completedSubtasks = subtasksList.filter((s) => s.completed).length;
@@ -78,6 +80,21 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
               <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue font-mono break-words leading-tight">
                 {homework.subject}
               </span>
+              {detectedLessonType && (
+                <span
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-md leading-tight ${
+                    detectedLessonType === 'Практика'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      : detectedLessonType === 'Лаба'
+                      ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                      : detectedLessonType === 'Лекция'
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                      : 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20'
+                  }`}
+                >
+                  {detectedLessonType}
+                </span>
+              )}
               <PriorityBadge priority={homework.priority} />
               <StatusBadge status={homework.status} />
             </div>

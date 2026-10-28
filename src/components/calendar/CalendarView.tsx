@@ -217,18 +217,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
 
           {/* Legend */}
-          <div className="pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-center gap-5 text-xs text-apple-gray-500 dark:text-apple-gray-400">
+          <div className="pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-center gap-4 sm:gap-6 text-xs text-apple-gray-500 dark:text-apple-gray-400 whitespace-nowrap">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-apple-blue" />
+              <span className="w-2 h-2 rounded-full bg-apple-blue shrink-0" />
               <span>Занятия</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-apple-orange" />
-              <span>Дедлайны ДЗ</span>
+              <span className="w-2 h-2 rounded-full bg-apple-orange shrink-0" />
+              <span>Дедлайны</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
-              <span>Контрольные / Экзамены</span>
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span>Контрольные</span>
             </span>
           </div>
         </div>

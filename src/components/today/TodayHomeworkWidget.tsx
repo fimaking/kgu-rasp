@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckSquare, AlertTriangle, Clock, Plus, ArrowRight, Check } from 'lucide-react';
 import { Homework } from '../../types/homework';
 import { PriorityBadge } from '../ui/Badge';
+import { getHomeworkLessonType } from '../../utils/scheduleParser';
 
 interface TodayHomeworkWidgetProps {
   dueTomorrowList?: Homework[];
@@ -46,34 +47,45 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
           </div>
 
           <div className="space-y-2">
-            {overdueList.slice(0, 3).map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/5 hover:shadow-apple-sm hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 ease-out"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <button
-                    onClick={() => onToggleComplete(item.id)}
-                    className="w-5 h-5 rounded-full border-2 border-rose-400 hover:bg-rose-500 hover:border-rose-500 flex items-center justify-center transition-all duration-200 ease-out active:scale-75 group shrink-0"
-                    title="Отметить выполненным"
-                  >
-                    <Check className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                  <div
-                    onClick={() => onSelectHomework(item)}
-                    className="min-w-0 cursor-pointer"
-                  >
-                    <h5 className="text-xs sm:text-sm font-semibold text-apple-gray-900 dark:text-white truncate hover:text-apple-blue transition-colors">
-                      {item.title}
-                    </h5>
-                    <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 truncate">
-                      {item.subject} • Долг с {item.dueDate}
-                    </p>
+            {overdueList.slice(0, 3).map((item) => {
+              const overdueLessonType = item.lessonType || getHomeworkLessonType(item);
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/5 hover:shadow-apple-sm hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 ease-out"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <button
+                      onClick={() => onToggleComplete(item.id)}
+                      className="w-5 h-5 rounded-full border-2 border-rose-400 hover:bg-rose-500 hover:border-rose-500 flex items-center justify-center transition-all duration-200 ease-out active:scale-75 group shrink-0"
+                      title="Отметить выполненным"
+                    >
+                      <Check className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                    <div
+                      onClick={() => onSelectHomework(item)}
+                      className="min-w-0 cursor-pointer"
+                    >
+                      <h5 className="text-xs sm:text-sm font-semibold text-apple-gray-900 dark:text-white truncate hover:text-apple-blue transition-colors">
+                        {item.title}
+                      </h5>
+                      <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 truncate flex items-center gap-1.5 flex-wrap">
+                        <span>{item.subject}</span>
+                        {overdueLessonType && (
+                          <>
+                            <span className="opacity-40">•</span>
+                            <span className="font-semibold text-apple-blue">{overdueLessonType}</span>
+                          </>
+                        )}
+                        <span className="opacity-40">•</span>
+                        <span>Долг с {item.dueDate}</span>
+                      </p>
+                    </div>
                   </div>
+                  <PriorityBadge priority={item.priority} />
                 </div>
-                <PriorityBadge priority={item.priority} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -120,6 +132,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
             {tomorrowList.map((item) => {
               const subtasks = Array.isArray(item.subtasks) ? item.subtasks : [];
               const completedSubtasks = subtasks.filter((s) => s.completed).length;
+              const itemLessonType = item.lessonType || getHomeworkLessonType(item);
 
               return (
                 <div
@@ -146,8 +159,26 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
                       <h5 className="text-sm font-semibold text-apple-gray-900 dark:text-white truncate group-hover:text-apple-blue transition-colors">
                         {item.title}
                       </h5>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-apple-gray-500 dark:text-apple-gray-400">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-apple-gray-500 dark:text-apple-gray-400 flex-wrap">
                         <span className="truncate font-medium">{item.subject}</span>
+                        {itemLessonType && (
+                          <>
+                            <span className="opacity-40">•</span>
+                            <span
+                              className={`font-semibold shrink-0 ${
+                                itemLessonType === 'Практика'
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : itemLessonType === 'Лаба'
+                                  ? 'text-purple-600 dark:text-purple-400'
+                                  : itemLessonType === 'Лекция'
+                                  ? 'text-apple-blue dark:text-blue-400'
+                                  : 'text-zinc-600 dark:text-zinc-400'
+                              }`}
+                            >
+                              {itemLessonType}
+                            </span>
+                          </>
+                        )}
                         {item.dueTime && (
                           <>
                             <span className="opacity-40">•</span>

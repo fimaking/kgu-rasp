@@ -35,6 +35,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
   const [subject, setSubject] = useState('');
   const [customSubject, setCustomSubject] = useState('');
   const [isCustomSubject, setIsCustomSubject] = useState(false);
+  const [lessonType, setLessonType] = useState('Практика');
   const [description, setDescription] = useState('');
   const [assignedDate, setAssignedDate] = useState(() => formatDateToIso(new Date()));
   const [dueDate, setDueDate] = useState(() => {
@@ -83,9 +84,16 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       setMaterialLink(initialData.materialLink || '');
       setNotes(initialData.notes || '');
       setSubtasks(initialData.subtasks || []);
+      setLessonType(initialData.lessonType || 'Практика');
     } else {
       // New form reset
-      setTitle(defaultLessonType || '');
+      setTitle('');
+      const matchedLessonType = defaultLessonType
+        ? defaultLessonType.toLowerCase().startsWith('лаб')
+          ? 'Лаба'
+          : defaultLessonType
+        : 'Практика';
+      setLessonType(matchedLessonType);
       if (defaultSubject) {
         const matched = subjectsList.find((s) => s.toLowerCase() === defaultSubject.toLowerCase());
         if (matched) {
@@ -168,6 +176,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
     onSubmit({
       title: title.trim(),
       subject: finalSubject,
+      lessonType: lessonType || undefined,
       description: description.trim() || undefined,
       assignedDate,
       dueDate,
@@ -219,7 +228,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
           </label>
           <input
             type="text"
-            placeholder="Например, Лабораторная работа №3 или Эссе"
+            placeholder="Например, Лаба №3 или конспект"
             value={title}
             maxLength={200}
             onChange={(e) => setTitle(e.target.value)}
@@ -281,6 +290,40 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               />
             </div>
           )}
+        </div>
+
+        {/* Lesson Type selector (Практика / Лаба / Лекция / Другое) */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 mb-1.5">
+            Тип занятия (к какому занятию задание)
+          </label>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { id: 'Практика', label: 'Практика' },
+              { id: 'Лаба', label: 'Лаба' },
+              { id: 'Лекция', label: 'Лекция' },
+              { id: 'Другое', label: 'Другое' },
+            ].map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setLessonType(t.id)}
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all duration-150 text-center ${
+                  lessonType === t.id
+                    ? t.id === 'Практика'
+                      ? 'bg-emerald-500 text-white shadow-apple-sm'
+                      : t.id === 'Лаба'
+                      ? 'bg-purple-600 text-white shadow-apple-sm'
+                      : t.id === 'Лекция'
+                      ? 'bg-apple-blue text-white shadow-apple-sm'
+                      : 'bg-zinc-700 text-white shadow-apple-sm'
+                    : 'bg-black/[0.04] dark:bg-white/[0.05] text-apple-gray-600 dark:text-apple-gray-400 hover:bg-black/[0.08] dark:hover:bg-white/[0.08]'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Priority & Status segmented controls */}

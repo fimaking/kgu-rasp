@@ -34,7 +34,7 @@ export function parseLessonType(rawDiscipline?: string): { type: LessonType; lab
     return { type: 'practice', label: 'Практика' };
   }
   if (d.startsWith('лаб')) {
-    return { type: 'lab', label: 'Лабораторная' };
+    return { type: 'lab', label: 'Лаба' };
   }
   if (d.startsWith('экз') || d.includes('экзамен')) {
     return { type: 'exam', label: 'Экзамен' };
@@ -454,5 +454,28 @@ export function formatTeacherName(fullName?: string, useInitials = false): strin
   const middleInitial = parts[2]?.[0] ? ` ${parts[2][0]}.` : '';
 
   return `${lastName} ${firstInitial}${middleInitial}`.trim();
+}
+
+/**
+ * Detects or formats the lesson type for a homework item.
+ * Returns "Практика", "Лаба", "Лекция", or the custom type.
+ */
+export function getHomeworkLessonType(hw: {
+  lessonType?: string;
+  title?: string;
+  description?: string;
+}): string | undefined {
+  if (hw.lessonType && hw.lessonType.trim()) {
+    const lower = hw.lessonType.trim().toLowerCase();
+    if (lower.startsWith('лаб')) return 'Лаба';
+    if (lower.startsWith('пр')) return 'Практика';
+    if (lower.startsWith('лек')) return 'Лекция';
+    return hw.lessonType.trim();
+  }
+  const text = `${hw.title || ''} ${hw.description || ''}`.toLowerCase();
+  if (text.includes('лаб')) return 'Лаба';
+  if (text.includes('практик') || text.includes('семинар')) return 'Практика';
+  if (text.includes('лекци')) return 'Лекция';
+  return undefined;
 }
 

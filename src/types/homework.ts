@@ -11,6 +11,7 @@ export interface Homework {
   id: string;
   title: string;
   subject: string;
+  lessonType?: string; // "Практика", "Лаба", "Лекция", etc.
   description?: string;
   assignedDate: string; // YYYY-MM-DD
   dueDate: string; // YYYY-MM-DD
