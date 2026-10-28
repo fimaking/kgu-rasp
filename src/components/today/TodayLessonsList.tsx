@@ -9,6 +9,7 @@ interface TodayLessonsListProps {
   onSelectLesson: (lesson: ParsedLesson) => void;
   emptyTitle?: string;
   emptyDescription?: string;
+  now?: Date;
 }
 
 export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
@@ -16,12 +17,14 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
   onSelectLesson,
   emptyTitle,
   emptyDescription,
+  now: externalNow,
 }) => {
-  const [now, setNow] = useState(() => new Date());
+  const [internalNow, setInternalNow] = useState(() => new Date());
 
   useEffect(() => {
+    if (externalNow) return;
     let intervalId: ReturnType<typeof setInterval>;
-    const syncTime = () => setNow(new Date());
+    const syncTime = () => setInternalNow(new Date());
 
     const currentTime = new Date();
     const msUntilNextMinute = (60 - currentTime.getSeconds()) * 1000 - currentTime.getMilliseconds();
@@ -35,7 +38,9 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
       clearTimeout(timeoutId);
       if (intervalId) clearInterval(intervalId);
     };
-  }, []);
+  }, [externalNow]);
+
+  const now = externalNow || internalNow;
 
   if (lessons.length === 0) {
     return (

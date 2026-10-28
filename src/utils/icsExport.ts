@@ -22,7 +22,7 @@ function escapeIcsText(text: string): string {
 /**
  * Generate standard RFC 5545 iCalendar (.ics) string from parsed lessons
  */
-export function generateIcsSchedule(lessons: ParsedLesson[], groupName = 'КГУ Студент'): string {
+export function generateIcsSchedule(lessons: ParsedLesson[], groupName = 'UniKGU'): string {
   const nowStr = formatIcsDateTime(new Date());
 
   const lines = [

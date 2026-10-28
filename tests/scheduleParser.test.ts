@@ -11,6 +11,7 @@ import {
   getNextLessonDeadline,
   formatTeacherName,
   sanitizeUrl,
+  filterVisibleTodayLessons,
 } from '../src/utils/scheduleParser';
 import { ScheduleService } from '../src/services/scheduleService';
 import { SyncService } from '../src/services/syncService';
@@ -345,6 +346,86 @@ describe('scheduleParser', () => {
     it('sets a 40-minute big break after the 3rd pair (13:20 to 14:00)', () => {
       expect(KSU_BELL_TIMES[2].breakAfter).toContain('40 мин');
       expect(KSU_BELL_TIMES[2].breakAfter).toContain('14:00');
+    });
+  });
+
+  describe('filterVisibleTodayLessons (auto-hide completed pairs with 10-min grace for last pair)', () => {
+    const makeLesson = (pairNumber: number, startH: number, startM: number, endH: number, endM: number): ParsedLesson => {
+      const startDateTime = new Date(2026, 9, 28, startH, startM, 0, 0);
+      const endDateTime = new Date(2026, 9, 28, endH, endM, 0, 0);
+      return {
+        id: pairNumber,
+        dateStr: '2026-10-28',
+        rawDate: '2026-10-28T00:00:00',
+        startTime: `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`,
+        endTime: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`,
+        startDateTime,
+        endDateTime,
+        pairNumber,
+        dayOfWeek: 3,
+        dayName: 'Среда',
+        subject: `Предмет ${pairNumber}`,
+        rawDiscipline: `пр Предмет ${pairNumber}`,
+        type: 'practice',
+        typeLabel: 'Практика',
+        typeBadgeColor: { bg: '#fff', text: '#000', border: '#ccc', dot: '#007aff' },
+        teacher: 'Иванов И.И.',
+        auditorium: '206',
+        building: 'Корпус «Б»',
+        subgroup: 1,
+        isReplacement: false,
+      };
+    };
+
+    const lesson1 = makeLesson(1, 8, 30, 10, 0);
+    const lesson2 = makeLesson(2, 10, 10, 11, 40);
+    const lesson4 = makeLesson(4, 14, 0, 15, 30);
+    const todayList = [lesson1, lesson2, lesson4];
+
+    it('returns empty array when no lessons are scheduled', () => {
+      expect(filterVisibleTodayLessons([], new Date(2026, 9, 28, 12, 0))).toEqual([]);
+    });
+
+    it('keeps all lessons visible before any of them finish', () => {
+      const now = new Date(2026, 9, 28, 8, 0, 0); // 08:00
+      const result = filterVisibleTodayLessons(todayList, now);
+      expect(result.map((l) => l.pairNumber)).toEqual([1, 2, 4]);
+    });
+
+    it('immediately removes lesson 1 when it ends at 10:00', () => {
+      const now = new Date(2026, 9, 28, 10, 0, 1); // 10:00:01
+      const result = filterVisibleTodayLessons(todayList, now);
+      expect(result.map((l) => l.pairNumber)).toEqual([2, 4]);
+    });
+
+    it('immediately removes lesson 2 when it ends at 11:40', () => {
+      const now = new Date(2026, 9, 28, 11, 40, 1); // 11:40:01
+      const result = filterVisibleTodayLessons(todayList, now);
+      expect(result.map((l) => l.pairNumber)).toEqual([4]);
+    });
+
+    it('keeps the last lesson (lesson 4) visible for 10 minutes after ending (user screenshot scenario at 15:39)', () => {
+      // Lesson 4 ended at 15:30:00. At 15:39:00 (9 min later), it must still be visible in the list.
+      const now = new Date(2026, 9, 28, 15, 39, 0);
+      const result = filterVisibleTodayLessons(todayList, now);
+      expect(result.map((l) => l.pairNumber)).toEqual([4]);
+    });
+
+    it('removes the last lesson once 10 minutes have elapsed (at 15:40:01)', () => {
+      // 10 minutes and 1 second after 15:30:00
+      const now = new Date(2026, 9, 28, 15, 40, 1);
+      const result = filterVisibleTodayLessons(todayList, now);
+      expect(result).toHaveLength(0);
+    });
+
+    it('handles a single lesson of the day with the 10-minute grace period', () => {
+      const single = [lesson2]; // 10:10 - 11:40
+      // During class
+      expect(filterVisibleTodayLessons(single, new Date(2026, 9, 28, 11, 0))).toHaveLength(1);
+      // 5 min after class (11:45) -> still visible
+      expect(filterVisibleTodayLessons(single, new Date(2026, 9, 28, 11, 45))).toHaveLength(1);
+      // 10 min 1 sec after class (11:50:01) -> disappeared
+      expect(filterVisibleTodayLessons(single, new Date(2026, 9, 28, 11, 50, 1))).toHaveLength(0);
     });
   });
 });

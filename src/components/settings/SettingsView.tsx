@@ -916,7 +916,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* App Version & Info Footer */}
       <div className="text-center pt-2 pb-6 space-y-1 select-none text-apple-gray-400 dark:text-zinc-500">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 text-xs">
-          <span className="font-semibold text-apple-gray-700 dark:text-zinc-300">КГУ Студент</span>
+          <span className="font-semibold text-apple-gray-700 dark:text-zinc-300">UniKGU</span>
           <span>•</span>
           <span className="font-mono font-bold text-apple-blue">{APP_VERSION}</span>
         </div>

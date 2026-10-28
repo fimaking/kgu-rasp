@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ParsedLesson, RaspInfo } from '../../types/schedule';
 import { Homework } from '../../types/homework';
-import { getNextLessonDeadline } from '../../utils/scheduleParser';
+import { getNextLessonDeadline, filterVisibleTodayLessons } from '../../utils/scheduleParser';
 import { formatDateToIso, formatDayOfWeek, formatRussianDate } from '../../utils/dateUtils';
 import { NextPairBanner } from './NextPairBanner';
 import { TodayLessonsList } from './TodayLessonsList';
@@ -50,6 +50,34 @@ export const TodayView: React.FC<TodayViewProps> = ({
 }) => {
   const [selectedLesson, setSelectedLesson] = useState<ParsedLesson | null>(null);
 
+  // Live minute ticker to auto-remove finished pairs and update counts in real time
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const syncTime = () => setNow(new Date());
+
+    const currentTime = new Date();
+    const msUntilNextMinute = (60 - currentTime.getSeconds()) * 1000 - currentTime.getMilliseconds();
+
+    const timeoutId = setTimeout(() => {
+      syncTime();
+      intervalId = setInterval(syncTime, 60 * 1000);
+    }, Math.max(500, msUntilNextMinute));
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
+  // Filter today's lessons:
+  // - Once a pair concludes, it is removed from the list.
+  // - The final pair of the day stays visible for 10 minutes after ending, then disappears.
+  const visibleTodayLessons = useMemo(() => {
+    return filterVisibleTodayLessons(todayLessons, now);
+  }, [todayLessons, now]);
+
   const tomorrow = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
@@ -82,14 +110,21 @@ export const TodayView: React.FC<TodayViewProps> = ({
           <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white flex items-center gap-2">
             <span>Пары на сегодня</span>
             <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-500">
-              {todayLessons.length}
+              {visibleTodayLessons.length}
             </span>
           </h3>
         </div>
 
         <TodayLessonsList
-          lessons={todayLessons}
+          lessons={visibleTodayLessons}
+          now={now}
           onSelectLesson={(l) => setSelectedLesson(l)}
+          emptyTitle={todayLessons.length > 0 ? 'Все пары на сегодня завершены! 🎉' : 'Пар сегодня нет'}
+          emptyDescription={
+            todayLessons.length > 0
+              ? 'Все занятия подошли к концу. Отличная работа! Можно отдохнуть или закрыть оставшиеся дедлайны по заданиям.'
+              : 'Расписание на сегодня пустое. Вы можете заняться домашними заданиями или посмотреть расписание на другие дни.'
+          }
         />
       </div>
 

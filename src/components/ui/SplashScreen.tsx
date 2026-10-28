@@ -84,7 +84,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       {/* Top Header Label */}
       <div className="w-full flex justify-center pt-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-gray-400 dark:text-apple-gray-500 font-mono">
-          КГУ Студент
+          UniKGU
         </span>
       </div>
 

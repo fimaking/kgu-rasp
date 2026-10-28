@@ -300,6 +300,44 @@ export function getLessonStatus(lesson: ParsedLesson, now = new Date()): {
 }
 
 /**
+ * Filters today's lessons list:
+ * - When a lesson finishes, it is removed immediately from the list.
+ * - Exception: The last lesson(s) of the day stay visible for 10 minutes after ending,
+ *   and then disappear (removed when now >= endDateTime + 10 minutes).
+ */
+export function filterVisibleTodayLessons(
+  lessons: ParsedLesson[],
+  now: Date = new Date()
+): ParsedLesson[] {
+  if (!lessons || lessons.length === 0) return [];
+
+  const nowMs = now.getTime();
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
+
+  // Identify the latest end time among all lessons today
+  let maxEndMs = -Infinity;
+  for (const l of lessons) {
+    const endMs = l.endDateTime.getTime();
+    if (endMs > maxEndMs) {
+      maxEndMs = endMs;
+    }
+  }
+
+  return lessons.filter((lesson) => {
+    const endMs = lesson.endDateTime.getTime();
+    const isLastLesson = endMs === maxEndMs;
+
+    if (isLastLesson) {
+      // The last pair stays visible for 10 minutes after ending
+      return nowMs < endMs + TEN_MINUTES_MS;
+    }
+
+    // Regular pairs disappear immediately once they finish
+    return nowMs < endMs;
+  });
+}
+
+/**
  * Find the next upcoming lesson for a specific subject after the given lesson.
  * Respects lesson type:
  * - Lab matches the next Lab

@@ -80,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="text-sm font-bold tracking-tight text-apple-gray-900 dark:text-white truncate leading-tight">
-            КГУ Студент
+            UniKGU
           </h1>
           <div className="mt-1 flex items-center">
             {onOpenGroupSelect ? (
