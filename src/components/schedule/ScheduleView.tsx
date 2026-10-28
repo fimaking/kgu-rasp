@@ -1,7 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  LayoutGrid,
-  Calendar as CalendarIcon,
   Info,
   ArrowRight,
   Sparkles,
