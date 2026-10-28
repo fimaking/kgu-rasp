@@ -63,21 +63,16 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
           </button>
         </div>
 
-        {/* Academic schedule plaque (График уч. процесса) */}
+        {/* Academic schedule button (График) - discreet & minimalist */}
         {onOpenAcademicSchedule && (
           <button
             type="button"
             onClick={onOpenAcademicSchedule}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95 shadow-apple-sm"
-            title="Посмотреть официальный график учебного процесса 1 курса"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-medium text-apple-gray-500 hover:text-apple-gray-900 dark:text-zinc-400 dark:hover:text-white bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.07] dark:hover:bg-white/[0.08] transition-all duration-150 ease-out active:scale-95"
+            title="Посмотреть график учебного процесса"
           >
-            <GraduationCap className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-            <span>График уч. процесса</span>
-            {academicWeekNumber && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 font-mono font-bold">
-                {academicWeekNumber} нед.
-              </span>
-            )}
+            <GraduationCap className="w-3.5 h-3.5 opacity-70" />
+            <span>График</span>
           </button>
         )}
 

@@ -237,34 +237,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Grid vs Single Day View Buttons (centered as shown on screenshot 2) */}
-      <div className="flex justify-center select-none">
-        <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5">
-          <button
-            onClick={() => setViewLayout('grid')}
-            className={`p-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
-              viewLayout === 'grid'
-                ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
-                : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-            }`}
-            title="Вся неделя (Сетка)"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewLayout('single')}
-            className={`p-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
-              viewLayout === 'single'
-                ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
-                : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-            }`}
-            title="Один день"
-          >
-            <CalendarIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
       {/* Week Navigator Bar */}
       <WeekNavigator
         selectedWeekMonday={selectedWeekMonday}
