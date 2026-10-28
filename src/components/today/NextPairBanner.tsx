@@ -84,11 +84,6 @@ export const NextPairBanner: React.FC<NextPairBannerProps> = ({
             {lesson.pairNumber}-я пара
           </span>
           <LessonTypeBadge type={lesson.type} label={lesson.typeLabel} />
-          {lesson.subgroup > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-300 font-medium">
-              {lesson.subgroup}-я подгруппа
-            </span>
-          )}
           {lesson.isReplacement && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/15 text-apple-red dark:text-rose-400 font-medium">
               Замена
