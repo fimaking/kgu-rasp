@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, GraduationCap } from 'lucide-react';
 import { formatRussianDate, isSameDay } from '../../utils/dateUtils';
 import { RaspInfo } from '../../types/schedule';
 
@@ -12,6 +12,8 @@ interface WeekNavigatorProps {
   onSelectDay: (date: Date) => void;
   days: { date: Date; shortDayName: string; isToday: boolean; count: number }[];
   info?: RaspInfo | null;
+  onOpenAcademicSchedule?: () => void;
+  academicWeekNumber?: number;
 }
 
 export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
@@ -22,6 +24,8 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   selectedDayDate,
   onSelectDay,
   days,
+  onOpenAcademicSchedule,
+  academicWeekNumber,
 }) => {
   const lastStudyDay = new Date(selectedWeekMonday);
   lastStudyDay.setDate(selectedWeekMonday.getDate() + (days.length > 0 ? days.length - 1 : 5));
@@ -30,7 +34,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
   return (
     <div className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4 select-none">
-      {/* Top Bar: Nav controls & Date Range */}
+      {/* Top Bar: Nav controls, Academic schedule badge & Date Range */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Navigation buttons */}
         <div className="flex items-center gap-2">
@@ -58,6 +62,24 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Academic schedule plaque (График уч. процесса) */}
+        {onOpenAcademicSchedule && (
+          <button
+            type="button"
+            onClick={onOpenAcademicSchedule}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95 shadow-apple-sm"
+            title="Посмотреть официальный график учебного процесса 1 курса"
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span>График уч. процесса</span>
+            {academicWeekNumber && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 font-mono font-bold">
+                {academicWeekNumber} нед.
+              </span>
+            )}
+          </button>
+        )}
 
         {/* Date Range */}
         <div className="flex items-center gap-2">

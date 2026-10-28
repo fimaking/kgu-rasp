@@ -1,14 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Search,
   LayoutGrid,
   Calendar as CalendarIcon,
-  BookOpen,
   Info,
   ArrowRight,
   Sparkles,
   Bell,
-  GraduationCap,
 } from 'lucide-react';
 import { ParsedLesson, WeekDaySchedule, RaspInfo } from '../../types/schedule';
 import { WeekNavigator } from './WeekNavigator';
@@ -69,8 +66,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   // Default to grid layout on both PC and mobile so the entire week schedule is immediately visible
   const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterMode, setFilterMode] = useState<ScheduleFilterMode>('all');
   const [showBellsModal, setShowBellsModal] = useState(false);
   const [showAcademicModal, setShowAcademicModal] = useState(false);
 
@@ -159,42 +154,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       }));
   }, [weekSchedule]);
 
-  // Search & type filtering (excluding Sunday)
+  // Week schedule (excluding Sunday)
   const filteredWeekSchedule = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-
-    return weekSchedule
-      .filter((day) => day.dayOfWeek !== 7)
-      .map((day) => ({
-        ...day,
-        lessons: day.lessons.filter((l) => {
-          // Mode filter:
-          if (filterMode === 'session') {
-            const isSession =
-              l.type === 'exam' ||
-              l.type === 'credit' ||
-              l.rawDiscipline?.toLowerCase().includes('конс') ||
-              l.rawDiscipline?.toLowerCase().includes('аттест');
-            if (!isSession) return false;
-          } else if (filterMode === 'lecture') {
-            if (l.type !== 'lecture') return false;
-          } else if (filterMode === 'practice') {
-            if (l.type !== 'practice') return false;
-          } else if (filterMode === 'lab') {
-            if (l.type !== 'lab') return false;
-          }
-
-          // Search query
-          if (!q) return true;
-          return (
-            l.subject.toLowerCase().includes(q) ||
-            l.teacher.toLowerCase().includes(q) ||
-            l.auditorium.toLowerCase().includes(q) ||
-            l.rawDiscipline.toLowerCase().includes(q)
-          );
-        }),
-      }));
-  }, [weekSchedule, searchQuery, filterMode]);
+    return weekSchedule.filter((day) => day.dayOfWeek !== 7);
+  }, [weekSchedule]);
 
   // Selected single day
   const singleDaySchedule = useMemo(() => {
@@ -274,141 +237,33 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Banner: Semester Badge & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm">
-            <BookOpen className="w-3.5 h-3.5 text-apple-blue shrink-0" />
-            <span className="text-xs sm:text-sm font-semibold tracking-tight text-apple-gray-800 dark:text-zinc-200">
-              {info?.year || '2026-2027'} учебный год • {info?.curSem ? `${info.curSem} семестр` : '1 семестр'}
-            </span>
-          </div>
-
-          {/* Bell schedule button */}
+      {/* Grid vs Single Day View Buttons (centered as shown on screenshot 2) */}
+      <div className="flex justify-center select-none">
+        <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5">
           <button
-            type="button"
-            onClick={() => setShowBellsModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95"
-            title="Посмотреть расписание звонков КГУ"
+            onClick={() => setViewLayout('grid')}
+            className={`p-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
+              viewLayout === 'grid'
+                ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
+                : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
+            }`}
+            title="Вся неделя (Сетка)"
           >
-            <Bell className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span>Звонки КГУ</span>
+            <LayoutGrid className="w-4 h-4" />
           </button>
-
-          {/* Academic Schedule button */}
           <button
-            type="button"
-            onClick={() => setShowAcademicModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-900/70 hover:bg-white dark:hover:bg-zinc-800 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-sm text-xs font-semibold text-apple-gray-800 dark:text-zinc-200 transition-all active:scale-95"
-            title="Посмотреть официальный график учебного процесса 1 курса"
+            onClick={() => setViewLayout('single')}
+            className={`p-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
+              viewLayout === 'single'
+                ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
+                : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
+            }`}
+            title="Один день"
           >
-            <GraduationCap className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-            <span>График уч. процесса</span>
-            {viewedAcademicWeek && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono font-bold">
-                {viewedAcademicWeek.weekNumber} нед.
-              </span>
-            )}
+            <CalendarIcon className="w-4 h-4" />
           </button>
-        </div>
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Quick Filter: All / Lectures / Practicals / Labs / Exams */}
-          <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5 text-xs font-medium overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => setFilterMode('all')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
-                filterMode === 'all'
-                  ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Все
-            </button>
-            <button
-              onClick={() => setFilterMode('lecture')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
-                filterMode === 'lecture'
-                  ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Лекции
-            </button>
-            <button
-              onClick={() => setFilterMode('practice')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
-                filterMode === 'practice'
-                  ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Практики
-            </button>
-            <button
-              onClick={() => setFilterMode('lab')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 whitespace-nowrap ${
-                filterMode === 'lab'
-                  ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Лабы
-            </button>
-            <button
-              onClick={() => setFilterMode('session')}
-              className={`px-2.5 py-1 rounded-xl transition-all duration-200 ease-out active:scale-95 inline-flex items-center gap-1 whitespace-nowrap ${
-                filterMode === 'session'
-                  ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-              title="Только экзамены, зачёты и консультации"
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Сессия</span>
-            </button>
-          </div>
-
-          {/* Search Input */}
-          <div className="relative flex-1 sm:flex-initial">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-apple-gray-400" />
-            <input
-              type="text"
-              placeholder="Поиск по предмету, преподавателю..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-black/5 dark:border-white/10 text-xs text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all shadow-apple-sm"
-            />
-          </div>
-
-          {/* Grid vs Single Day View Buttons */}
-          <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5">
-            <button
-              onClick={() => setViewLayout('grid')}
-              className={`p-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
-                viewLayout === 'grid'
-                  ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-              title="Вся неделя (Сетка)"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewLayout('single')}
-              className={`p-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
-                viewLayout === 'single'
-                  ? 'bg-white dark:bg-zinc-800 text-apple-blue shadow-apple-sm font-semibold'
-                  : 'text-apple-gray-500 hover:text-apple-gray-900 dark:hover:text-white'
-              }`}
-              title="Один день"
-            >
-              <CalendarIcon className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
-
-
 
       {/* Week Navigator Bar */}
       <WeekNavigator
@@ -417,6 +272,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         onNextWeek={handleNextWeek}
         onGoToToday={handleGoToToday}
         selectedDayDate={selectedDayDate}
+        onOpenAcademicSchedule={() => setShowAcademicModal(true)}
+        academicWeekNumber={viewedAcademicWeek?.weekNumber}
         onSelectDay={(d) => {
           setSelectedDayDate(d);
           if (viewLayout === 'grid') {
