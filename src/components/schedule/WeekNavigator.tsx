@@ -13,7 +13,6 @@ interface WeekNavigatorProps {
   days: { date: Date; shortDayName: string; isToday: boolean; count: number }[];
   info?: RaspInfo | null;
   onOpenAcademicSchedule?: () => void;
-  academicWeekNumber?: number;
 }
 
 export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
@@ -25,7 +24,6 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   onSelectDay,
   days,
   onOpenAcademicSchedule,
-  academicWeekNumber,
 }) => {
   const lastStudyDay = new Date(selectedWeekMonday);
   lastStudyDay.setDate(selectedWeekMonday.getDate() + (days.length > 0 ? days.length - 1 : 5));

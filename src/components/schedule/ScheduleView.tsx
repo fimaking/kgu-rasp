@@ -10,7 +10,6 @@ import { WeekNavigator } from './WeekNavigator';
 import { DayCard } from './DayCard';
 import { LessonModal } from './LessonModal';
 import { AcademicScheduleModal } from './AcademicScheduleModal';
-import { getAcademicWeekByDate } from '../../data/academicCalendar';
 import { Modal } from '../ui/Modal';
 import { isSameDay, formatDateToIso, formatRussianDate, getMondayOfWeek } from '../../utils/dateUtils';
 import { getNextLessonDeadline } from '../../utils/scheduleParser';
@@ -62,14 +61,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     return now.getDay() === 0 ? getMondayOfWeek(now) : now;
   });
 
-  // Default to grid layout on both PC and mobile so the entire week schedule is immediately visible
-  const [viewLayout, setViewLayout] = useState<'grid' | 'single'>('grid');
   const [showBellsModal, setShowBellsModal] = useState(false);
   const [showAcademicModal, setShowAcademicModal] = useState(false);
-
-  const viewedAcademicWeek = useMemo(() => {
-    return getAcademicWeekByDate(selectedWeekMonday);
-  }, [selectedWeekMonday]);
   const [activeLessonModal, setActiveLessonModal] = useState<ParsedLesson | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
@@ -99,14 +92,12 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     } else {
       setSelectedDayDate(now);
     }
-    if (viewLayout === 'grid') {
-      setTimeout(() => {
-        const todayEl = document.getElementById('day-card-today');
-        if (todayEl) {
-          todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 50);
-    }
+    setTimeout(() => {
+      const todayEl = document.getElementById('day-card-today');
+      if (todayEl) {
+        todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
   };
 
   const handlePrevWeek = () => {
@@ -127,18 +118,16 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     });
   };
 
-  // Scroll to today's card when opening grid layout
+  // Scroll to today's card on initial load
   useEffect(() => {
-    if (viewLayout === 'grid') {
-      const timer = setTimeout(() => {
-        const el = document.getElementById('day-card-today');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [viewLayout]);
+    const timer = setTimeout(() => {
+      const el = document.getElementById('day-card-today');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Day buttons data for WeekNavigator (excluding Sunday)
   const daysSummary = useMemo(() => {
@@ -157,23 +146,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     return weekSchedule.filter((day) => day.dayOfWeek !== 7);
   }, [weekSchedule]);
 
-  // Selected single day
-  const singleDaySchedule = useMemo(() => {
-    const found = filteredWeekSchedule.find((d) => isSameDay(d.date, selectedDayDate));
-    return (
-      found || {
-        date: selectedDayDate,
-        dateStr: formatDateToIso(selectedDayDate),
-        dayOfWeek: selectedDayDate.getDay() || 7,
-        dayName: 'Выбранный день',
-        shortDayName: 'День',
-        isToday: isSameDay(selectedDayDate, new Date()),
-        isPast: false,
-        lessons: [],
-      }
-    );
-  }, [filteredWeekSchedule, selectedDayDate]);
-
   // Total lessons scheduled for this week
   const totalWeekLessons = useMemo(() => {
     return weekSchedule.reduce((acc, d) => acc + d.lessons.length, 0);
@@ -187,7 +159,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     return future.length > 0 ? future[0] : allLessons[allLessons.length - 1];
   }, [allLessons]);
 
-  // Touch swipe support for switching days or weeks on mobile devices
+  // Touch swipe support for switching weeks on mobile devices
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       setTouchStartX(e.touches[0].clientX);
@@ -206,29 +178,11 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     // Horizontal swipe threshold: 50px, dominating vertical scroll
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
       if (deltaX < 0) {
-        // Swiped Left -> Forward (next day or next week)
-        if (viewLayout === 'single') {
-          setSelectedDayDate((prev) => {
-            const next = new Date(prev);
-            next.setDate(prev.getDate() + 1);
-            if (next.getDay() === 0) next.setDate(next.getDate() + 1); // skip Sunday
-            return next;
-          });
-        } else {
-          handleNextWeek();
-        }
+        // Swiped Left -> Forward (next week)
+        handleNextWeek();
       } else {
-        // Swiped Right -> Backward (previous day or previous week)
-        if (viewLayout === 'single') {
-          setSelectedDayDate((prev) => {
-            const next = new Date(prev);
-            next.setDate(prev.getDate() - 1);
-            if (next.getDay() === 0) next.setDate(next.getDate() - 1); // skip Sunday
-            return next;
-          });
-        } else {
-          handlePrevWeek();
-        }
+        // Swiped Right -> Backward (previous week)
+        handlePrevWeek();
       }
     }
   };
@@ -243,18 +197,15 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         onGoToToday={handleGoToToday}
         selectedDayDate={selectedDayDate}
         onOpenAcademicSchedule={() => setShowAcademicModal(true)}
-        academicWeekNumber={viewedAcademicWeek?.weekNumber}
         onSelectDay={(d) => {
           setSelectedDayDate(d);
-          if (viewLayout === 'grid') {
-            const dateStr = formatDateToIso(d);
-            const isCurrentDay = isSameDay(d, new Date());
-            const el = isCurrentDay
-              ? document.getElementById('day-card-today')
-              : document.getElementById(`day-card-${dateStr}`);
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+          const dateStr = formatDateToIso(d);
+          const isCurrentDay = isSameDay(d, new Date());
+          const el = isCurrentDay
+            ? document.getElementById('day-card-today')
+            : document.getElementById(`day-card-${dateStr}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }}
         days={daysSummary}
@@ -305,53 +256,18 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       {/* Schedule Display with touch swipe support */}
       <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="touch-pan-y">
-        {viewLayout === 'grid' ? (
-          /* Full week grid: 6 study days (Mon-Sat, Sunday excluded) */
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filteredWeekSchedule.map((day) => (
-              <DayCard
-                key={day.dateStr}
-                daySchedule={day}
-                isSelected={isSameDay(day.date, selectedDayDate)}
-                onSelectDay={() => setSelectedDayDate(day.date)}
-                onSelectLesson={(l) => setActiveLessonModal(l)}
-              />
-            ))}
-          </div>
-        ) : (
-          /* Single focused day view */
-          <div className="max-w-2xl mx-auto space-y-4">
+        {/* Full week grid: 6 study days (Mon-Sat, Sunday excluded) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filteredWeekSchedule.map((day) => (
             <DayCard
-              daySchedule={singleDaySchedule}
+              key={day.dateStr}
+              daySchedule={day}
+              isSelected={isSameDay(day.date, selectedDayDate)}
+              onSelectDay={() => setSelectedDayDate(day.date)}
               onSelectLesson={(l) => setActiveLessonModal(l)}
             />
-            {singleDaySchedule.lessons.length === 0 && (
-              <div className="p-4 rounded-3xl bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/10 backdrop-blur-xl shadow-apple-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left animate-in fade-in">
-                <div>
-                  <p className="text-xs font-semibold text-apple-gray-900 dark:text-white">
-                    В этот день учебных занятий нет
-                  </p>
-                  <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
-                    Перейдите к началу недели или смахните влево для следующего дня
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const now = new Date();
-                    const mon = getMondayOfWeek(now);
-                    setSelectedDayDate(mon);
-                    if (onGoToDate) onGoToDate(mon);
-                  }}
-                  className="px-3.5 py-1.5 rounded-2xl bg-apple-blue text-white text-xs font-semibold hover:bg-apple-blue/90 transition-all active:scale-95 shadow-apple-sm flex items-center gap-1.5 shrink-0"
-                >
-                  <span>К началу недели</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
       {/* Lesson Details Modal */}
