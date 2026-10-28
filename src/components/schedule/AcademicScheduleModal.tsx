@@ -60,43 +60,22 @@ export const AcademicScheduleModal: React.FC<AcademicScheduleModalProps> = ({
       maxWidth="xl"
     >
       <div className="space-y-5">
-        {/* Academic Status Card */}
-        <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-purple-500/10 dark:from-blue-500/20 dark:via-indigo-500/10 dark:to-purple-500/20 border border-blue-500/20 shadow-apple-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-xs font-bold tracking-wide uppercase">
-                <Sparkles className="w-3 h-3" />
-                <span>{GROUP_ACADEMIC_METADATA.title}</span>
+        {/* Plaque: До зимней сессии */}
+        {daysUntilWinterSession > 0 && (
+          <div className="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-blue-500/10 dark:from-purple-950/40 dark:via-zinc-900/60 dark:to-blue-950/30 border border-purple-500/20 dark:border-purple-500/30 shadow-apple-sm text-center select-none">
+            <div className="space-y-1">
+              <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-apple-gray-500 dark:text-zinc-400">
+                До зимней сессии
+              </span>
+              <div className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-purple-600 dark:text-purple-400">
+                {daysUntilWinterSession} {daysUntilWinterSession === 1 ? 'день' : daysUntilWinterSession < 5 ? 'дня' : 'дней'}
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
-                <span>1 курс • Учебный план:</span>
-                <span className="font-mono text-xs sm:text-sm px-2 py-0.5 rounded-lg bg-black/5 dark:bg-white/10 text-blue-600 dark:text-blue-400 font-semibold">
-                  {GROUP_ACADEMIC_METADATA.studyPlan}
-                </span>
-              </h3>
-              <p className="text-xs sm:text-sm text-apple-gray-600 dark:text-apple-gray-300">
-                {currentWeek ? (
-                  <>
-                    Сейчас идёт <strong className="text-apple-blue">{currentWeek.weekNumber}-я неделя</strong> ({currentWeek.primaryTypeLabel}, {currentWeek.semester} семестр).
-                  </>
-                ) : (
-                  <>Официальный график учебного процесса на 52 недели для студентов группы 26-ИСбо-4.</>
-                )}
+              <p className="text-xs text-apple-gray-400 dark:text-zinc-500 font-medium">
+                с 11 января 2027 г.
               </p>
             </div>
-
-            {/* Countdown widget */}
-            {daysUntilWinterSession > 0 && (
-              <div className="shrink-0 p-3 rounded-2xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-black/5 dark:border-white/10 shadow-apple-sm text-center sm:text-right">
-                <div className="text-xs text-apple-gray-500 dark:text-apple-gray-400 font-medium">До зимней сессии</div>
-                <div className="text-lg font-extrabold text-purple-600 dark:text-purple-400">
-                  {daysUntilWinterSession} {daysUntilWinterSession === 1 ? 'день' : daysUntilWinterSession < 5 ? 'дня' : 'дней'}
-                </div>
-                <div className="text-[10px] text-apple-gray-400">с 11 января 2027 г.</div>
-              </div>
-            )}
           </div>
-        </div>
+        )}
 
         {/* Tab Switcher */}
         <div className="flex items-center p-1 bg-black/5 dark:bg-white/10 rounded-2xl border border-black/5 dark:border-white/5 text-xs font-semibold">
