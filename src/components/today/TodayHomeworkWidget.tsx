@@ -9,7 +9,7 @@ interface TodayHomeworkWidgetProps {
   overdueList?: Homework[];
   onToggleComplete: (id: string) => void;
   onOpenCreateModal: () => void;
-  onViewAllHomework: () => void;
+  onViewAllHomework?: () => void;
   onSelectHomework: (hw: Homework) => void;
 }
 
@@ -23,6 +23,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
   onSelectHomework,
 }) => {
   const tomorrowList = dueTomorrowList ?? dueTodayList;
+
   return (
     <div className="space-y-4">
       {/* Overdue alert banner if overdue tasks exist */}
@@ -33,13 +34,15 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
               <AlertTriangle className="w-4 h-4" />
               <span>Просроченные задания ({overdueList.length})</span>
             </div>
-            <button
-              onClick={onViewAllHomework}
-              className="text-xs text-apple-red dark:text-rose-400 font-semibold hover:underline flex items-center gap-1"
-            >
-              <span>Все</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            {onViewAllHomework && (
+              <button
+                onClick={onViewAllHomework}
+                className="text-xs text-apple-red dark:text-rose-400 font-semibold hover:underline flex items-center gap-1"
+              >
+                <span>Все</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -76,30 +79,36 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
       )}
 
       {/* Due Tomorrow Card */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center">
-              <CheckSquare className="w-4 h-4" />
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
+        {/* Card Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center shrink-0">
+              <CheckSquare className="w-4 h-4 stroke-[2.2]" />
             </div>
-            <h4 className="text-base font-bold text-apple-gray-900 dark:text-white">
-              Сдать завтра ({tomorrowList.length})
+            <h4 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
+              <span>Сдать завтра</span>
+              <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-apple-blue/10 text-apple-blue dark:bg-apple-blue/20">
+                {tomorrowList.length}
+              </span>
             </h4>
           </div>
 
           <button
             onClick={onOpenCreateModal}
-            className="flex items-center gap-1 text-xs font-semibold text-apple-blue hover:text-blue-600 transition-all duration-200 ease-out active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue text-xs font-semibold transition-all duration-200 ease-out active:scale-95"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Добавить</span>
           </button>
         </div>
 
         {tomorrowList.length === 0 ? (
-          <div className="py-6 text-center">
-            <Clock className="w-8 h-8 mx-auto text-apple-gray-300 dark:text-apple-gray-600 mb-2" />
-            <p className="text-xs sm:text-sm font-medium text-apple-gray-600 dark:text-apple-gray-400">
+          <div className="py-7 text-center">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2.5">
+              <Check className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <p className="text-sm font-semibold text-apple-gray-800 dark:text-zinc-200">
               На завтра нет дедлайнов
             </p>
             <p className="mt-0.5 text-xs text-apple-gray-400">
@@ -107,7 +116,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {tomorrowList.map((item) => {
               const subtasks = Array.isArray(item.subtasks) ? item.subtasks : [];
               const completedSubtasks = subtasks.filter((s) => s.completed).length;
@@ -115,37 +124,43 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-white/90 dark:bg-zinc-800/90 border border-black/5 dark:border-white/5 hover:shadow-apple-sm hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 ease-out"
+                  className="group flex items-center justify-between gap-3.5 p-3.5 sm:p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] hover:bg-black/[0.05] dark:hover:bg-white/[0.07] border border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10 transition-all duration-200 ease-out active:scale-[0.99]"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     {/* Apple Reminders round checkbox */}
                     <button
-                      onClick={() => onToggleComplete(item.id)}
-                      className="w-5 h-5 rounded-full border-2 border-apple-blue hover:bg-apple-blue flex items-center justify-center transition-all duration-200 ease-out active:scale-75 group shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleComplete(item.id);
+                      }}
+                      className="w-5 h-5 rounded-full border-2 border-apple-blue/70 hover:border-apple-blue hover:bg-apple-blue flex items-center justify-center transition-all duration-150 ease-out active:scale-75 group/check shrink-0 cursor-pointer"
                       title="Отметить выполненным"
                     >
-                      <Check className="w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Check className="w-3 text-white opacity-0 group-hover/check:opacity-100 transition-opacity stroke-[3]" />
                     </button>
 
                     <div
                       onClick={() => onSelectHomework(item)}
-                      className="min-w-0 cursor-pointer"
+                      className="min-w-0 flex-1 cursor-pointer"
                     >
-                      <h5 className="text-xs sm:text-sm font-semibold text-apple-gray-900 dark:text-white truncate hover:text-apple-blue transition-colors">
+                      <h5 className="text-sm font-semibold text-apple-gray-900 dark:text-white truncate group-hover:text-apple-blue transition-colors">
                         {item.title}
                       </h5>
-                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
-                        <span className="truncate">{item.subject}</span>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-apple-gray-500 dark:text-apple-gray-400">
+                        <span className="truncate font-medium">{item.subject}</span>
                         {item.dueTime && (
                           <>
-                            <span>•</span>
-                            <span className="font-mono text-apple-orange">до {item.dueTime}</span>
+                            <span className="opacity-40">•</span>
+                            <span className="font-mono text-apple-orange flex items-center gap-1 shrink-0">
+                              <Clock className="w-3 h-3 stroke-[2]" />
+                              до {item.dueTime}
+                            </span>
                           </>
                         )}
                         {subtasks.length > 0 && (
                           <>
-                            <span>•</span>
-                            <span>
+                            <span className="opacity-40">•</span>
+                            <span className="shrink-0 font-medium text-apple-gray-400">
                               {completedSubtasks}/{subtasks.length} подзадач
                             </span>
                           </>
@@ -154,22 +169,14 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
                     </div>
                   </div>
 
-                  <PriorityBadge priority={item.priority} />
+                  <div className="shrink-0" onClick={() => onSelectHomework(item)}>
+                    <PriorityBadge priority={item.priority} />
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-
-        <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 flex justify-end">
-          <button
-            onClick={onViewAllHomework}
-            className="text-xs font-semibold text-apple-blue hover:underline flex items-center gap-1 active:scale-95 transition-all duration-200 ease-out"
-          >
-            <span>Перейти ко всем заданиям</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
       </div>
     </div>
   );
