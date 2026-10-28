@@ -104,29 +104,25 @@ export const TodayView: React.FC<TodayViewProps> = ({
         todayLessonsCount={todayLessons.length}
       />
 
-      {/* 2. Today's pairs (после нее пары на сегодня) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white flex items-center gap-2">
-            <span>Пары на сегодня</span>
-            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-500">
-              {visibleTodayLessons.length}
-            </span>
-          </h3>
-        </div>
+      {/* 2. Today's pairs (отображается только пока есть текущие/предстоящие пары или пары, завершившиеся менее 10 мин назад) */}
+      {visibleTodayLessons.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold tracking-tight text-apple-gray-900 dark:text-white flex items-center gap-2">
+              <span>Пары на сегодня</span>
+              <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-500">
+                {visibleTodayLessons.length}
+              </span>
+            </h3>
+          </div>
 
-        <TodayLessonsList
-          lessons={visibleTodayLessons}
-          now={now}
-          onSelectLesson={(l) => setSelectedLesson(l)}
-          emptyTitle={todayLessons.length > 0 ? 'Все пары на сегодня завершены! 🎉' : 'Пар сегодня нет'}
-          emptyDescription={
-            todayLessons.length > 0
-              ? 'Все занятия подошли к концу. Отличная работа! Можно отдохнуть или закрыть оставшиеся дедлайны по заданиям.'
-              : 'Расписание на сегодня пустое. Вы можете заняться домашними заданиями или посмотреть расписание на другие дни.'
-          }
-        />
-      </div>
+          <TodayLessonsList
+            lessons={visibleTodayLessons}
+            now={now}
+            onSelectLesson={(l) => setSelectedLesson(l)}
+          />
+        </div>
+      )}
 
       {/* 3. Tomorrow's pairs (пары на завтра) */}
       <div className="space-y-4">

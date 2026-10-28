@@ -1,4 +1,4 @@
-const CACHE_NAME = 'unikgu-cache-v70';
+const CACHE_NAME = 'unikgu-cache-v71';
 
 const STATIC_ASSETS = [
   './',

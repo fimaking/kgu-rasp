@@ -349,7 +349,7 @@ describe('scheduleParser', () => {
     });
   });
 
-  describe('filterVisibleTodayLessons (auto-hide completed pairs with 10-min grace for last pair)', () => {
+  describe('filterVisibleTodayLessons (auto-hide completed pairs 10 minutes after ending)', () => {
     const makeLesson = (pairNumber: number, startH: number, startM: number, endH: number, endM: number): ParsedLesson => {
       const startDateTime = new Date(2026, 9, 28, startH, startM, 0, 0);
       const endDateTime = new Date(2026, 9, 28, endH, endM, 0, 0);
@@ -392,26 +392,32 @@ describe('scheduleParser', () => {
       expect(result.map((l) => l.pairNumber)).toEqual([1, 2, 4]);
     });
 
-    it('immediately removes lesson 1 when it ends at 10:00', () => {
-      const now = new Date(2026, 9, 28, 10, 0, 1); // 10:00:01
+    it('keeps lesson 1 visible during its 10-minute break after ending at 10:00', () => {
+      const now = new Date(2026, 9, 28, 10, 5, 0); // 10:05:00 (5 min after ending)
+      const result = filterVisibleTodayLessons(todayList, now);
+      expect(result.map((l) => l.pairNumber)).toEqual([1, 2, 4]);
+    });
+
+    it('removes lesson 1 after 10 minutes have elapsed since its end time (10:10:01)', () => {
+      const now = new Date(2026, 9, 28, 10, 10, 1); // 10:10:01
       const result = filterVisibleTodayLessons(todayList, now);
       expect(result.map((l) => l.pairNumber)).toEqual([2, 4]);
     });
 
-    it('immediately removes lesson 2 when it ends at 11:40', () => {
-      const now = new Date(2026, 9, 28, 11, 40, 1); // 11:40:01
+    it('removes lesson 2 after 10 minutes have elapsed since its end time (11:50:01)', () => {
+      const now = new Date(2026, 9, 28, 11, 50, 1); // 11:50:01
       const result = filterVisibleTodayLessons(todayList, now);
       expect(result.map((l) => l.pairNumber)).toEqual([4]);
     });
 
-    it('keeps the last lesson (lesson 4) visible for 10 minutes after ending (user screenshot scenario at 15:39)', () => {
-      // Lesson 4 ended at 15:30:00. At 15:39:00 (9 min later), it must still be visible in the list.
+    it('keeps lesson 4 visible for 10 minutes after ending (user screenshot scenario at 15:39)', () => {
+      // Lesson 4 ended at 15:30:00. At 15:39:00 (9 min later), it is still visible in the list.
       const now = new Date(2026, 9, 28, 15, 39, 0);
       const result = filterVisibleTodayLessons(todayList, now);
       expect(result.map((l) => l.pairNumber)).toEqual([4]);
     });
 
-    it('removes the last lesson once 10 minutes have elapsed (at 15:40:01)', () => {
+    it('removes lesson 4 once 10 minutes have elapsed (at 15:40:01), making the list completely empty', () => {
       // 10 minutes and 1 second after 15:30:00
       const now = new Date(2026, 9, 28, 15, 40, 1);
       const result = filterVisibleTodayLessons(todayList, now);
