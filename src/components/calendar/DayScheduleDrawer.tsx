@@ -185,11 +185,6 @@ export const DayScheduleDrawer: React.FC<DayScheduleDrawerProps> = ({
                             {lesson.startTime}&nbsp;—&nbsp;{lesson.endTime}
                           </span>
                           <LessonTypeBadge type={lesson.type} label={lesson.typeLabel} />
-                          {lesson.subgroup > 0 && (
-                            <span className="text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-apple-gray-500 font-medium whitespace-nowrap shrink-0">
-                              {lesson.subgroup}&nbsp;п/г
-                            </span>
-                          )}
                         </div>
                         <h5 className="text-sm font-bold text-apple-gray-900 dark:text-white truncate mt-0.5">
                           {lesson.subject}

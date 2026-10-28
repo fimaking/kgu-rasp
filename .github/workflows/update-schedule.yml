@@ -1,0 +1,41 @@
+name: Auto-Sync KSU Schedule
+
+on:
+  schedule:
+    # Run every 4 hours (at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC)
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "schedule-sync"
+  cancel-in-progress: true
+
+jobs:
+  sync-schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sync latest schedule from KSU EIOS
+        run: node scripts/update-schedule.js
+
+      - name: Commit and push if updated
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "KSU Auto-Sync Bot"
+          if [[ -n $(git status -s public/schedules/ src/data/initialSchedule.json) ]]; then
+            git add public/schedules/ src/data/initialSchedule.json
+            git commit -m "chore(schedule): auto-sync latest schedule from KSU [skip ci]"
+            git push
+          else
+            echo "Schedule is already up to date. No changes to commit."
+          fi

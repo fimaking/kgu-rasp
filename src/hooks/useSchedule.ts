@@ -14,7 +14,11 @@ import {
 } from '../utils/dateUtils';
 import { getLessonStatus, filterLessonsBySubgroup } from '../utils/scheduleParser';
 
-export function useSchedule() {
+export interface UseScheduleOptions {
+  onAutoUpdate?: (lastUpdated: string) => void;
+}
+
+export function useSchedule(options?: UseScheduleOptions) {
   // Settings
   const [groupId, setGroupId] = useState<number>(() => StorageService.getSettings().groupId || 8953);
   const [groupName, setGroupName] = useState<string>(() => StorageService.getSettings().groupName || '26-ИСбо-4');
@@ -42,15 +46,39 @@ export function useSchedule() {
   );
 
   const groupIdRef = useRef(groupId);
+  const lastCheckTimeRef = useRef<number>(Date.now());
+
   useEffect(() => {
     groupIdRef.current = groupId;
   }, [groupId]);
+
+  const checkUpdatesSilently = useCallback(
+    async (targetGroupId?: number) => {
+      const idToFetch = typeof targetGroupId === 'number' ? targetGroupId : groupIdRef.current;
+      lastCheckTimeRef.current = Date.now();
+
+      try {
+        const { hasNewData, result } = await ScheduleService.syncScheduleSilently(idToFetch);
+        if (hasNewData) {
+          setLessons(result.lessons);
+          setInfo(result.info);
+          setIsOffline(result.isOffline);
+          setLastUpdated(result.lastUpdated);
+          options?.onAutoUpdate?.(result.lastUpdated);
+        }
+      } catch (err) {
+        console.warn('[useSchedule] Silent schedule auto-sync check failed:', err);
+      }
+    },
+    [options]
+  );
 
   const loadData = useCallback(
     async (force = false, targetGroupId?: number) => {
       const idToFetch = typeof targetGroupId === 'number' ? targetGroupId : groupIdRef.current;
       if (force) setRefreshing(true);
       setError(null);
+      lastCheckTimeRef.current = Date.now();
 
       try {
         const result = await ScheduleService.fetchSchedule(idToFetch, force);
@@ -72,10 +100,41 @@ export function useSchedule() {
   );
 
   useEffect(() => {
-    // Silent background refresh on mount
-    loadData(false, groupId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // 1. Silent background check right after startup
+    const timer = setTimeout(() => {
+      checkUpdatesSilently();
+    }, 1500);
+
+    // 2. Periodic background check every 20 minutes
+    const interval = setInterval(() => {
+      checkUpdatesSilently();
+    }, 20 * 60 * 1000);
+
+    // 3. Re-check when user returns to app/tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        const elapsed = Date.now() - lastCheckTimeRef.current;
+        if (elapsed > 10 * 60 * 1000) {
+          checkUpdatesSilently();
+        }
+      }
+    };
+
+    // 4. Re-check when device reconnects to network
+    const handleOnline = () => {
+      checkUpdatesSilently();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [checkUpdatesSilently]);
 
   const updateSubgroupFilter = useCallback((sg: number) => {
     setSubgroupFilter(sg);

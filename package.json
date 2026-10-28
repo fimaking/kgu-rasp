@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "prebuild": "node scripts/update-schedule.js || true",
+    "update-schedule": "node scripts/update-schedule.js",
     "preview": "vite preview",
     "test": "vitest run",
     "server": "node server/server.js",

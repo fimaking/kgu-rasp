@@ -50,6 +50,7 @@ interface SettingsViewProps {
   onShowToast: (type: 'success' | 'error' | 'info', title: string, msg?: string) => void;
   onDataImported: () => void;
   onRefreshSchedule: () => void;
+  isRefreshing?: boolean;
   lastUpdated: string | null;
 }
 
@@ -66,6 +67,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onShowToast,
   onDataImported,
   onRefreshSchedule,
+  isRefreshing = false,
   lastUpdated,
 }) => {
   const [settings, setSettings] = useState<UserSettings>(() => StorageService.getSettings());
@@ -343,20 +345,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </a>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
-            <span className="text-xs text-apple-gray-500 font-medium">Статус расписания КГУ:</span>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{formatLastSync(lastUpdated)}</span>
+          <div className="pt-2 border-t border-black/5 dark:border-white/5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-apple-gray-500 font-medium">Статус расписания КГУ:</span>
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                  isRefreshing
+                    ? 'bg-apple-blue/10 text-apple-blue border-apple-blue/20'
+                    : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isRefreshing ? 'bg-apple-blue animate-ping' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span>{isRefreshing ? 'Проверка сайта КГУ...' : formatLastSync(lastUpdated)}</span>
+                </div>
+                <button
+                  onClick={onRefreshSchedule}
+                  disabled={isRefreshing}
+                  className="p-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-all duration-200 ease-out active:scale-90 disabled:opacity-50"
+                  title="Обновить расписание с сайта КГУ"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-apple-blue' : ''}`} />
+                </button>
               </div>
-              <button
-                onClick={onRefreshSchedule}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-300 transition-all duration-200 ease-out active:scale-90"
-                title="Обновить расписание с сайта КГУ"
-              >
-                <RotateCw className="w-3.5 h-3.5" />
-              </button>
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-apple-gray-500 dark:text-apple-gray-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-apple-blue shrink-0" />
+              <span>Автообновление активно: база сама проверяет обновления на сайте КГУ</span>
             </div>
           </div>
 
@@ -883,10 +896,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <Button
             variant="ghost"
-            icon={<RotateCcw className="w-4 h-4 text-apple-gray-500" />}
+            loading={isRefreshing}
+            icon={<RotateCcw className={`w-4 h-4 text-apple-gray-500 ${isRefreshing ? 'animate-spin' : ''}`} />}
             onClick={onRefreshSchedule}
           >
-            Синхронизировать расписание
+            {isRefreshing ? 'Синхронизация с сайтом КГУ...' : 'Синхронизировать расписание'}
           </Button>
 
           <Button

@@ -48,11 +48,6 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onClick }) => {
 
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
           <LessonTypeBadge type={lesson.type} label={lesson.typeLabel} />
-          {lesson.subgroup > 0 && (
-            <span className="text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-apple-gray-600 dark:text-apple-gray-400 font-medium whitespace-nowrap shrink-0">
-              {lesson.subgroup}&nbsp;п/г
-            </span>
-          )}
           {lesson.isReplacement && (
             <span className="text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-rose-500/15 text-apple-red dark:text-rose-400 font-bold whitespace-nowrap shrink-0">
               Замена

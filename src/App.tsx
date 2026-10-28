@@ -37,12 +37,6 @@ export const App: React.FC = () => {
   const [quickCreateLessonType, setQuickCreateLessonType] = useState<string | undefined>(undefined);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // Hooks
-  const theme = useTheme();
-  const schedule = useSchedule();
-  const homework = useHomework();
-  const calendar = useCalendar(schedule.lessons, homework.allItems);
-
   const showToast = useCallback((type: 'success' | 'error' | 'info', title: string, message?: string) => {
     const id = 'toast_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
     setToasts((prev) => [...prev.slice(-2), { id, type, title, message }]);
@@ -51,6 +45,16 @@ export const App: React.FC = () => {
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  // Hooks
+  const theme = useTheme();
+  const schedule = useSchedule({
+    onAutoUpdate: () => {
+      showToast('info', 'Расписание КГУ обновлено', 'Загружены самые свежие данные с сайта КГУ.');
+    },
+  });
+  const homework = useHomework();
+  const calendar = useCalendar(schedule.lessons, homework.allItems);
 
   // Connect RealtimeSyncService globally on mount
   useEffect(() => {
@@ -357,6 +361,7 @@ export const App: React.FC = () => {
                   theme.reload();
                 }}
                 onRefreshSchedule={handleRefreshSchedule}
+                isRefreshing={schedule.refreshing}
                 lastUpdated={schedule.lastUpdated}
               />
             )}

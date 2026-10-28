@@ -1,4 +1,4 @@
-const CACHE_NAME = 'unikgu-cache-v72';
+const CACHE_NAME = 'unikgu-cache-v73';
 
 const STATIC_ASSETS = [
   './',
@@ -77,10 +77,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. API requests: Network-First
+  // 3. API & Schedule JSON requests: Network-First (Always fetch latest schedule if online)
   if (
     url.pathname.includes('/api') ||
+    url.pathname.includes('/schedules/') ||
+    url.pathname.endsWith('.json') ||
     url.hostname.includes('eios.kosgos.ru') ||
+    url.hostname.includes('raw.githubusercontent.com') ||
     url.hostname.includes('broker.emqx.io') ||
     url.hostname.includes('broker.hivemq.com') ||
     url.hostname.includes('mosquitto.org') ||

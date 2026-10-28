@@ -103,11 +103,6 @@ export const TodayLessonsList: React.FC<TodayLessonsListProps> = ({
                 </div>
                 <div className="mt-1 flex items-center gap-2 flex-wrap">
                   <LessonTypeBadge type={lesson.type} label={lesson.typeLabel} />
-                  {lesson.subgroup > 0 && (
-                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-apple-gray-500 font-medium whitespace-nowrap shrink-0">
-                      {lesson.subgroup}&nbsp;п/г
-                    </span>
-                  )}
                 </div>
               </div>
             </div>

@@ -25,27 +25,42 @@ export class ScheduleService {
 
   /**
    * Get schedule instantly on startup (0ms synchronous loading)
-   * Reads from localStorage cache, or falls back to embedded dataset immediately
+   * Reads from localStorage cache, or falls back to embedded dataset immediately.
+   * If the bundled dataset has a newer upload date than localStorage, upgrades cache immediately.
    */
   static getInitialSchedule(groupId = 8953): ScheduleFetchResult {
+    let cachedResult: ScheduleFetchResult | null = null;
     try {
-      const cached = this.getCachedSchedule(groupId);
-      if (cached && cached.lessons && cached.lessons.length > 0) {
-        return cached;
-      }
+      cachedResult = this.getCachedSchedule(groupId);
     } catch (e) {
       console.warn('Error reading cached schedule:', e);
     }
 
     if (groupId === 8953) {
       try {
-        const fallbackResponse = initialScheduleData as unknown as ScheduleResponse;
-        const initialResult = this.processResponse(fallbackResponse, false);
-        this.cacheSchedule(groupId, fallbackResponse);
-        return initialResult;
+        const bundledResponse = initialScheduleData as unknown as ScheduleResponse;
+        const bundledDateStr = bundledResponse.data?.info?.dateUploadingRasp;
+        const cachedDateStr = cachedResult?.info?.dateUploadingRasp;
+
+        // If no cache or bundled dataset has a newer upload date, immediately upgrade localStorage!
+        const isBundledNewer =
+          !cachedResult ||
+          !cachedResult.lessons ||
+          cachedResult.lessons.length === 0 ||
+          (bundledDateStr && (!cachedDateStr || new Date(bundledDateStr) > new Date(cachedDateStr)));
+
+        if (isBundledNewer) {
+          const freshResult = this.processResponse(bundledResponse, false);
+          this.cacheSchedule(groupId, bundledResponse);
+          return freshResult;
+        }
       } catch (e) {
         console.error('Error processing fallback schedule:', e);
       }
+    }
+
+    if (cachedResult && cachedResult.lessons && cachedResult.lessons.length > 0) {
+      return cachedResult;
     }
 
     return {
@@ -59,8 +74,9 @@ export class ScheduleService {
   }
 
   /**
-   * Fetch schedule: If not forceRefresh and cached schedule exists, return it immediately (0ms).
-   * Otherwise, fetch from bundled static schedules, local proxy, or fallback CDN.
+   * Fetch schedule:
+   * If not forceRefresh and cached schedule exists, return it immediately (0ms).
+   * Otherwise, fetch from live KSU EIOS, GitHub Raw CDN, or same-origin static files with cache-busting.
    */
   static async fetchSchedule(groupId = 8953, forceRefresh = false): Promise<ScheduleFetchResult> {
     const cached = this.getCachedSchedule(groupId);
@@ -75,52 +91,60 @@ export class ScheduleService {
           window.location.hostname === '127.0.0.1' ||
           window.location.hostname.startsWith('192.168.'));
 
+      const cacheBuster = `_t=${Date.now()}`;
       const endpoints: string[] = [];
 
-      // 1. In local dev, Vite proxy to KSU is fast and direct
+      // 1. In local dev, Vite proxy to KSU is fast, direct, and eliminates CORS completely
       if (isLocal) {
-        endpoints.push(`/api-eios/Rasp?idGroup=${groupId}`);
+        endpoints.push(`/api-eios/Rasp?idGroup=${groupId}&${cacheBuster}`);
       }
 
-      // 2. Relative static schedules (bundled in PWA, 100% reliable, same origin, 0 CORS)
+      // 2. Direct KSU EIOS API (works directly when CORS is allowed or running in non-browser context)
+      endpoints.push(`https://eios.kosgos.ru/api/Rasp?idGroup=${groupId}`);
+
+      // 3. Fallback CDN on GitHub Raw (has Access-Control-Allow-Origin: * and is updated by auto-sync bot)
+      endpoints.push(
+        `https://raw.githubusercontent.com/fimaking/kgu-rasp/main/public/schedules/${groupId}.json?${cacheBuster}`
+      );
+
+      // 4. Same-origin static schedules (bundled in PWA, with cache-busting parameter)
       if (typeof window !== 'undefined') {
         const basePath = import.meta.env.BASE_URL || './';
         const cleanBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
-        endpoints.push(`${cleanBase}schedules/${groupId}.json`);
-        endpoints.push(`./schedules/${groupId}.json`);
+        endpoints.push(`${cleanBase}schedules/${groupId}.json?${cacheBuster}`);
+        endpoints.push(`./schedules/${groupId}.json?${cacheBuster}`);
       }
 
-      // 3. Fallback CDN on GitHub (has Access-Control-Allow-Origin: *)
+      // 5. jsDelivr global CDN fallback
       endpoints.push(
-        `https://raw.githubusercontent.com/fimaking/kgu-rasp/main/public/schedules/${groupId}.json`
+        `https://cdn.jsdelivr.net/gh/fimaking/kgu-rasp@main/public/schedules/${groupId}.json?${cacheBuster}`
       );
-
-      // 4. Direct KSU API
-      endpoints.push(`https://eios.kosgos.ru/api/Rasp?idGroup=${groupId}`);
 
       let rawData: ScheduleResponse | null = null;
 
       for (const endpoint of endpoints) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
           const response = await fetch(endpoint, {
             signal: controller.signal,
             headers: {
               Accept: 'application/json',
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
             },
           });
           clearTimeout(timeoutId);
 
           if (response.ok) {
             const data = await response.json();
-            if (data && data.data && Array.isArray(data.data.rasp)) {
+            if (data && data.data && Array.isArray(data.data.rasp) && data.data.rasp.length > 0) {
               rawData = data;
               break;
             }
           }
         } catch {
-          // Continue to next endpoint
+          // Continue to next endpoint in cascade
         }
       }
 
@@ -138,6 +162,38 @@ export class ScheduleService {
     }
 
     return this.getInitialSchedule(groupId);
+  }
+
+  /**
+   * Check for schedule updates silently in the background.
+   * Returns whether a newer schedule was found and applied.
+   */
+  static async syncScheduleSilently(groupId = 8953): Promise<{ hasNewData: boolean; result: ScheduleFetchResult }> {
+    const currentCached = this.getCachedSchedule(groupId);
+    const currentDateStr = currentCached?.info?.dateUploadingRasp;
+
+    try {
+      const freshResult = await this.fetchSchedule(groupId, true);
+      const newDateStr = freshResult.info?.dateUploadingRasp;
+
+      // Check if the freshly fetched schedule has a newer upload date or changed lesson count
+      const isNewer =
+        !currentCached ||
+        !currentDateStr ||
+        (newDateStr && new Date(newDateStr).getTime() > new Date(currentDateStr).getTime()) ||
+        freshResult.lessons.length !== (currentCached?.lessons?.length || 0);
+
+      if (isNewer) {
+        return { hasNewData: true, result: freshResult };
+      }
+
+      return { hasNewData: false, result: freshResult };
+    } catch {
+      return {
+        hasNewData: false,
+        result: currentCached || this.getInitialSchedule(groupId),
+      };
+    }
   }
 
   private static processResponse(res: ScheduleResponse, isOffline: boolean): ScheduleFetchResult {
