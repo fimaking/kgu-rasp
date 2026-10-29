@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { CheckSquare, AlertCircle } from 'lucide-react';
 import { Homework, HomeworkFilters as IHomeworkFilters } from '../../types/homework';
 import { HomeworkCard } from './HomeworkCard';
-import { HomeworkFilters } from './HomeworkFilters';
 import { HomeworkFormModal } from './HomeworkFormModal';
 import { QuickStats } from '../today/QuickStats';
 import { Button } from '../ui/Button';
@@ -81,31 +80,33 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
         onSelectFilter={(filterTab) => onFilterChange({ ...filters, tab: filterTab })}
       />
 
-      {/* Filter and Search Bar */}
-      <HomeworkFilters
-        filters={filters}
-        onFilterChange={onFilterChange}
-        subjectsList={subjectsList}
-        counts={{
-          all: stats.total,
-          today: stats.dueToday,
-          thisWeek: stats.thisWeek,
-          overdue: stats.overdue,
-          completed: stats.completed,
-        }}
-      />
+      {/* Filter indicator if filtered by QuickStats */}
+      {filters.tab !== 'all' && (
+        <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/5 dark:border-white/5 animate-in fade-in">
+          <span className="text-xs text-apple-gray-500 dark:text-apple-gray-400 font-medium">
+            Показаны:{' '}
+            <strong className="text-apple-gray-900 dark:text-white">
+              {filters.tab === 'today' ? 'Сдать сегодня' : filters.tab === 'overdue' ? 'Просроченные' : filters.tab}
+            </strong>
+          </span>
+          <button
+            onClick={() => onFilterChange({ ...filters, tab: 'all' })}
+            className="text-xs text-apple-blue font-semibold hover:underline cursor-pointer"
+          >
+            Показать все
+          </button>
+        </div>
+      )}
 
       {/* List of Tasks */}
       {items.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card">
           <CheckSquare className="w-12 h-12 mx-auto text-apple-gray-300 dark:text-apple-gray-600 mb-3" />
           <h4 className="text-base font-bold text-apple-gray-900 dark:text-white">
-            Нет заданий в этом разделе
+            Нет заданий
           </h4>
           <p className="mt-1 text-xs sm:text-sm text-apple-gray-500 dark:text-apple-gray-400 max-w-sm mx-auto">
-            {filters.searchQuery
-              ? 'По запросу ничего не найдено. Попробуйте изменить параметры поиска.'
-              : 'Все задачи в этой категории выполнены или ещё не добавлены.'}
+            Все задачи выполнены или ещё не добавлены.
           </p>
           <div className="mt-4">
             <Button variant="secondary" size="sm" onClick={onOpenCreateModal}>
