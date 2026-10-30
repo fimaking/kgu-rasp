@@ -197,6 +197,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         onGoToToday={handleGoToToday}
         selectedDayDate={selectedDayDate}
         onOpenAcademicSchedule={() => setShowAcademicModal(true)}
+        onOpenBells={() => setShowBellsModal(true)}
         onSelectDay={(d) => {
           setSelectedDayDate(d);
           const dateStr = formatDateToIso(d);

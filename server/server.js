@@ -21,6 +21,51 @@ const httpsAgent = new https.Agent({
 });
 
 /**
+ * Generic EIOS Proxy for local parity with Vite dev server
+ * GET /api-eios/Rasp?idGroup=8953
+ */
+app.get('/api-eios/*', (req, res) => {
+  const subPath = req.params[0] || '';
+  const queryString = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  const eiosUrl = `https://eios.kosgos.ru/api/${subPath}${queryString}`;
+
+  const options = {
+    agent: httpsAgent,
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept: 'application/json, text/plain, */*',
+      Referer: 'https://eios.kosgos.ru/WebApp/',
+    },
+  };
+
+  https
+    .get(eiosUrl, options, (resp) => {
+      let data = '';
+      resp.on('data', (chunk) => {
+        data += chunk;
+      });
+      resp.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          res.json(parsed);
+        } catch {
+          res.status(502).json({
+            state: 0,
+            msg: 'Ошибка разбора ответа сервера КГУ',
+          });
+        }
+      });
+    })
+    .on('error', (err) => {
+      res.status(500).json({
+        state: 0,
+        msg: 'Не удалось связаться с сервером ЭИОС КГУ: ' + err.message,
+      });
+    });
+});
+
+/**
  * Schedule Proxy: queries KSU EIOS API directly from backend
  * GET /api/schedule?groupId=8953&sdate=2026-10-16
  */

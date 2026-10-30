@@ -149,7 +149,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       title: title.trim(),
       subject: finalSubject,
       lessonType,
-      description,
+      description: description?.trim() ? description.trim() : undefined,
       assignedDate,
       dueDate,
       dueTime,
@@ -294,6 +294,20 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               <span>Выбранная дата в прошлом — задание станет просроченным</span>
             </p>
           )}
+        </div>
+
+        {/* Optional Description / Notes */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300">
+            Примечание / Номера заданий (необязательно)
+          </label>
+          <textarea
+            rows={2}
+            placeholder="Например, вариант 2, номера 4.1—4.7..."
+            value={description || ''}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all resize-none"
+          />
         </div>
 
         {/* Buttons */}

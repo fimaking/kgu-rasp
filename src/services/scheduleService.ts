@@ -94,8 +94,9 @@ export class ScheduleService {
       const cacheBuster = `_t=${Date.now()}`;
       const endpoints: string[] = [];
 
-      // 1. In local dev, Vite proxy to KSU is fast, direct, and eliminates CORS completely
+      // 1. In local dev / local backend, proxy to KSU is fast, direct, and eliminates CORS completely
       if (isLocal) {
+        endpoints.push(`/api/schedule?groupId=${groupId}&${cacheBuster}`);
         endpoints.push(`/api-eios/Rasp?idGroup=${groupId}&${cacheBuster}`);
       }
 

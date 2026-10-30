@@ -79,10 +79,10 @@ export const TodayView: React.FC<TodayViewProps> = ({
   }, [todayLessons, now]);
 
   const tomorrow = useMemo(() => {
-    const d = new Date();
+    const d = new Date(now);
     d.setDate(d.getDate() + 1);
     return d;
-  }, []);
+  }, [now.toDateString()]);
 
   const tomorrowDateStr = useMemo(() => formatDateToIso(tomorrow), [tomorrow]);
 

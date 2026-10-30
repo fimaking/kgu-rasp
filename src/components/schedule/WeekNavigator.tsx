@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, GraduationCap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, GraduationCap, Bell } from 'lucide-react';
 import { formatRussianDate, isSameDay } from '../../utils/dateUtils';
 import { RaspInfo } from '../../types/schedule';
 
@@ -13,6 +13,7 @@ interface WeekNavigatorProps {
   days: { date: Date; shortDayName: string; isToday: boolean; count: number }[];
   info?: RaspInfo | null;
   onOpenAcademicSchedule?: () => void;
+  onOpenBells?: () => void;
 }
 
 export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
@@ -24,6 +25,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   onSelectDay,
   days,
   onOpenAcademicSchedule,
+  onOpenBells,
 }) => {
   const lastStudyDay = new Date(selectedWeekMonday);
   lastStudyDay.setDate(selectedWeekMonday.getDate() + (days.length > 0 ? days.length - 1 : 5));
@@ -72,6 +74,19 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             >
               <GraduationCap className="w-3.5 h-3.5 opacity-70" />
               <span>График</span>
+            </button>
+          )}
+
+          {/* KSU Bell Times button (Звонки) */}
+          {onOpenBells && (
+            <button
+              type="button"
+              onClick={onOpenBells}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-apple-gray-600 hover:text-apple-gray-900 dark:text-zinc-400 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.05] hover:bg-black/[0.08] dark:hover:bg-white/[0.09] transition-all duration-150 ease-out active:scale-95 shrink-0"
+              title="Посмотреть расписание звонков КГУ"
+            >
+              <Bell className="w-3.5 h-3.5 opacity-70 text-amber-500" />
+              <span>Звонки</span>
             </button>
           )}
         </div>

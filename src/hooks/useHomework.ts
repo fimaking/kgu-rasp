@@ -146,17 +146,33 @@ export function useHomework() {
     };
   }, []);
 
-  // Compute dates
-  const now = new Date();
-  const todayStr = formatDateToIso(now);
-  const tomorrowDate = new Date(now);
-  tomorrowDate.setDate(now.getDate() + 1);
-  const tomorrowStr = formatDateToIso(tomorrowDate);
+  // Stable ticker for real-time overdue checks & midnight rollover
+  const [now, setNow] = useState<Date>(() => new Date());
 
-  const currentWeekMonday = getMondayOfWeek(now);
-  const currentWeekSunday = new Date(currentWeekMonday);
-  currentWeekSunday.setDate(currentWeekMonday.getDate() + 6);
-  const currentWeekEndStr = formatDateToIso(currentWeekSunday);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Compute dates
+  const todayStr = useMemo(() => formatDateToIso(now), [now]);
+  const tomorrowStr = useMemo(() => {
+    const tomorrowDate = new Date(now);
+    tomorrowDate.setDate(now.getDate() + 1);
+    return formatDateToIso(tomorrowDate);
+  }, [now]);
+
+  const { currentWeekMonday, currentWeekEndStr } = useMemo(() => {
+    const monday = getMondayOfWeek(now);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return {
+      currentWeekMonday: monday,
+      currentWeekEndStr: formatDateToIso(sunday),
+    };
+  }, [now]);
 
   // Statistics
   const stats = useMemo(() => {
