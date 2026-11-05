@@ -13700,9 +13700,9 @@
         "name": "Гл-240(4)"
       },
       "year": "2026-2027",
-      "curWeekNumber": 9,
-      "curNumNed": 1,
-      "selectedNumNed": 1,
+      "curWeekNumber": 10,
+      "curNumNed": 2,
+      "selectedNumNed": 2,
       "curSem": 1,
       "typesWeek": [
         {
@@ -13724,10 +13724,10 @@
       "fixedInCache": false,
       "date": null,
       "lastDate": null,
-      "dateUploadingRasp": "2026-10-26T19:33:52"
+      "dateUploadingRasp": "2026-11-02T18:31:41"
     }
   },
   "state": 1,
   "msg": "Расписание",
-  "time": 66
+  "time": 76
 }

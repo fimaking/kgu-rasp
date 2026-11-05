@@ -46,43 +46,46 @@ export const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      {/* Fullscreen Backdrop with Apple Frosted Glass Blur */}
+      {/* Fullscreen Backdrop */}
       <div
-        className="fixed inset-0 bg-black/25 dark:bg-black/40 backdrop-blur-xl animate-backdrop-fade"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Dialog Card with Apple Spring Entrance */}
+      {/* Dialog Card - TickTick style */}
       <div
-        className={`relative w-full ${widthClasses[maxWidth]} bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-apple-float overflow-hidden z-10 animate-modal-spring my-auto flex flex-col max-h-[92vh] sm:max-h-[88vh]`}
+        className={`relative w-full ${widthClasses[maxWidth]} bg-white dark:bg-[#1F1F1F] rounded-2xl border border-zinc-200 dark:border-[#303030] shadow-2xl overflow-hidden z-10 my-auto flex flex-col max-h-[92vh] sm:max-h-[88vh] animate-in fade-in zoom-in-95 duration-150`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header (pinned to top) */}
         {(title || subtitle) && (
-          <div className="shrink-0 flex items-start justify-between px-6 pt-5 pb-4 border-b border-black/5 dark:border-white/5">
+          <div className="shrink-0 flex items-start justify-between px-6 pt-5 pb-4 border-b border-zinc-100 dark:border-[#2C2C2C]">
             <div>
               {title && (
-                <h3 className="text-xl font-semibold tracking-tight text-apple-gray-900 dark:text-white">
+                <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
                   {title}
                 </h3>
               )}
               {subtitle && (
-                <p className="mt-1 text-xs text-apple-gray-500 dark:text-apple-gray-400">
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                   {subtitle}
                 </p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 -mr-1 text-apple-gray-400 hover:text-apple-gray-600 dark:hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#2C2C2C] transition-colors -mr-1"
+              aria-label="Закрыть"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Scrollable Content */}
-        <div className="p-5 sm:p-6 flex-1 overflow-y-auto min-h-0">{children}</div>
+        {/* Scrollable Content Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {children}
+        </div>
       </div>
     </div>,
     document.body

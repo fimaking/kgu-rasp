@@ -33,15 +33,15 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   const rangeStr = `${formatRussianDate(selectedWeekMonday)} — ${formatRussianDate(lastStudyDay, true)}`;
 
   return (
-    <div className="p-4 sm:p-5 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4 select-none">
+    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1F1F1F] border border-zinc-200 dark:border-[#2C2C2C] shadow-sm space-y-3.5 select-none">
       {/* Top Bar: Nav controls, Academic schedule badge & Date Range */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Navigation buttons and Academic schedule button together on the same line */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1">
             <button
               onClick={onPrevWeek}
-              className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
+              className="p-1.5 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-zinc-200 dark:hover:bg-[#383838] text-zinc-700 dark:text-zinc-300 transition-colors active:scale-95 cursor-pointer"
               title="Предыдущая неделя"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -49,7 +49,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
             <button
               onClick={onGoToToday}
-              className="px-3 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue font-semibold text-xs transition-all duration-200 ease-out active:scale-95 flex items-center gap-1.5"
+              className="px-2.5 py-1.5 rounded-lg bg-[#2B82FB]/10 hover:bg-[#2B82FB]/20 text-[#2B82FB] font-semibold text-xs transition-colors active:scale-95 flex items-center gap-1.5 cursor-pointer"
             >
               <CalendarIcon className="w-3.5 h-3.5" />
               <span>Сегодня</span>
@@ -57,7 +57,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
             <button
               onClick={onNextWeek}
-              className="p-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-apple-gray-700 dark:text-apple-gray-200 transition-all duration-200 ease-out active:scale-90"
+              className="p-1.5 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-zinc-200 dark:hover:bg-[#383838] text-zinc-700 dark:text-zinc-300 transition-colors active:scale-95 cursor-pointer"
               title="Следующая неделя"
             >
               <ChevronRight className="w-4 h-4" />
@@ -69,7 +69,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <button
               type="button"
               onClick={onOpenAcademicSchedule}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-apple-gray-600 hover:text-apple-gray-900 dark:text-zinc-400 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.05] hover:bg-black/[0.08] dark:hover:bg-white/[0.09] transition-all duration-150 ease-out active:scale-95 shrink-0"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-zinc-200 dark:hover:bg-[#383838] transition-colors active:scale-95 shrink-0 cursor-pointer"
               title="Посмотреть график учебного процесса"
             >
               <GraduationCap className="w-3.5 h-3.5 opacity-70" />
@@ -82,10 +82,10 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <button
               type="button"
               onClick={onOpenBells}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-apple-gray-600 hover:text-apple-gray-900 dark:text-zinc-400 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.05] hover:bg-black/[0.08] dark:hover:bg-white/[0.09] transition-all duration-150 ease-out active:scale-95 shrink-0"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-zinc-200 dark:hover:bg-[#383838] transition-colors active:scale-95 shrink-0 cursor-pointer"
               title="Посмотреть расписание звонков КГУ"
             >
-              <Bell className="w-3.5 h-3.5 opacity-70 text-amber-500" />
+              <Bell className="w-3.5 h-3.5 opacity-70 text-[#FA8C16]" />
               <span>Звонки</span>
             </button>
           )}
@@ -93,7 +93,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
         {/* Date Range */}
         <div className="flex items-center">
-          <span className="text-xs sm:text-sm font-bold text-apple-gray-900 dark:text-white">
+          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
             {rangeStr}
           </span>
         </div>
@@ -101,7 +101,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
 
       {/* Quick Day Selector Pills */}
       <div
-        className="grid gap-1.5 sm:gap-2 pt-2 border-t border-black/5 dark:border-white/5"
+        className="grid gap-1.5 sm:gap-2 pt-2 border-t border-zinc-100 dark:border-[#2A2A2A]"
         style={{ gridTemplateColumns: `repeat(${days.length || 6}, minmax(0, 1fr))` }}
       >
         {days.map((day, idx) => {
@@ -110,12 +110,12 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <button
               key={idx}
               onClick={() => onSelectDay(day.date)}
-              className={`flex flex-col items-center py-2 px-1 sm:px-2 rounded-2xl transition-all duration-200 ease-out active:scale-95 ${
+              className={`flex flex-col items-center py-2 px-1 sm:px-2 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer ${
                 isSelected
-                  ? 'bg-apple-blue text-white shadow-apple-sm font-semibold scale-102'
+                  ? 'bg-[#2B82FB] text-white shadow-xs font-semibold'
                   : day.isToday
-                  ? 'bg-blue-500/10 dark:bg-blue-500/20 text-apple-blue font-semibold border border-blue-500/30'
-                  : 'bg-black/[0.03] dark:bg-white/[0.04] text-apple-gray-600 dark:text-apple-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-apple-gray-900 dark:hover:text-white'
+                  ? 'bg-blue-50/50 dark:bg-[#262C38] text-[#2B82FB] font-semibold border border-[#2B82FB]/40'
+                  : 'bg-zinc-50 dark:bg-[#252525] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#2F2F2F] hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               <span className="text-[11px] uppercase tracking-wider font-medium opacity-80">
@@ -129,7 +129,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
                   isSelected
                     ? 'bg-white/20 text-white'
                     : day.count > 0
-                    ? 'text-apple-gray-500 dark:text-apple-gray-400'
+                    ? 'text-zinc-500 dark:text-zinc-400'
                     : 'opacity-40'
                 }`}
               >
