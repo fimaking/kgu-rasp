@@ -17,97 +17,78 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   dueTodayCount,
   overdueCount,
 }) => {
-  const tabs: {
-    id: NavTab;
-    label: string;
-    icon: (isActive: boolean) => React.ReactNode;
-    badge?: number;
-    badgeColor?: string;
-  }[] = [
+  const tabs: { id: NavTab; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
     {
       id: 'today',
       label: 'Сегодня',
-      icon: (active) => (
-        <Clock className={`w-5 h-5 ${active ? 'text-[#FA8C16]' : 'text-zinc-400 dark:text-zinc-500'}`} />
-      ),
+      icon: <Clock className="w-5 h-5" />,
       badge: dueTodayCount > 0 ? dueTodayCount : undefined,
-      badgeColor: 'bg-[#FA8C16] text-white',
+      badgeColor: 'bg-apple-blue',
     },
     {
       id: 'schedule',
       label: 'Расписание',
-      icon: (active) => (
-        <CalendarDays className={`w-5 h-5 ${active ? 'text-[#2B82FB]' : 'text-zinc-400 dark:text-zinc-500'}`} />
-      ),
+      icon: <CalendarDays className="w-5 h-5" />,
     },
     {
       id: 'homework',
       label: 'Задания',
-      icon: (active) => (
-        <CheckSquare className={`w-5 h-5 ${active ? 'text-[#10B981]' : 'text-zinc-400 dark:text-zinc-500'}`} />
-      ),
+      icon: <CheckSquare className="w-5 h-5" />,
       badge: overdueCount > 0 ? overdueCount : undefined,
-      badgeColor: 'bg-[#EF4444] text-white',
+      badgeColor: 'bg-rose-500',
     },
     {
       id: 'calendar',
       label: 'Календарь',
-      icon: (active) => (
-        <Calendar className={`w-5 h-5 ${active ? 'text-[#8B5CF6]' : 'text-zinc-400 dark:text-zinc-500'}`} />
-      ),
+      icon: <Calendar className="w-5 h-5" />,
     },
     {
       id: 'settings',
       label: 'Настройки',
-      icon: (active) => (
-        <Settings className={`w-5 h-5 ${active ? 'text-[#2B82FB]' : 'text-zinc-400 dark:text-zinc-500'}`} />
-      ),
+      icon: <Settings className="w-5 h-5" />,
     },
   ];
 
   return (
     <>
-      {/* Floating Action Button for mobile (+ task button in TickTick blue) */}
-      <button
-        onClick={onOpenCreateHomework}
-        className="md:hidden fixed bottom-20 right-4 z-40 w-13 h-13 rounded-full bg-[#2B82FB] hover:bg-[#2072E5] active:scale-90 text-white shadow-lg shadow-[#2B82FB]/35 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer"
-        aria-label="Добавить задачу"
-        title="Добавить задачу"
-      >
-        <Plus className="w-6 h-6 stroke-[2.5]" />
-      </button>
+      {/* Floating Action Button for mobile (only in homework tab) */}
+      {currentTab === 'homework' && (
+        <button
+          onClick={onOpenCreateHomework}
+          className="md:hidden fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-apple-float flex items-center justify-center transition-all duration-200 ease-out active:scale-90 hover:scale-105 animate-modal-spring"
+          aria-label="Добавить домашнее задание"
+        >
+          <Plus className="w-6 h-6 stroke-[2.5]" />
+        </button>
+      )}
 
-      {/* Docked bottom navigation bar - TickTick style */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-[#1F1F1F]/95 backdrop-blur-lg border-t border-zinc-200 dark:border-[#2C2C2C] px-1 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-around select-none">
+      {/* Docked bottom navigation bar */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/85 dark:bg-[#18181b]/85 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 px-1 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-between select-none">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex-1 min-w-0 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-150 ease-out active:scale-95 cursor-pointer ${
+              className={`relative flex-1 min-w-0 flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all duration-200 ease-out active:scale-90 ${
                 isActive
-                  ? 'text-zinc-900 dark:text-white font-semibold'
-                  : 'text-zinc-400 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+                  ? 'text-apple-blue font-semibold scale-105'
+                  : 'text-apple-gray-500 dark:text-apple-gray-400 hover:text-apple-gray-800'
               }`}
             >
               <div className="relative">
-                {tab.icon(isActive)}
+                {tab.icon}
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span
-                    className={`absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center leading-none ${
-                      tab.badgeColor || 'bg-[#2B82FB] text-white'
+                    className={`absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center animate-check-pop ${
+                      tab.badgeColor || 'bg-apple-blue'
                     }`}
                   >
                     {tab.badge}
                   </span>
                 )}
               </div>
-              <span
-                className={`text-[10px] mt-0.5 tracking-tight truncate max-w-full text-center leading-tight ${
-                  isActive ? 'text-zinc-900 dark:text-white font-semibold' : 'text-zinc-500 dark:text-zinc-400'
-                }`}
-              >
+              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-full text-center leading-tight">
                 {tab.label}
               </span>
             </button>

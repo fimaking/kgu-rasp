@@ -27,15 +27,16 @@ function hexToRgb(hex: string): string {
       return `${r} ${g} ${b}`;
     }
   }
-  return '43 130 251';
+  return '0 122 255';
 }
 
 export function useTheme() {
   const [settings, setSettings] = useState(() => StorageService.getSettings());
 
   const themeMode = settings.theme || DEFAULT_SETTINGS.theme;
+  // Default and locked to OLED Black, Comfortaa font, and Apple Blue accent
   const visualTheme: VisualTheme = 'oled';
-  const accentColor = settings.accentColor || DEFAULT_SETTINGS.accentColor;
+  const accentColor = '#007AFF';
   const fontFamily: FontFamily = 'comfortaa';
   const fontScale = settings.fontScale || DEFAULT_SETTINGS.fontScale;
   const appRadius = settings.appRadius || DEFAULT_SETTINGS.appRadius;

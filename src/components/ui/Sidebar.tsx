@@ -8,10 +8,7 @@ import {
   Plus,
   Moon,
   Sun,
-  Check,
-  Cloud,
-  Layers,
-  ChevronDown,
+  GraduationCap,
 } from 'lucide-react';
 import { ThemeMode } from '../../types/settings';
 import { APP_VERSION } from '../../utils/version';
@@ -29,7 +26,6 @@ interface SidebarProps {
   isDark: boolean;
   onToggleTheme: () => void;
   onOpenGroupSelect?: () => void;
-  subjectsList?: string[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -42,140 +38,107 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isDark,
   onToggleTheme,
   onOpenGroupSelect,
-  subjectsList = [],
 }) => {
-  const navItems: {
-    id: NavTab;
-    label: string;
-    icon: React.ReactNode;
-    badge?: number;
-    badgeColor?: string;
-  }[] = [
+  const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: number; badgeVariant?: 'red' | 'blue' }[] = [
     {
       id: 'today',
       label: 'Сегодня',
-      icon: <Clock className="w-4 h-4 text-[#FA8C16]" />,
+      icon: <Clock className="w-5 h-5" />,
       badge: dueTodayCount > 0 ? dueTodayCount : undefined,
-      badgeColor: 'bg-[#FA8C16] text-white',
+      badgeVariant: 'blue',
     },
     {
       id: 'schedule',
       label: 'Расписание',
-      icon: <CalendarDays className="w-4 h-4 text-[#2B82FB]" />,
+      icon: <CalendarDays className="w-5 h-5" />,
     },
     {
       id: 'homework',
       label: 'Задания',
-      icon: <CheckSquare className="w-4 h-4 text-[#10B981]" />,
+      icon: <CheckSquare className="w-5 h-5" />,
       badge: overdueCount > 0 ? overdueCount : undefined,
-      badgeColor: 'bg-[#EF4444] text-white',
+      badgeVariant: 'red',
     },
     {
       id: 'calendar',
       label: 'Календарь',
-      icon: <Calendar className="w-4 h-4 text-[#8B5CF6]" />,
+      icon: <Calendar className="w-5 h-5" />,
     },
     {
       id: 'settings',
       label: 'Настройки',
-      icon: <Settings className="w-4 h-4 text-zinc-400" />,
+      icon: <Settings className="w-5 h-5" />,
     },
   ];
 
-  // Distinct colors for subjects list (TickTick list tag dots)
-  const tagColors = [
-    'bg-[#2B82FB]',
-    'bg-[#10B981]',
-    'bg-[#FA8C16]',
-    'bg-[#8B5CF6]',
-    'bg-[#EC4899]',
-    'bg-[#06B6D4]',
-    'bg-[#F59E0B]',
-  ];
-
   return (
-    <aside className="hidden md:flex flex-col w-64 h-full bg-[#FFFFFF] dark:bg-[#1F1F1F] border-r border-zinc-200 dark:border-[#2C2C2C] select-none shrink-0 transition-colors duration-150">
-      {/* Brand & User Profile Header - TickTick Style */}
-      <div className="p-3.5 pb-2 border-b border-zinc-100 dark:border-[#2A2A2A]">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* TickTick Iconic Logo */}
-            <div className="w-8 h-8 rounded-xl bg-[#2B82FB] flex items-center justify-center text-white shadow-sm shadow-[#2B82FB]/40 shrink-0">
-              <Check className="w-5 h-5 stroke-[3]" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                  UniKGU
-                </span>
-                <span className="text-[10px] font-semibold px-1 py-0.2 rounded bg-[#2B82FB]/10 text-[#2B82FB] font-mono leading-none">
-                  PRO
-                </span>
-              </div>
-              <div className="flex items-center gap-1 text-[11px] text-zinc-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="truncate">Онлайн</span>
-              </div>
-            </div>
+    <aside className="hidden md:flex flex-col w-64 h-full bg-[#f6f6f8]/85 dark:bg-[#121214]/85 backdrop-blur-2xl border-r border-black/5 dark:border-white/10 p-4 shrink-0 select-none">
+      {/* Brand Header */}
+      <div className="flex items-center gap-3 px-3 py-2.5 mb-4 rounded-2xl bg-white/70 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-apple-sm backdrop-blur-md select-none">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-apple-blue via-blue-600 to-apple-indigo flex items-center justify-center text-white shadow-md shadow-apple-blue/25 ring-1 ring-white/20 shrink-0">
+          <GraduationCap className="w-5 h-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-sm font-bold tracking-tight text-apple-gray-900 dark:text-white truncate leading-tight">
+            UniKGU
+          </h1>
+          <div className="mt-1 flex items-center">
+            {onOpenGroupSelect ? (
+              <button
+                type="button"
+                onClick={onOpenGroupSelect}
+                title="Нажмите, чтобы сменить учебную группу"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue dark:text-blue-400 border border-apple-blue/25 tracking-tight hover:bg-apple-blue/20 transition-all cursor-pointer active:scale-95"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-apple-blue dark:bg-blue-400 animate-pulse" />
+                <span>{groupName}</span>
+                <span className="text-[9px] opacity-70 ml-0.5">▾</span>
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue dark:text-blue-400 border border-apple-blue/25 tracking-tight">
+                <span className="w-1.5 h-1.5 rounded-full bg-apple-blue dark:bg-blue-400 animate-pulse" />
+                {groupName}
+              </span>
+            )}
           </div>
-
-          {/* Group Switcher Button */}
-          {onOpenGroupSelect && (
-            <button
-              type="button"
-              onClick={onOpenGroupSelect}
-              title="Сменить учебную группу"
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#2C2C2C] transition-colors shrink-0"
-            >
-              <span className="max-w-[75px] truncate font-mono text-[11px]">{groupName}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Quick Add Task Button - TickTick Primary Action */}
-      <div className="p-3">
-        <button
-          onClick={onOpenCreateHomework}
-          className="flex items-center justify-between w-full py-2 px-3 rounded-xl bg-[#2B82FB] hover:bg-[#2072E5] active:bg-[#1668E3] text-white text-xs font-semibold shadow-sm transition-all duration-150 ease-out cursor-pointer group"
-        >
-          <div className="flex items-center gap-2">
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Добавить задачу</span>
-          </div>
-          <kbd className="hidden lg:inline-block text-[10px] font-mono font-normal opacity-70 px-1 py-0.5 rounded bg-black/20">
-            Ctrl K
-          </kbd>
-        </button>
-      </div>
+      {/* Quick Add Homework Button */}
+      <button
+        onClick={onOpenCreateHomework}
+        className="flex items-center justify-center gap-2 w-full py-2.5 px-4 mb-5 rounded-2xl bg-apple-blue hover:bg-blue-600 text-white font-medium text-sm shadow-apple-sm transition-all duration-200 ease-out active:scale-[0.96] hover:shadow-md"
+      >
+        <Plus className="w-4 h-4 stroke-[2.5]" />
+        <span>Новое задание</span>
+      </button>
 
-      {/* Navigation List - TickTick Left Rail */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
-        <div className="px-2 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-          Разделы
-        </div>
-
+      {/* Navigation List */}
+      <nav className="flex-1 space-y-1">
         {navItems.map((item) => {
           const isActive = currentTab === item.id;
           return (
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`flex items-center justify-between w-full px-2.5 py-2 rounded-xl text-xs font-medium transition-all duration-150 ease-out text-left cursor-pointer ${
+              className={`flex items-center justify-between w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ease-out active:scale-[0.97] ${
                 isActive
-                  ? 'bg-[#2B82FB]/10 text-[#2B82FB] font-semibold dark:bg-[#2B82FB]/15'
-                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-[#2A2A2A]'
+                  ? 'bg-black/5 dark:bg-white/10 text-apple-blue dark:text-apple-blue font-semibold shadow-sm'
+                  : 'text-apple-gray-600 dark:text-apple-gray-400 hover:bg-black/[0.03] dark:hover:bg-white/[0.05] hover:text-apple-gray-900 dark:hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="shrink-0">{item.icon}</span>
-                <span className="truncate">{item.label}</span>
+              <div className="flex items-center gap-3">
+                <span className={`transition-transform duration-200 ${isActive ? 'text-apple-blue scale-110' : 'text-current'}`}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
               </div>
               {item.badge !== undefined && item.badge > 0 && (
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                    item.badgeColor || 'bg-[#2B82FB] text-white'
+                  className={`text-xs px-2 py-0.5 rounded-full font-bold transition-all duration-200 ${
+                    item.badgeVariant === 'red'
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-apple-blue/15 text-apple-blue dark:bg-apple-blue/25'
                   }`}
                 >
                   {item.badge}
@@ -184,51 +147,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           );
         })}
-
-        {/* Subjects / Lists (TickTick Lists section) */}
-        {subjectsList.length > 0 && (
-          <div className="pt-4 space-y-0.5">
-            <div className="px-2 pb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-              <span>Предметы</span>
-              <Layers className="w-3 h-3 text-zinc-400" />
-            </div>
-            <div className="max-h-48 overflow-y-auto space-y-0.5 pr-1">
-              {subjectsList.slice(0, 8).map((subject, idx) => {
-                const dotColor = tagColors[idx % tagColors.length];
-                return (
-                  <button
-                    key={subject}
-                    onClick={() => {
-                      onTabChange('homework');
-                    }}
-                    className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-[11px] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#2A2A2A] hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors text-left truncate cursor-pointer"
-                    title={subject}
-                  >
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-                    <span className="truncate">{subject}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </nav>
 
-      {/* Footer: Theme Switcher & Status */}
-      <div className="p-3 border-t border-zinc-100 dark:border-[#2A2A2A] flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+      {/* Bottom Footer / Theme Switcher */}
+      <div className="pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between px-2">
         <button
           onClick={onToggleTheme}
-          className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-[#2C2C2C] text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer"
-          title={isDark ? 'Включить светлую тему' : 'Включить тёмную тему'}
+          className="flex items-center gap-2 p-2 rounded-xl text-xs font-medium text-apple-gray-500 hover:text-apple-gray-900 dark:text-apple-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200 ease-out active:scale-95"
+          title="Сменить тему"
         >
-          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-blue-500" />}
-          <span className="text-[11px] font-medium">{isDark ? 'Светлая' : 'Тёмная'}</span>
+          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-apple-indigo" />}
+          <span>{isDark ? 'Светлая тема' : 'Тёмная тема'}</span>
         </button>
-
-        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-          <Cloud className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="font-mono text-[10px]">{APP_VERSION}</span>
-        </div>
+        <span className="text-[11px] text-apple-gray-400 font-mono font-medium">{APP_VERSION}</span>
       </div>
     </aside>
   );

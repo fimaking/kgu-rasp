@@ -197,7 +197,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F5F6F8] dark:bg-[#181818] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#2B82FB] selection:text-white relative">
+    <div className="flex h-screen w-screen overflow-hidden bg-apple-gray-100 dark:bg-black text-apple-gray-900 dark:text-zinc-100 font-sans selection:bg-apple-blue selection:text-white relative">
       {/* Smooth Apple-inspired Launch Screen */}
       {showSplash && (
         <SplashScreen
@@ -223,32 +223,10 @@ export const App: React.FC = () => {
         isDark={theme.isDark}
         onToggleTheme={() => theme.setThemeMode(theme.isDark ? 'light' : 'dark')}
         onOpenGroupSelect={() => setIsGroupSelectOpen(true)}
-        subjectsList={schedule.subjects}
       />
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* Mobile Top Header - TickTick style */}
-        <header className="md:hidden flex items-center justify-between px-4 py-2.5 bg-white dark:bg-[#1F1F1F] border-b border-zinc-200 dark:border-[#2C2C2C] select-none shrink-0 z-20">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#2B82FB] flex items-center justify-center text-white shadow-xs">
-              <span className="font-bold text-xs">✓</span>
-            </div>
-            <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              UniKGU
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsGroupSelectOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-zinc-200 dark:hover:bg-[#383838] text-xs font-semibold text-zinc-700 dark:text-zinc-200 transition-colors"
-          >
-            <span className="font-mono text-[11px]">{schedule.groupName || '26-ИСбо-4'}</span>
-            <span className="text-[10px] text-zinc-400">▾</span>
-          </button>
-        </header>
-
         {/* Scrollable View Area with Smooth Transitions */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6 pb-28 md:pb-8">
           <div className="max-w-7xl mx-auto">

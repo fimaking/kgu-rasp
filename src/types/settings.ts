@@ -88,11 +88,10 @@ export interface AccentColorOption {
   id: string;
   name: string;
   hex: string;
-  rgb: string; // Space separated for CSS alpha: "43 130 251"
+  rgb: string; // Space separated for CSS alpha: "0 122 255"
 }
 
 export const ACCENT_COLORS: AccentColorOption[] = [
-  { id: 'ticktick-blue', name: 'Синий TickTick', hex: '#2B82FB', rgb: '43 130 251' },
   { id: 'neon-purple', name: 'Кибер-пурпур', hex: '#B5179E', rgb: '181 23 158' },
   { id: 'electric-mint', name: 'Электро-мята', hex: '#00F5A0', rgb: '0 245 160' },
   { id: 'acid-lime', name: 'Кислотный лайм', hex: '#D4FF00', rgb: '212 255 0' },

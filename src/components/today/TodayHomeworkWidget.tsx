@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckSquare, AlertTriangle, Clock, Plus, ArrowRight, Check } from 'lucide-react';
 import { Homework } from '../../types/homework';
+import { PriorityBadge } from '../ui/Badge';
 import { getHomeworkLessonType } from '../../utils/scheduleParser';
 
 interface TodayHomeworkWidgetProps {
@@ -25,19 +26,19 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
   const tomorrowList = dueTomorrowList ?? dueTodayList;
 
   return (
-    <div className="space-y-3.5 select-none">
+    <div className="space-y-4">
       {/* Overdue alert banner if overdue tasks exist */}
       {overdueList.length > 0 && (
-        <div className="p-4 rounded-2xl bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-xs sm:text-sm">
+        <div className="p-4 sm:p-5 rounded-3xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/20 backdrop-blur-xl">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-apple-red dark:text-rose-400 font-bold text-sm">
               <AlertTriangle className="w-4 h-4" />
               <span>Просроченные задания ({overdueList.length})</span>
             </div>
             {onViewAllHomework && (
               <button
                 onClick={onViewAllHomework}
-                className="text-xs text-red-600 dark:text-red-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs text-apple-red dark:text-rose-400 font-semibold hover:underline flex items-center gap-1"
               >
                 <span>Все</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -45,42 +46,43 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
             )}
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {overdueList.slice(0, 3).map((item) => {
               const overdueLessonType = item.lessonType || getHomeworkLessonType(item);
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white dark:bg-[#242424] border border-zinc-200 dark:border-[#333333] hover:border-zinc-300 dark:hover:border-[#404040] transition-all"
+                  className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/5 hover:shadow-apple-sm hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 ease-out"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     <button
                       onClick={() => onToggleComplete(item.id)}
-                      className="w-4.5 h-4.5 rounded-full border-2 border-red-400 hover:bg-red-500 hover:border-red-500 flex items-center justify-center transition-all shrink-0 cursor-pointer"
+                      className="w-5 h-5 rounded-full border-2 border-rose-400 hover:bg-rose-500 hover:border-rose-500 flex items-center justify-center transition-all duration-200 ease-out active:scale-75 group shrink-0"
                       title="Отметить выполненным"
                     >
-                      <Check className="w-2.5 h-2.5 text-white opacity-0 hover:opacity-100" />
+                      <Check className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                     <div
                       onClick={() => onSelectHomework(item)}
                       className="min-w-0 cursor-pointer"
                     >
-                      <h5 className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate hover:text-[#2B82FB] transition-colors">
+                      <h5 className="text-xs sm:text-sm font-semibold text-apple-gray-900 dark:text-white truncate hover:text-apple-blue transition-colors">
                         {item.title}
                       </h5>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate flex items-center gap-1.5">
+                      <p className="text-[11px] text-apple-gray-500 dark:text-apple-gray-400 truncate flex items-center gap-1.5 flex-wrap">
                         <span>{item.subject}</span>
                         {overdueLessonType && (
                           <>
                             <span className="opacity-40">•</span>
-                            <span className="font-medium text-[#2B82FB]">{overdueLessonType}</span>
+                            <span className="font-semibold text-apple-blue">{overdueLessonType}</span>
                           </>
                         )}
                         <span className="opacity-40">•</span>
-                        <span>Срок: {item.dueDate}</span>
+                        <span>Долг с {item.dueDate}</span>
                       </p>
                     </div>
                   </div>
+                  <PriorityBadge priority={item.priority} />
                 </div>
               );
             })}
@@ -89,16 +91,16 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
       )}
 
       {/* Due Tomorrow Card */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#242424] border border-zinc-200 dark:border-[#303030] shadow-sm space-y-3">
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-apple-card space-y-4">
         {/* Card Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#2B82FB]/10 text-[#2B82FB] flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue flex items-center justify-center shrink-0">
               <CheckSquare className="w-4 h-4 stroke-[2.2]" />
             </div>
-            <h4 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+            <h4 className="text-base font-bold text-apple-gray-900 dark:text-white flex items-center gap-2">
               <span>Сдать завтра</span>
-              <span className="text-xs font-mono font-semibold px-2 py-0.2 rounded-full bg-[#2B82FB]/10 text-[#2B82FB]">
+              <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-apple-blue/10 text-apple-blue dark:bg-apple-blue/20">
                 {tomorrowList.length}
               </span>
             </h4>
@@ -106,7 +108,7 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
 
           <button
             onClick={onOpenCreateModal}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2B82FB]/10 hover:bg-[#2B82FB]/20 text-[#2B82FB] text-xs font-semibold transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-apple-blue/10 dark:bg-apple-blue/20 hover:bg-apple-blue/20 text-apple-blue text-xs font-semibold transition-all duration-200 ease-out active:scale-95"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Добавить</span>
@@ -114,55 +116,65 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
         </div>
 
         {tomorrowList.length === 0 ? (
-          <div className="py-6 text-center">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2">
-              <Check className="w-4 h-4 stroke-[2.5]" />
+          <div className="py-7 text-center">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2.5">
+              <Check className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <p className="text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            <p className="text-sm font-semibold text-apple-gray-800 dark:text-zinc-200">
               На завтра нет дедлайнов
             </p>
-            <p className="mt-0.5 text-xs text-zinc-400">
-              Все задачи выполнены или дедлайны позже
+            <p className="mt-0.5 text-xs text-apple-gray-400">
+              Все задания выполнены или дедлайны позже
             </p>
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {tomorrowList.map((item) => {
+              const subtasks = Array.isArray(item.subtasks) ? item.subtasks : [];
+              const completedSubtasks = subtasks.filter((s) => s.completed).length;
               const itemLessonType = item.lessonType || getHomeworkLessonType(item);
 
               return (
                 <div
                   key={item.id}
-                  className="group flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-[#1E1E1E] hover:bg-zinc-100 dark:hover:bg-[#282828] border border-zinc-200 dark:border-[#2C2C2C] transition-all"
+                  className="group flex items-center justify-between gap-3.5 p-3.5 sm:p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] hover:bg-black/[0.05] dark:hover:bg-white/[0.07] border border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10 transition-all duration-200 ease-out active:scale-[0.99]"
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    {/* TickTick round checkbox */}
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    {/* Apple Reminders round checkbox */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleComplete(item.id);
                       }}
-                      className="w-4.5 h-4.5 rounded-full border-2 border-zinc-400 dark:border-zinc-500 hover:border-[#2B82FB] hover:bg-[#2B82FB] flex items-center justify-center transition-all group/check shrink-0 cursor-pointer"
+                      className="w-5 h-5 rounded-full border-2 border-apple-blue/70 hover:border-apple-blue hover:bg-apple-blue flex items-center justify-center transition-all duration-150 ease-out active:scale-75 group/check shrink-0 cursor-pointer"
                       title="Отметить выполненным"
                     >
-                      <Check className="w-2.5 h-2.5 text-white opacity-0 group-hover/check:opacity-100 transition-opacity stroke-[3]" />
+                      <Check className="w-3 text-white opacity-0 group-hover/check:opacity-100 transition-opacity stroke-[3]" />
                     </button>
 
                     <div
                       onClick={() => onSelectHomework(item)}
                       className="min-w-0 flex-1 cursor-pointer"
                     >
-                      <h5 className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate group-hover:text-[#2B82FB] transition-colors">
+                      <h5 className="text-sm font-semibold text-apple-gray-900 dark:text-white truncate group-hover:text-apple-blue transition-colors">
                         {item.title}
                       </h5>
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 flex-wrap">
-                        <span className="truncate font-medium text-[#2B82FB] dark:text-[#60A5FA]">
-                          {item.subject}
-                        </span>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-apple-gray-500 dark:text-apple-gray-400 flex-wrap">
+                        <span className="truncate font-medium">{item.subject}</span>
                         {itemLessonType && (
                           <>
                             <span className="opacity-40">•</span>
-                            <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            <span
+                              className={`font-semibold shrink-0 ${
+                                itemLessonType === 'Практика'
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : itemLessonType === 'Лаба'
+                                  ? 'text-purple-600 dark:text-purple-400'
+                                  : itemLessonType === 'Лекция'
+                                  ? 'text-apple-blue dark:text-blue-400'
+                                  : 'text-zinc-600 dark:text-zinc-400'
+                              }`}
+                            >
                               {itemLessonType}
                             </span>
                           </>
@@ -170,14 +182,26 @@ export const TodayHomeworkWidget: React.FC<TodayHomeworkWidgetProps> = ({
                         {item.dueTime && (
                           <>
                             <span className="opacity-40">•</span>
-                            <span className="font-mono text-[#FA8C16] flex items-center gap-1 shrink-0">
+                            <span className="font-mono text-apple-orange flex items-center gap-1 shrink-0">
                               <Clock className="w-3 h-3 stroke-[2]" />
                               до {item.dueTime}
                             </span>
                           </>
                         )}
+                        {subtasks.length > 0 && (
+                          <>
+                            <span className="opacity-40">•</span>
+                            <span className="shrink-0 font-medium text-apple-gray-400">
+                              {completedSubtasks}/{subtasks.length} подзадач
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
+                  </div>
+
+                  <div className="shrink-0" onClick={() => onSelectHomework(item)}>
+                    <PriorityBadge priority={item.priority} />
                   </div>
                 </div>
               );

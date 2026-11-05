@@ -40,7 +40,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
     return formatDateToIso(next);
   });
 
-  // Preserve underlying data properties
+  // Preserve underlying data for existing tasks
   const [assignedDate, setAssignedDate] = useState(() => formatDateToIso(new Date()));
   const [dueTime, setDueTime] = useState('23:59');
   const [priority, setPriority] = useState<Priority>('normal');
@@ -87,6 +87,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
       setMaterialLink(initialData.materialLink);
       setNotes(initialData.notes);
     } else {
+      // New form reset
       setTitle('');
       if (defaultSubject) {
         const matched = subjectsList.find((s) => s.toLowerCase() === defaultSubject.toLowerCase());
@@ -166,19 +167,19 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={initialData ? 'Редактировать задание' : 'Новое задание'}
-      subtitle="Название, дисциплина и срок сдачи"
+      title={initialData ? 'Редактировать задание' : 'Новое домашнее задание'}
+      subtitle="Укажите название задания, предмет и срок сдачи"
       maxWidth="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 select-none">
-        {/* 1. Title */}
+      <form onSubmit={handleSubmit} className="space-y-5 select-none">
+        {/* Title */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300">
             Название задания *
           </label>
           <input
             type="text"
-            placeholder="Что нужно сделать? Например, Лаба №3"
+            placeholder="Например, Лаба №3 или конспект"
             value={title}
             maxLength={200}
             autoFocus
@@ -186,21 +187,21 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               setTitle(e.target.value);
               if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
             }}
-            className={`w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#282828] border text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2B82FB]/50 transition-all ${
+            className={`w-full px-4 py-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all ${
               errors.title
-                ? 'border-red-500'
-                : 'border-zinc-200 dark:border-[#383838]'
+                ? 'border-rose-500'
+                : 'border-black/10 dark:border-white/10'
             }`}
           />
           {errors.title && (
-            <p className="text-xs text-red-500 font-medium">{errors.title}</p>
+            <p className="text-xs text-rose-500 font-medium">{errors.title}</p>
           )}
         </div>
 
-        {/* 2. Subject selector */}
+        {/* Subject selector */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-[#2B82FB]" />
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-apple-blue" />
             <span>Дисциплина (Предмет) *</span>
           </label>
           <select
@@ -214,7 +215,7 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
               }
               if (errors.subject) setErrors((prev) => ({ ...prev, subject: undefined }));
             }}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#282828] border border-zinc-200 dark:border-[#383838] text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2B82FB]/50 transition-all cursor-pointer"
+            className="w-full px-4 py-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-sm text-apple-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
           >
             <optgroup label={`Дисциплины группы ${groupName || 'КГУ'}`}>
               {subjectsList.map((s) => (
@@ -237,78 +238,85 @@ export const HomeworkFormModal: React.FC<HomeworkFormModalProps> = ({
                   setCustomSubject(e.target.value);
                   if (errors.subject) setErrors((prev) => ({ ...prev, subject: undefined }));
                 }}
-                className={`w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-[#282828] border text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2B82FB]/50 transition-all ${
-                  errors.subject ? 'border-red-500' : 'border-zinc-200 dark:border-[#383838]'
+                className={`w-full px-4 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all ${
+                  errors.subject ? 'border-rose-500' : 'border-black/10 dark:border-white/10'
                 }`}
               />
             </div>
           )}
           {errors.subject && (
-            <p className="text-xs text-red-500 font-medium">{errors.subject}</p>
+            <p className="text-xs text-rose-500 font-medium">{errors.subject}</p>
           )}
         </div>
 
-        {/* 3. Due Date (Deadline) */}
+        {/* Due Date (Deadline) */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-[#2B82FB]" />
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-apple-blue" />
             <span>Срок сдачи (Дедлайн) *</span>
           </label>
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#282828] border border-zinc-200 dark:border-[#383838] text-sm font-medium text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2B82FB]/50 transition-all cursor-pointer"
+            className="w-full px-4 py-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-sm font-semibold text-apple-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
           />
 
           {/* Quick deadline shortcuts */}
           <div className="flex items-center gap-2 pt-1 flex-wrap">
-            <span className="text-xs text-zinc-400 font-medium">Быстро:</span>
-            <button
-              type="button"
-              onClick={() => setQuickDeadline(0)}
-              className="text-xs px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-[#2B82FB]/15 hover:text-[#2B82FB] transition-colors font-medium text-zinc-700 dark:text-zinc-300 active:scale-95 cursor-pointer"
-            >
-              Сегодня
-            </button>
+            <span className="text-xs text-apple-gray-400 font-medium">Быстро:</span>
             <button
               type="button"
               onClick={() => setQuickDeadline(1)}
-              className="text-xs px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-[#2B82FB]/15 hover:text-[#2B82FB] transition-colors font-medium text-zinc-700 dark:text-zinc-300 active:scale-95 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-apple-blue/15 hover:text-apple-blue dark:hover:text-blue-300 transition-colors font-medium text-apple-gray-700 dark:text-zinc-300 active:scale-95"
             >
               Завтра
             </button>
             <button
               type="button"
               onClick={() => setQuickDeadline(3)}
-              className="text-xs px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-[#2B82FB]/15 hover:text-[#2B82FB] transition-colors font-medium text-zinc-700 dark:text-zinc-300 active:scale-95 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-apple-blue/15 hover:text-apple-blue dark:hover:text-blue-300 transition-colors font-medium text-apple-gray-700 dark:text-zinc-300 active:scale-95"
             >
               +3 дня
             </button>
             <button
               type="button"
               onClick={() => setQuickDeadline(7)}
-              className="text-xs px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-[#2C2C2C] hover:bg-[#2B82FB]/15 hover:text-[#2B82FB] transition-colors font-medium text-zinc-700 dark:text-zinc-300 active:scale-95 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-apple-blue/15 hover:text-apple-blue dark:hover:text-blue-300 transition-colors font-medium text-apple-gray-700 dark:text-zinc-300 active:scale-95"
             >
               +1 неделя
             </button>
           </div>
 
           {isPastDue && (
-            <p className="mt-1 text-xs text-amber-500 font-medium flex items-center gap-1">
+            <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 animate-in fade-in">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              <span>Выбранная дата в прошлом — задание будет отмечено как просроченное</span>
+              <span>Выбранная дата в прошлом — задание станет просроченным</span>
             </p>
           )}
         </div>
 
+        {/* Optional Description / Notes */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-apple-gray-600 dark:text-apple-gray-300">
+            Примечание / Номера заданий (необязательно)
+          </label>
+          <textarea
+            rows={2}
+            placeholder="Например, вариант 2, номера 4.1—4.7..."
+            value={description || ''}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 text-sm text-apple-gray-900 dark:text-white placeholder:text-apple-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all resize-none"
+          />
+        </div>
+
         {/* Buttons */}
-        <div className="pt-3 flex items-center justify-end gap-2 border-t border-zinc-100 dark:border-[#2C2C2C]">
+        <div className="pt-4 flex items-center justify-end gap-3 border-t border-black/5 dark:border-white/5">
           <Button type="button" variant="ghost" onClick={onClose}>
             Отмена
           </Button>
           <Button type="submit" variant="primary">
-            {initialData ? 'Сохранить' : 'Создать задание'}
+            {initialData ? 'Сохранить изменения' : 'Создать задание'}
           </Button>
         </div>
       </form>
